@@ -901,7 +901,11 @@ const _mergeArcs = (svg: string) => {
   const data = parseSync(svg);
   for (let i = 0; i < data.children.length; i++) {
     if (data.children[i].name === "path") {
-      const command = commander(data.children[i].attributes.d);
+      const pathData = new SVGPathData(data.children[i].attributes.d)
+        .toAbs()
+        .transform(SVGPathDataTransformer.NORMALIZE_HVZ())
+        .encode();
+      const command = commander(pathData);
       const segments = command.segments;
       for (let j = 0; j < segments.length; j++) {
         const prevSegment = segments[j - 1];
