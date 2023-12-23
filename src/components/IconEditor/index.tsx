@@ -117,10 +117,11 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         {selected &&
           `.svg-preview-radii-group > path { display: none !important }`}
         {`
-  .svg-editor-path:hover, .svg-editor-start:hover, .svg-editor-end:hover { stroke: black; stroke-opacity: 0.5 }
-  .svg-editor-path, .svg-editor-start, .svg-editor-end { cursor: pointer }
+  .svg-editor-path:hover, .svg-editor-start:hover, .svg-editor-end:hover, .svg-editor-cp1:hover, .svg-editor-cp2:hover { stroke: black; stroke-opacity: 0.5 }
+  .svg-editor-path, .svg-editor-start, .svg-editor-end, .svg-editor-cp1, .svg-editor-cp2 { cursor: pointer }
   .svg-editor-segment-${selected?.id}-${selected?.idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
   .svg-editor-segment-${selected?.id}-${selected?.idx}:active { cursor: grabbing !important }
+
   .icon-editor-highlight-segment-${selected?.id}-${selected?.idx} {
     box-shadow: 0 0 0 2px black !important;
   }

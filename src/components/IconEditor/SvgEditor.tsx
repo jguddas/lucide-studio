@@ -7,6 +7,7 @@ import { Path } from "../SvgPreview/types";
 import getPaths, { getNodes } from "../SvgPreview/utils";
 import { stringify, INode } from "svgson";
 import throttle from "lodash/throttle";
+import { round } from "lodash";
 
 const nodesToSvg = (nodes: INode[]) => `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -34,7 +35,12 @@ export type Selection = {
   id: number;
   idx: number;
   startPosition: { x: number; y: number };
-  type: "svg-editor-path" | "svg-editor-start" | "svg-editor-end";
+  type:
+    | "svg-editor-path"
+    | "svg-editor-start"
+    | "svg-editor-end"
+    | "svg-editor-cp1"
+    | "svg-editor-cp2";
 };
 
 const SvgEditor = ({
@@ -96,6 +102,8 @@ const SvgEditor = ({
           ((event.clientX - dragTargetRef.current.startPosition.x) * 24) / 480;
         const y =
           ((event.clientY - dragTargetRef.current.startPosition.y) * 24) / 480;
+        const dragCp1 = dragTargetRef.current.type === "svg-editor-cp1";
+        const dragCp2 = dragTargetRef.current.type === "svg-editor-cp2";
         const dragStart =
           dragTargetRef.current.type === "svg-editor-path" ||
           dragTargetRef.current.type === "svg-editor-start";
@@ -108,35 +116,66 @@ const SvgEditor = ({
             scopedPaths[i].c.idx === dragTargetRef.current.idx
           ) {
             const n = scopedPaths[i].d.split(" ");
+            const movedPath = movedPaths[i];
+            const scopedPath = scopedPaths[i];
             let snapXDelta = 0;
             let snapYDelta = 0;
-            if (dragStart) {
-              movedPaths[i].prev.x = limit(scopedPaths[i].prev.x + x);
-              movedPaths[i].prev.y = limit(scopedPaths[i].prev.y + y);
+            if (dragCp1 && movedPath.cp1 && scopedPath.cp1) {
+              movedPath.cp1.x = limit(scopedPath.cp1.x + x);
+              movedPath.cp1.y = limit(scopedPath.cp1.y + y);
               snapXDelta =
-                Math.round(movedPaths[i].prev.x * 2) / 2 - movedPaths[i].prev.x;
+                Math.round(movedPath.cp1.x * 2) / 2 - movedPath.cp1.x;
               snapYDelta =
-                Math.round(movedPaths[i].prev.y * 2) / 2 - movedPaths[i].prev.y;
-              movedPaths[i].prev.x += snapXDelta;
-              movedPaths[i].prev.y += snapYDelta;
+                Math.round(movedPath.cp1.y * 2) / 2 - movedPath.cp1.y;
+              movedPath.cp1.x += snapXDelta;
+              movedPath.cp1.y += snapYDelta;
+            }
+            if (dragCp2 && movedPath.cp2 && scopedPath.cp2) {
+              movedPath.cp2.x = limit(scopedPath.cp2.x + x);
+              movedPath.cp2.y = limit(scopedPath.cp2.y + y);
+              snapXDelta =
+                Math.round(movedPath.cp2.x * 2) / 2 - movedPath.cp2.x;
+              snapYDelta =
+                Math.round(movedPath.cp2.y * 2) / 2 - movedPath.cp2.y;
+              movedPath.cp2.x += snapXDelta;
+              movedPath.cp2.y += snapYDelta;
+            }
+            if (dragStart) {
+              movedPath.prev.x = limit(scopedPath.prev.x + x);
+              movedPath.prev.y = limit(scopedPath.prev.y + y);
+              snapXDelta =
+                Math.round(movedPath.prev.x * 2) / 2 - movedPath.prev.x;
+              snapYDelta =
+                Math.round(movedPath.prev.y * 2) / 2 - movedPath.prev.y;
+              movedPath.prev.x += snapXDelta;
+              movedPath.prev.y += snapYDelta;
             }
             if (dragEnd) {
-              movedPaths[i].next.x = limit(scopedPaths[i].next.x + x);
-              movedPaths[i].next.y = limit(scopedPaths[i].next.y + y);
+              movedPath.next.x = limit(scopedPath.next.x + x);
+              movedPath.next.y = limit(scopedPath.next.y + y);
               if (dragStart) {
-                movedPaths[i].next.x += snapXDelta;
-                movedPaths[i].next.y += snapYDelta;
+                movedPath.next.x += snapXDelta;
+                movedPath.next.y += snapYDelta;
               } else {
-                movedPaths[i].next.x = Math.round(movedPaths[i].next.x * 2) / 2;
-                movedPaths[i].next.y = Math.round(movedPaths[i].next.y * 2) / 2;
+                movedPath.next.x = Math.round(movedPath.next.x * 2) / 2;
+                movedPath.next.y = Math.round(movedPath.next.y * 2) / 2;
               }
             }
-            n[1] = movedPaths[i].prev.x + "";
-            n[2] = movedPaths[i].prev.y + "";
-            n[n.length - 2] = movedPaths[i].next.x + "";
-            n[n.length - 1] = movedPaths[i].next.y + "";
-            if (movedPaths[i].d !== n.join(" ")) {
-              movedPaths[i].d = n.join(" ");
+            if (movedPath.cp1) {
+              n[3] = "C" + round(movedPath.cp1.x, 3);
+              n[4] = round(movedPath.cp1.y, 3) + "";
+            }
+            if (movedPath.cp2) {
+              n[5] = round(movedPath.cp2.x, 3) + "";
+              n[6] = round(movedPath.cp2.y, 3) + "";
+            }
+            n[1] = round(movedPath.prev.x, 3) + "";
+            n[2] = round(movedPath.prev.y, 3) + "";
+            n[n.length - 2] = round(movedPath.next.x, 3) + "";
+            n[n.length - 1] = round(movedPath.next.y, 3) + "";
+            if (movedPath.d !== n.join(" ")) {
+              movedPath.d = n.join(" ");
+              movedPaths[i] = movedPath;
               setPaths(movedPaths.slice(0));
             }
           }
@@ -188,7 +227,7 @@ const SvgEditor = ({
           <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.5" />
         </filter>
         <g strokeWidth={1.5} strokeOpacity={0}>
-          {paths.map(({ d, c, next, prev }, i) => (
+          {paths.map(({ d, c, next, prev, cp1, cp2 }, i) => (
             <React.Fragment key={i}>
               <path
                 className={`svg-editor-path svg-editor-segment-${c.id}-${c.idx}`}
@@ -203,6 +242,20 @@ const SvgEditor = ({
                 strokeWidth={1.5}
                 d={`M${next.x} ${next.y}h.01`}
               />
+              {cp1 && (
+                <path
+                  className={`svg-editor-cp1 svg-editor-segment-${c.id}-${c.idx}`}
+                  strokeWidth={1.5}
+                  d={`M${cp1.x} ${cp1.y}h.01`}
+                />
+              )}
+              {cp2 && (
+                <path
+                  className={`svg-editor-cp2 svg-editor-segment-${c.id}-${c.idx}`}
+                  strokeWidth={1.5}
+                  d={`M${cp2.x} ${cp2.y}h.01`}
+                />
+              )}
             </React.Fragment>
           ))}
         </g>
