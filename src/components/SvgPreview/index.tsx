@@ -229,12 +229,7 @@ const Radii = ({
           (c.name === "circle" ? (
             <path key={i} d={`M${circle.x} ${circle.y}h.01`} />
           ) : (
-            <React.Fragment key={i}>
-              <path
-                d={`M${prev.x} ${prev.y} ${circle.x} ${circle.y} ${next.x} ${next.y}`}
-              />
-              <circle cy={circle.y} cx={circle.x} r={circle.r} />
-            </React.Fragment>
+            <circle cy={circle.y} cx={circle.x} r={circle.r} key={i} />
           )),
       )}
     </g>

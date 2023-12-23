@@ -111,17 +111,12 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         </div>
       </div>
       <style>
-        {
-          "textarea.npm__react-simple-code-editor__textarea:focus { outline: none }"
-        }
-        {selected &&
-          `.svg-preview-radii-group > path { display: none !important }`}
         {`
+  textarea.npm__react-simple-code-editor__textarea:focus { outline: none }
   .svg-editor-path:hover, .svg-editor-start:hover, .svg-editor-end:hover, .svg-editor-cp1:hover, .svg-editor-cp2:hover { stroke: black; stroke-opacity: 0.5 }
   .svg-editor-path, .svg-editor-start, .svg-editor-end, .svg-editor-cp1, .svg-editor-cp2 { cursor: pointer }
   .svg-editor-segment-${selected?.id}-${selected?.idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
   .svg-editor-segment-${selected?.id}-${selected?.idx}:active { cursor: grabbing !important }
-
   .icon-editor-highlight-segment-${selected?.id}-${selected?.idx} {
     box-shadow: 0 0 0 2px black !important;
   }
