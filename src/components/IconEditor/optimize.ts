@@ -507,7 +507,7 @@ const getCircle = (segments: PathSegment[]): INode | undefined => {
     }
   }
   // @ts-ignore
-  if (!isDistanceSmaller(prevPoint, startPoint, 0.1)) {
+  if (!prevCenters.length || !isDistanceSmaller(prevPoint, startPoint, 0.1)) {
     return undefined;
   }
   return {
@@ -865,6 +865,7 @@ const getArcs = (paths: ReturnType<typeof getPaths>) =>
       },
     }));
 
+const mMergePaths = memoize(mergePaths);
 const mergeArcs = (svg: string) => {
   const before = _mergeArcs(svg);
   const paths = getPaths(before);
@@ -889,7 +890,7 @@ const mergeArcs = (svg: string) => {
     getArcs,
     (children) => ({ ...data, children: [...children, ...notArcs] }),
     stringify,
-    mergePaths,
+    mMergePaths,
     _mergeArcs,
   )({ ...data, children: arcs });
 
@@ -987,27 +988,31 @@ const catchErrors = (fn: (svg: string) => string) => (svg: string) => {
   try {
     return fn(svg);
   } catch (e) {
+    console.error(e);
     return svg;
   }
 };
 
+const mFormat = memoize(catchErrors(format));
+const mFixDots = memoize(catchErrors(fixDots));
+
 const runOptimizations = flow(
-  catchErrors(format),
-  catchErrors(elementsToPath),
-  catchErrors(fixDots),
-  catchErrors(mergeLines),
-  catchErrors(removeTinySegments),
-  catchErrors(mergeArcs),
-  catchErrors(mergePaths),
-  catchErrors(segmentsToArc),
-  catchErrors(pathsToElement),
-  catchErrors(removeBackdrop),
-  catchErrors(optimizeRect),
-  catchErrors(optimizeEllipse),
-  catchErrors(smartClose),
-  catchErrors(fixDots),
-  catchErrors(svgo),
-  catchErrors(format),
+  mFormat,
+  memoize(catchErrors(elementsToPath)),
+  mFixDots,
+  memoize(catchErrors(mergeLines)),
+  memoize(catchErrors(removeTinySegments)),
+  memoize(catchErrors(mergeArcs)),
+  memoize(catchErrors(mMergePaths)),
+  memoize(catchErrors(segmentsToArc)),
+  memoize(catchErrors(pathsToElement)),
+  memoize(catchErrors(removeBackdrop)),
+  memoize(catchErrors(optimizeRect)),
+  memoize(catchErrors(optimizeEllipse)),
+  memoize(catchErrors(smartClose)),
+  mFixDots,
+  memoize(catchErrors(svgo)),
+  mFormat,
 );
 
 export default memoize((value: string) =>
