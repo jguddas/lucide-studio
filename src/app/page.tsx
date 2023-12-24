@@ -25,10 +25,12 @@ const useValueState = () => {
   const setValue = useCallback(
     (value: string | ((old: string) => string)) => {
       history.current = history.current.slice(0, pointer.current + 1);
-      pointer.current = history.current.length - 1;
       _setValue((old) => {
         const newValue = typeof value === "function" ? value(old) : value;
-        history.current.push(newValue);
+        if (newValue !== old) {
+          history.current.push(newValue);
+          pointer.current = history.current.length - 1;
+        }
         return newValue;
       });
     },

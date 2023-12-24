@@ -224,13 +224,18 @@ const Radii = ({
   return (
     <g className="svg-preview-radii-group" {...props}>
       {paths.map(
-        ({ c, prev, next, circle }, i) =>
-          circle &&
-          (c.name === "circle" ? (
-            <path key={i} d={`M${circle.x} ${circle.y}h.01`} />
-          ) : (
-            <circle cy={circle.y} cx={circle.x} r={circle.r} key={i} />
-          )),
+        ({ circle }, i) =>
+          circle && (
+            <React.Fragment key={i}>
+              <circle
+                cy={circle.y}
+                cx={circle.x}
+                r={0.25}
+                strokeDasharray="0"
+              />
+              <circle cy={circle.y} cx={circle.x} r={circle.r} />
+            </React.Fragment>
+          ),
       )}
     </g>
   );
