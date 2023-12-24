@@ -232,8 +232,23 @@ const Radii = ({
                 cx={circle.x}
                 r={0.25}
                 strokeDasharray="0"
+                stroke={
+                  (Math.round(circle.x * 1000) / 1000) % 1 !== 0 ||
+                  (Math.round(circle.y * 1000) / 1000) % 1 !== 0
+                    ? "red"
+                    : undefined
+                }
               />
-              <circle cy={circle.y} cx={circle.x} r={circle.r} />
+              <circle
+                cy={circle.y}
+                cx={circle.x}
+                r={circle.r}
+                stroke={
+                  (Math.round(circle.r * 1000) / 1000) % 1 !== 0
+                    ? "red"
+                    : undefined
+                }
+              />
             </React.Fragment>
           ),
       )}
