@@ -3,8 +3,13 @@ import {
   MenubarContent,
   MenubarItem,
   MenubarMenu,
+  MenubarRadioGroup,
+  MenubarRadioItem,
   MenubarSeparator,
   MenubarShortcut,
+  MenubarSub,
+  MenubarSubContent,
+  MenubarSubTrigger,
   MenubarTrigger,
 } from "@/components/ui/menubar";
 import optimize from "@/components/IconEditor/optimize";
@@ -13,12 +18,15 @@ import {
   DownloadIcon,
   MaximizeIcon,
   MinimizeIcon,
+  MoonIcon,
   RedoIcon,
   SparklesIcon,
+  SunIcon,
   UndoIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import format from "./format";
+import { useTheme } from "next-themes";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -51,6 +59,7 @@ const Menu = ({
   setValue: (value: string) => void;
 }) => {
   const isFullscreen = useIsFullscreen();
+  const { theme, setTheme } = useTheme();
   return (
     <Menubar className="border-t-transparent border-x-transparent rounded-none">
       <MenubarMenu>
@@ -120,6 +129,19 @@ const Menu = ({
             Fullscreen
             <MenubarShortcut>{isMac ? "FN+F" : "F11"}</MenubarShortcut>
           </MenubarItem>
+          <MenubarSub>
+            <MenubarSubTrigger className="gap-1.5">
+              {theme === "dark" ? <MoonIcon /> : <SunIcon />}
+              Theme
+            </MenubarSubTrigger>
+            <MenubarSubContent>
+              <MenubarRadioGroup value={theme} onValueChange={setTheme}>
+                <MenubarRadioItem value="system">System</MenubarRadioItem>
+                <MenubarRadioItem value="dark">Dark</MenubarRadioItem>
+                <MenubarRadioItem value="light">Light</MenubarRadioItem>
+              </MenubarRadioGroup>
+            </MenubarSubContent>
+          </MenubarSub>
         </MenubarContent>
       </MenubarMenu>
     </Menubar>
