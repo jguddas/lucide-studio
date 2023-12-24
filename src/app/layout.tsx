@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lucide Studio",
+  title: "Lucide | Lucide Studio",
   description: "Edit and create lucide icons",
 };
 
