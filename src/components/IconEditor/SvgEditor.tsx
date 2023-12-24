@@ -39,6 +39,7 @@ export type Selection = {
     | "svg-editor-path"
     | "svg-editor-start"
     | "svg-editor-end"
+    | "svg-editor-circle"
     | "svg-editor-cp1"
     | "svg-editor-cp2";
 };
@@ -102,24 +103,37 @@ const SvgEditor = ({
           ((event.clientX - dragTargetRef.current.startPosition.x) * 24) / 480;
         const y =
           ((event.clientY - dragTargetRef.current.startPosition.y) * 24) / 480;
+        const dragCircle = dragTargetRef.current.type === "svg-editor-circle";
         const dragCp1 = dragTargetRef.current.type === "svg-editor-cp1";
         const dragCp2 = dragTargetRef.current.type === "svg-editor-cp2";
         const dragStart =
           dragTargetRef.current.type === "svg-editor-path" ||
+          dragTargetRef.current.type === "svg-editor-circle" ||
           dragTargetRef.current.type === "svg-editor-start";
         const dragEnd =
           dragTargetRef.current.type === "svg-editor-path" ||
+          dragTargetRef.current.type === "svg-editor-circle" ||
           dragTargetRef.current.type === "svg-editor-end";
         for (let i = 0; i < scopedPaths.length; i++) {
+          const movedPath = movedPaths[i];
+          const scopedPath = scopedPaths[i];
           if (
-            scopedPaths[i].c.id === dragTargetRef.current.id &&
-            scopedPaths[i].c.idx === dragTargetRef.current.idx
+            scopedPath.c.id === dragTargetRef.current.id &&
+            scopedPath.c.idx === dragTargetRef.current.idx
           ) {
             const n = scopedPaths[i].d.split(" ");
-            const movedPath = movedPaths[i];
-            const scopedPath = scopedPaths[i];
             let snapXDelta = 0;
             let snapYDelta = 0;
+            if (dragCircle && movedPath.circle && scopedPath.circle) {
+              movedPath.circle.x = limit(scopedPath.circle.x + x);
+              movedPath.circle.y = limit(scopedPath.circle.y + y);
+              snapXDelta =
+                Math.round(movedPath.circle.x * 2) / 2 - movedPath.circle.x;
+              snapYDelta =
+                Math.round(movedPath.circle.y * 2) / 2 - movedPath.circle.y;
+              movedPath.circle.x += snapXDelta;
+              movedPath.circle.y += snapYDelta;
+            }
             if (dragCp1 && movedPath.cp1 && scopedPath.cp1) {
               movedPath.cp1.x = limit(scopedPath.cp1.x + x);
               movedPath.cp1.y = limit(scopedPath.cp1.y + y);
@@ -143,23 +157,26 @@ const SvgEditor = ({
             if (dragStart) {
               movedPath.prev.x = limit(scopedPath.prev.x + x);
               movedPath.prev.y = limit(scopedPath.prev.y + y);
-              snapXDelta =
-                Math.round(movedPath.prev.x * 2) / 2 - movedPath.prev.x;
-              snapYDelta =
-                Math.round(movedPath.prev.y * 2) / 2 - movedPath.prev.y;
+              if (!dragCircle) {
+                snapXDelta =
+                  Math.round(movedPath.prev.x * 2) / 2 - movedPath.prev.x;
+                snapYDelta =
+                  Math.round(movedPath.prev.y * 2) / 2 - movedPath.prev.y;
+              }
               movedPath.prev.x += snapXDelta;
               movedPath.prev.y += snapYDelta;
             }
             if (dragEnd) {
               movedPath.next.x = limit(scopedPath.next.x + x);
               movedPath.next.y = limit(scopedPath.next.y + y);
-              if (dragStart) {
-                movedPath.next.x += snapXDelta;
-                movedPath.next.y += snapYDelta;
-              } else {
-                movedPath.next.x = Math.round(movedPath.next.x * 2) / 2;
-                movedPath.next.y = Math.round(movedPath.next.y * 2) / 2;
+              if (!dragStart && !dragCircle) {
+                snapXDelta =
+                  Math.round(movedPath.next.x * 2) / 2 - movedPath.next.x;
+                snapYDelta =
+                  Math.round(movedPath.next.y * 2) / 2 - movedPath.next.y;
               }
+              movedPath.next.x += snapXDelta;
+              movedPath.next.y += snapYDelta;
             }
             if (movedPath.cp1) {
               n[3] = "C" + round(movedPath.cp1.x, 3);
@@ -227,7 +244,7 @@ const SvgEditor = ({
           <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.5" />
         </filter>
         <g strokeWidth={1.5} strokeOpacity={0}>
-          {paths.map(({ d, c, next, prev, cp1, cp2 }, i) => (
+          {paths.map(({ d, c, next, prev, circle, cp1, cp2 }, i) => (
             <React.Fragment key={i}>
               <path
                 className={`svg-editor-path svg-editor-segment-${c.id}-${c.idx}`}
@@ -242,6 +259,13 @@ const SvgEditor = ({
                 strokeWidth={1.5}
                 d={`M${next.x} ${next.y}h.01`}
               />
+              {circle && (
+                <path
+                  className={`svg-editor-circle svg-editor-segment-${c.id}-${c.idx}`}
+                  strokeWidth={1.5}
+                  d={`M${circle.x} ${circle.y}h.01`}
+                />
+              )}
               {cp1 && (
                 <path
                   className={`svg-editor-cp1 svg-editor-segment-${c.id}-${c.idx}`}
