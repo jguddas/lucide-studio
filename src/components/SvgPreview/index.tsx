@@ -4,7 +4,7 @@ import getPaths, { assert } from "./utils";
 
 const Grid = ({
   radius,
-  fill = "#fff",
+  fill,
   ...props
 }: {
   strokeWidth: number;
@@ -284,19 +284,15 @@ const SvgPreview = React.forwardRef<
 >(({ src, children, showGrid = false, ...props }, ref) => {
   const paths = typeof src === "string" ? getPaths(src) : src;
 
-  const darkModeCss = `@media screen and (prefers-color-scheme: light) {
-  .svg-preview-grid-rect { fill: none }
-}
-@media screen and (prefers-color-scheme: dark) {
-  .svg-preview-grid-rect { fill: none }
-  .svg
-  .svg-preview-grid-group,
-  .svg-preview-radii-group,
-  .svg-preview-shadow-mask-group,
-  .svg-preview-shadow-group {
-    stroke: #fff;
+  const darkModeCss = `
+  .dark .svg
+  .dark .svg-preview-grid-group,
+  .dark .svg-preview-radii-group,
+  .dark .svg-preview-shadow-mask-group,
+  .dark .svg-preview-shadow-group {
+    stroke: ###;
   }
-}`;
+`;
   return (
     <svg
       ref={ref}
