@@ -807,6 +807,47 @@ const optimizeEllipse = (svg: string) => {
   return stringify(data);
 };
 
+const optimizeHalfCircle = (svg: string) => {
+  const data = parseSync(svg);
+  for (let i = 0; i < data.children.length; i++) {
+    if (data.children[i].name === "path") {
+      const command = commander(data.children[i].attributes.d);
+      let prevPoint: Point | undefined = undefined;
+      for (let i = 0; i < command.segments.length; i++) {
+        const segment = command.segments[i];
+        if (
+          segment[0] === "A" &&
+          segment[1] === segment[2] &&
+          (segment[1] > 9 || segment[1] % 1 !== 0) &&
+          prevPoint &&
+          !isDistanceSmaller(
+            { x: segment[6], y: segment[7] },
+            prevPoint,
+            segment[1] * 2,
+          ) &&
+          segment[1]
+        ) {
+          command.segments[i][1] = 1;
+          command.segments[i][2] = 1;
+        }
+        if (segment[0] === "Z") {
+          prevPoint = { x: command.segments[0][1], y: command.segments[0][2] };
+        } else if (segment[0] === "V") {
+          // @ts-ignore
+          prevPoint = { x: prevPoint.x, y: segment[1] };
+        } else if (segment[0] === "H") {
+          // @ts-ignore
+          prevPoint = { x: segment[1], y: prevPoint.y };
+        } else {
+          prevPoint = { x: segment.at(-2), y: segment.at(-1) } as Point;
+        }
+      }
+      data.children[i].attributes.d = command.toString();
+    }
+  }
+  return stringify(data);
+};
+
 const smartClose = (svg: string) => {
   const data = parseSync(svg);
   for (let i = 0; i < data.children.length; i++) {
@@ -1013,6 +1054,7 @@ const runOptimizations = flow(
   memoize(catchErrors(removeBackdrop)),
   memoize(catchErrors(optimizeRect)),
   memoize(catchErrors(optimizeEllipse)),
+  memoize(catchErrors(optimizeHalfCircle)),
   memoize(catchErrors(smartClose)),
   mFixDots,
   memoize(catchErrors(svgo)),
