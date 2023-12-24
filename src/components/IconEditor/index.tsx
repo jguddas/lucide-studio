@@ -20,7 +20,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   const [nextValue, setNextValue] = useState<string | undefined>(undefined);
   return (
     <div className="flex gap-5 flex-col lg:flex-row">
-      <div className="flex flex-col gap-1.5 h-[min-content] w-[25vw] max-w-[840px] min-w-[480px]">
+      <div className="flex flex-col gap-1.5 h-[min-content] w-full lg:w-[480px]">
         <Label htmlFor="interactive-editor">Preview</Label>
         <SvgEditor
           src={nextValue || value}
@@ -90,7 +90,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
             }
           }}
           onValueChange={onChange}
-          className="h-full min-w-[480px] min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground data-[focus=true]:outline-none data-[focus=true]:ring-2 data-[focus=true]:ring-ring data-[focus=true]:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-full min-w-full min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground data-[focus=true]:outline-none data-[focus=true]:ring-2 data-[focus=true]:ring-ring data-[focus=true]:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           data-focus={focus}
           padding={12}
           onFocus={() => setFocus(true)}
