@@ -24,7 +24,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         <Label htmlFor="interactive-editor">Preview</Label>
         <SvgEditor
           src={nextValue || value}
-          onChange={(v) => onChange(format(v))}
+          onChange={onChange}
           onSelectionChange={setSelected}
         />
       </div>
