@@ -75,8 +75,10 @@ const format = (svg: string) => {
 ${children
   .map((c) => "  " + stringify(c).replace(/\/>$/, " />"))
   .sort((a, b) => {
-    if (a.includes("<path")) return 1;
-    if (b.includes("<path")) return -1;
+    const isPathA = a.includes("<path");
+    const isPathB = b.includes("<path");
+    if (isPathA && !isPathB) return -1;
+    if (!isPathA && isPathB) return 1;
     return a.localeCompare(b);
   })
   .filter((val, idx, arr) => arr.findIndex((v) => v === val) === idx)
