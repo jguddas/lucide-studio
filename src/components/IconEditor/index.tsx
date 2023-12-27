@@ -8,6 +8,7 @@ import format from "./format";
 import { Label } from "@/components/ui/label";
 import { SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import getPaths from "@/components/SvgPreview/utils";
 
 interface IconEditorProps {
   value: string;
@@ -24,7 +25,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         <Label htmlFor="interactive-editor">Preview</Label>
         <SvgEditor
           src={nextValue || value}
-          onChange={onChange}
+          onChange={(value) => onChange(format(value))}
           onSelectionChange={setSelected}
         />
       </div>
@@ -36,14 +37,14 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
           onClick={(e) => {
             const highlights = highlight(value);
             // @ts-ignore
-            if (e.target?.selectionStart !== e.target?.selectionEnd) return;
+            const selectionStart = e.target?.selectionStart as
+              | number
+              | undefined;
             // @ts-ignore
-            for (let i = e.target?.selectionStart || 0; i >= 0; i--) {
-              if (
-                // @ts-ignore
-                i < e.target?.selectionStart - 1 &&
-                highlights[i].includes("</span>")
-              ) {
+            const selectionEnd = e.target?.selectionEnd as number | undefined;
+            if (!selectionStart || selectionStart !== selectionEnd) return;
+            for (let i = selectionStart || 0; i >= 0; i--) {
+              if (i < selectionStart - 1 && highlights[i].includes("</span>")) {
                 setSelected(undefined);
                 break;
               }
@@ -51,11 +52,19 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                 const match = highlights[i].match(
                   /icon-editor-highlight-segment-(\d+)-(\d+)/,
                 );
+
+                const path =
+                  match?.[1] &&
+                  match?.[2] &&
+                  getPaths(value).find(
+                    (p) =>
+                      p.c.id + "" === match[1] && p.c.idx + "" === match[2],
+                  );
+
                 setSelected(
-                  match
+                  path
                     ? {
-                        id: parseInt(match[1]),
-                        idx: parseInt(match[2]),
+                        ...path,
                         startPosition: { x: 0, y: 0 },
                         type: "svg-editor-path",
                       }
@@ -115,9 +124,9 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   textarea.npm__react-simple-code-editor__textarea:focus { outline: none }
   .svg-editor-path:hover, .svg-editor-start:hover, .svg-editor-end:hover, .svg-editor-circle:hover, .svg-editor-cp1:hover, .svg-editor-cp2:hover { stroke: black; stroke-opacity: 0.5 }
   .svg-editor-path, .svg-editor-start, .svg-editor-end, .svg-editor-circle, .svg-editor-cp1, .svg-editor-cp2 { cursor: pointer }
-  .svg-editor-segment-${selected?.id}-${selected?.idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
-  .svg-editor-segment-${selected?.id}-${selected?.idx}:active { cursor: grabbing !important }
-  .icon-editor-highlight-segment-${selected?.id}-${selected?.idx} {
+  .svg-editor-segment-${selected?.c.id}-${selected?.c.idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
+  .svg-editor-segment-${selected?.c.id}-${selected?.c.idx}:active { cursor: grabbing !important }
+  .icon-editor-highlight-segment-${selected?.c.id}-${selected?.c.idx} {
     box-shadow: 0 0 0 2px black !important;
   }
         `}

@@ -32,8 +32,6 @@ const pathToPathNode = (path: Path) => ({
 });
 
 export type Selection = {
-  id: number;
-  idx: number;
   startPosition: { x: number; y: number };
   type:
     | "svg-editor-path"
@@ -42,7 +40,7 @@ export type Selection = {
     | "svg-editor-circle"
     | "svg-editor-cp1"
     | "svg-editor-cp2";
-};
+} & Path;
 
 const limit = (val: number) => Math.max(0, Math.min(val, 24));
 
@@ -82,12 +80,21 @@ const SvgEditor = ({
       }
       if (className?.startsWith("svg-editor-")) {
         event.preventDefault();
-        dragTargetRef.current = {
-          id: parseInt(className.split("-").at(-2)),
-          idx: parseInt(className.split("-").at(-1)),
-          startPosition: { x: event.clientX, y: event.clientY },
-          type: className.split(" ")[0],
-        };
+
+        const id = parseInt(className.split("-").at(-2));
+        const idx = parseInt(className.split("-").at(-1));
+
+        const path = getPaths(src).find(
+          (p) => p.c.id === id && p.c.idx === idx,
+        );
+
+        dragTargetRef.current = path
+          ? {
+              ...path,
+              startPosition: { x: event.clientX, y: event.clientY },
+              type: className.split(" ")[0],
+            }
+          : undefined;
         onSelectionChange(dragTargetRef.current);
         return;
       }
@@ -108,8 +115,8 @@ const SvgEditor = ({
           const movedPath = movedPaths[i];
           const scopedPath = scopedPaths[i];
           if (
-            scopedPath.c.id === dragTargetRef.current.id &&
-            scopedPath.c.idx === dragTargetRef.current.idx
+            scopedPath.c.id === dragTargetRef.current.c.id &&
+            scopedPath.c.idx === dragTargetRef.current.c.idx
           ) {
             const n = scopedPaths[i].d.split(" ");
 
@@ -223,7 +230,7 @@ const SvgEditor = ({
           nodesToSvg(
             nodes.flatMap((val, id) =>
               // @ts-ignore
-              id === dragTargetRef.current?.id
+              id === dragTargetRef.current?.c.id
                 ? movedPaths.filter(({ c }) => c.id === id).map(pathToPathNode)
                 : [val],
             ),
