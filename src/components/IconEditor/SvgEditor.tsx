@@ -71,7 +71,7 @@ const SvgEditor = ({
       console.error(e);
     }
 
-    const onMouseDown = (event: MouseEvent) => {
+    const onMouseDown = (event: MouseEvent | TouchEvent) => {
       //@ts-ignore
       const className = event.target?.getAttribute("class");
       //@ts-ignore
@@ -88,10 +88,20 @@ const SvgEditor = ({
           (p) => p.c.id === id && p.c.idx === idx,
         );
 
+        // @ts-ignore
+        const clientX = event.clientX ?? event.touches[0].clientX;
+        // @ts-ignore
+        const clientY = event.clientY ?? event.touches[0].clientY;
+
+        // @ts-ignore
+        if (event.touches?.length > 1) return;
+
+        event.preventDefault();
+
         dragTargetRef.current = path
           ? {
               ...path,
-              startPosition: { x: event.clientX, y: event.clientY },
+              startPosition: { x: clientX, y: clientY },
               type: className.split(" ")[0],
             }
           : undefined;
@@ -104,13 +114,22 @@ const SvgEditor = ({
       }
     };
 
-    const onMouseMove = throttle((event: MouseEvent) => {
+    const onMouseMove = throttle((event: MouseEvent | TouchEvent) => {
       if (dragTargetRef.current) {
+        // @ts-ignore
+        const clientX = event.clientX ?? event.touches[0].clientX;
+        // @ts-ignore
+        const clientY = event.clientY ?? event.touches[0].clientY;
+
+        // @ts-ignore
+        if (event.touches?.length > 1) return;
+
         event.preventDefault();
+
         const x =
-          ((event.clientX - dragTargetRef.current.startPosition.x) * 24) / 350;
+          ((clientX - dragTargetRef.current.startPosition.x) * 24) / 350;
         const y =
-          ((event.clientY - dragTargetRef.current.startPosition.y) * 24) / 350;
+          ((clientY - dragTargetRef.current.startPosition.y) * 24) / 350;
         for (let i = 0; i < scopedPaths.length; i++) {
           const movedPath = movedPaths[i];
           const scopedPath = scopedPaths[i];
@@ -244,10 +263,18 @@ const SvgEditor = ({
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
 
+    document.addEventListener("touchstart", onMouseDown, { passive: false });
+    document.addEventListener("touchmove", onMouseMove);
+    document.addEventListener("touchend", onMouseUp);
+
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+
+      document.removeEventListener("touchstart", onMouseDown);
+      document.removeEventListener("touchmove", onMouseMove);
+      document.removeEventListener("touchend", onMouseUp);
     };
   }, [src, onChange, onSelectionChange]);
 
