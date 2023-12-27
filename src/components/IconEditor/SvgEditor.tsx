@@ -114,6 +114,11 @@ const SvgEditor = ({
       }
     };
 
+    const editorWidth =
+      document.getElementById("svg-editor")?.clientWidth ?? 350;
+    const editorHeight =
+      document.getElementById("svg-editor")?.clientHeight ?? 350;
+
     const onMouseMove = throttle((event: MouseEvent | TouchEvent) => {
       if (dragTargetRef.current) {
         // @ts-ignore
@@ -127,9 +132,11 @@ const SvgEditor = ({
         event.preventDefault();
 
         const x =
-          ((clientX - dragTargetRef.current.startPosition.x) * 24) / 350;
+          ((clientX - dragTargetRef.current.startPosition.x) * 24) /
+          editorWidth;
         const y =
-          ((clientY - dragTargetRef.current.startPosition.y) * 24) / 350;
+          ((clientY - dragTargetRef.current.startPosition.y) * 24) /
+          editorHeight;
         for (let i = 0; i < scopedPaths.length; i++) {
           const movedPath = movedPaths[i];
           const scopedPath = scopedPaths[i];
