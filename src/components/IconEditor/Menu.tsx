@@ -16,6 +16,7 @@ import optimize from "@/components/IconEditor/optimize";
 import {
   BrushIcon,
   DownloadIcon,
+  FolderUpIcon,
   MaximizeIcon,
   MinimizeIcon,
   MoonIcon,
@@ -67,6 +68,29 @@ const Menu = ({
         <MenubarContent>
           <MenubarItem
             onClick={() => {
+              const input = document.createElement("input");
+              input.type = "file";
+              input.accept = "image/svg+xml";
+              input.onchange = () => {
+                const file = input.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = () => {
+                  // @ts-ignore
+                  setValue(format(reader.result));
+                };
+                reader.readAsText(file);
+              };
+              input.click();
+            }}
+            className="gap-1.5"
+          >
+            <FolderUpIcon />
+            Load SVG from disk
+          </MenubarItem>
+          <MenubarSeparator />
+          <MenubarItem
+            onClick={() => {
               const svg = new Blob([value], { type: "image/svg+xml" });
               const url = URL.createObjectURL(svg);
               const a = document.createElement("a");
@@ -77,7 +101,7 @@ const Menu = ({
             className="gap-1.5"
           >
             <DownloadIcon />
-            Download
+            Download as SVG
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
