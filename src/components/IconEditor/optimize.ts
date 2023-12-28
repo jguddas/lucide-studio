@@ -673,24 +673,21 @@ const getArcFromCurve = (
         Math.abs(arcs[0].r - val.r) > 0.01 &&
         isDistanceSmaller(arcs[0], val, arcs[0].r / 30),
     ).length
-  )
+  ) {
     return undefined;
+  }
+
+  let radius = arcs[0].r / 100;
+  if (radius % 1 < 0.01 || radius % 1 > 0.99) {
+    radius = Math.round(radius);
+  }
   const sweep =
     (segment[6] - prevPoint.y) * (segment[1] - prevPoint.x) -
       (segment[5] - prevPoint.x) * (segment[2] - prevPoint.y) >
     0
       ? 1
       : 0;
-  return [
-    "A",
-    arcs[0].r / 100,
-    arcs[0].r / 100,
-    0,
-    0,
-    sweep,
-    segment[5],
-    segment[6],
-  ];
+  return ["A", radius, radius, 0, 0, sweep, segment[5], segment[6]];
 };
 
 const segmentsToArc = (svg: string) => {
