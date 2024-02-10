@@ -12,6 +12,16 @@ export const GET = auth(async function GET(req) {
   const user = JSON.parse(req.auth.user?.image || "");
   const octokit = new Octokit({ auth: user.access_token });
 
+  try {
+    const { data } = await octokit.request(
+      `GET /repos/${user.login}/lucide/contents/icons/${iconName}.json`,
+      { ref: `studio/${iconName}` },
+    );
+    return NextResponse.json(
+      JSON.parse(Buffer.from(data.content, "base64").toString("utf-8")),
+    );
+  } catch (error) {}
+
   const { data } = await octokit.request(
     `GET /repos/${user.login}/lucide/contents/icons/${iconName}.json`,
   );
