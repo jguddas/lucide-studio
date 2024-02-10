@@ -279,7 +279,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
                       Tags<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea {...field} aria-required />
+                      <Textarea rows={10} {...field} aria-required />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
