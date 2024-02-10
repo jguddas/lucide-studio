@@ -60,7 +60,10 @@ const ContributionDialog = ({ value }: { value: string }) => {
     parse: (query) => query === "true",
   });
   const setOpen = (value: boolean) => {
-    if (!value) setStep("name");
+    if (!value) {
+      metadataStepForm.reset();
+      setStep("name");
+    }
     _setOpen(value);
   };
   const session = useSession();
