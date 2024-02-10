@@ -63,7 +63,9 @@ const updateIconChecklistStepSchema = z.object({
 
 const ContributionDialog = ({ value }: { value: string }) => {
   const [prUrl, setPrUrl] = useQueryState("pr");
-  const [step, setStep] = useQueryState("step", { defaultValue: "name" });
+  const [step, setStep] = useState<"name" | "metadata" | "update-checklist">(
+    "name",
+  );
   const [name, setName] = useQueryState("name", { defaultValue: "" });
   const [open, _setOpen] = useQueryState("dialog", {
     defaultValue: false,
