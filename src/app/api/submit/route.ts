@@ -73,7 +73,7 @@ export const POST = auth(async function POST(req) {
     await createOrUpdateIcon(`icons/${icon.name}.svg`, icon.value);
     await createOrUpdateIcon(`icons/${icon.name}.json`, metadata);
 
-    const isNewIcon = !!(await getFile(`icons/${icon.name}.svg`, "main"));
+    const isNewIcon = !(await getFile(`icons/${icon.name}.svg`, "main"));
 
     const pullRequestExisting = await octokit.request(
       `GET /repos/lucide-icons/lucide/pulls`,
