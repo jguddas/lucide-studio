@@ -30,13 +30,14 @@ export const POST = auth(async function POST(req) {
       .request(`GET /repos/${user.login}/lucide/contents/${path}`, {
         ref: branch,
       })
-      .catch(() => ({ data: {} }));
+      .catch(() => ({ data: null }));
 
     return data;
   }
 
   async function createOrUpdateIcon(path: string, content: string) {
-    const { sha, content: existingContent } = await getFile(path, branch);
+    const { sha, content: existingContent } =
+      (await getFile(path, branch)) || {};
 
     if (sha && existingContent.trim() === content.trim()) return;
 

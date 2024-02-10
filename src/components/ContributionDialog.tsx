@@ -231,6 +231,7 @@ ${values.description}
         global?.window.open(url, "_blank");
         await new Promise((resolve) => setTimeout(resolve, 2000));
         setOpen(false);
+        return;
       }
       if (prUrl !== url.toString()) {
         setPrUrl(url.toString());
