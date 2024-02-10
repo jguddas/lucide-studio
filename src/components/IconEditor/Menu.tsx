@@ -17,6 +17,7 @@ import {
   BrushIcon,
   DownloadIcon,
   FolderUpIcon,
+  LogOutIcon,
   MaximizeIcon,
   MinimizeIcon,
   MoonIcon,
@@ -28,6 +29,7 @@ import {
 import { useEffect, useState } from "react";
 import format from "./format";
 import { useTheme } from "next-themes";
+import { signOut, useSession } from "next-auth/react";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -61,6 +63,8 @@ const Menu = ({
 }) => {
   const isFullscreen = useIsFullscreen();
   const { theme, setTheme } = useTheme();
+  const session = useSession();
+
   return (
     <Menubar className="border-t-transparent border-x-transparent rounded-none">
       <MenubarMenu>
@@ -168,6 +172,19 @@ const Menu = ({
           </MenubarSub>
         </MenubarContent>
       </MenubarMenu>
+      {session.status === "authenticated" && session.data.user && (
+        <MenubarMenu>
+          <MenubarTrigger className="!ml-auto">
+            {session.data.user.name}
+          </MenubarTrigger>
+          <MenubarContent>
+            <MenubarItem onClick={() => signOut()} className="gap-1.5">
+              <LogOutIcon />
+              Logout
+            </MenubarItem>
+          </MenubarContent>
+        </MenubarMenu>
+      )}
     </Menubar>
   );
 };

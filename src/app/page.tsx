@@ -5,6 +5,7 @@ import format from "@/components/IconEditor/format";
 import optimize from "@/components/IconEditor/optimize";
 import { useCallback, useEffect, useRef } from "react";
 import Menu from "@/components/IconEditor/Menu";
+import ContributionDialog from "@/components/ContributionDialog";
 
 const emptyState = format(
   '<path d="M12 3c7.2 0 9 1.8 9 9s-1.8 9-9 9-9-1.8-9-9 1.8-9 9-9" />',
@@ -101,8 +102,11 @@ export default function Home() {
         value={value}
         setValue={setValue}
       />
-      <div className="m-12">
+      <div className="flex flex-col m-12 gap-5">
         <IconEditor onChange={setValue} value={value} />
+        <div className="flex justify-end">
+          <ContributionDialog value={value} />
+        </div>
       </div>
     </div>
   );

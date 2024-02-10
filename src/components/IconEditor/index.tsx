@@ -22,7 +22,9 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   return (
     <div className="flex gap-5 flex-col lg:flex-row">
       <div className="flex flex-col gap-1.5 h-[min-content] w-full lg:w-[480px]">
-        <Label htmlFor="interactive-editor">Preview</Label>
+        <Label asChild>
+          <span>Preview</span>
+        </Label>
         <SvgEditor
           src={nextValue || value}
           onChange={(value) => onChange(format(value))}
@@ -32,7 +34,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
       <div className="relative flex flex-col gap-1.5 w-full">
         <Label htmlFor="source-editor">Source</Label>
         <Editor
-          id="source-editor"
+          textareaId="source-editor"
           value={nextValue || value}
           onClick={(e) => {
             const highlights = highlight(value);
