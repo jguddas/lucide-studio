@@ -31,7 +31,7 @@ import { useTheme } from "next-themes";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
-    !!window?.document.fullscreenElement,
+    !!global.window?.document.fullscreenElement,
   );
   useEffect(() => {
     if (typeof window === "undefined") return;
