@@ -75,6 +75,13 @@ const ContributionDialog = ({ value }: { value: string }) => {
   const watch = nameStepForm.watch;
 
   useEffect(() => {
+    const currentName = nameStepForm.getValues("name");
+    if (name !== currentName) {
+      nameStepForm.setValue("name", name);
+    }
+  }, [name, nameStepForm]);
+
+  useEffect(() => {
     watch((values) => {
       if (values.name) {
         setName(values.name);

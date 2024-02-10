@@ -30,6 +30,7 @@ import { useEffect, useState } from "react";
 import format from "./format";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
+import { useQueryState } from "next-usequerystate";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -61,6 +62,7 @@ const Menu = ({
   isMac: boolean;
   setValue: (value: string) => void;
 }) => {
+  const [name, setName] = useQueryState("name");
   const isFullscreen = useIsFullscreen();
   const { theme, setTheme } = useTheme();
   const session = useSession();
@@ -78,6 +80,7 @@ const Menu = ({
               input.onchange = () => {
                 const file = input.files?.[0];
                 if (!file) return;
+                if (!file.name) setName(file.name.split(".")[0]);
                 const reader = new FileReader();
                 reader.onload = () => {
                   // @ts-ignore
@@ -99,7 +102,7 @@ const Menu = ({
               const url = URL.createObjectURL(svg);
               const a = document.createElement("a");
               a.href = url;
-              a.download = "icon.svg";
+              a.download = `${name || "icon"}.svg`;
               a.click();
             }}
             className="gap-1.5"

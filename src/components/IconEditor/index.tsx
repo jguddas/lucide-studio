@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { SparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import getPaths from "@/components/SvgPreview/utils";
+import { useQueryState } from "next-usequerystate";
 
 interface IconEditorProps {
   value: string;
@@ -16,6 +17,7 @@ interface IconEditorProps {
 }
 
 const IconEditor = ({ value, onChange }: IconEditorProps) => {
+  const [, setName] = useQueryState("name");
   const [focus, setFocus] = useState(false);
   const [selected, setSelected] = useState<Selection | undefined>(undefined);
   const [nextValue, setNextValue] = useState<string | undefined>(undefined);
@@ -79,6 +81,9 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
           onPaste={(e) => {
             if (e.clipboardData.files.length > 0) {
               e.preventDefault();
+              if (e.clipboardData.files[0].name) {
+                setName(e.clipboardData.files[0].name?.split(".")[0]);
+              }
               const reader = new FileReader();
               reader.onload = (e) => {
                 const result = e.target?.result;
