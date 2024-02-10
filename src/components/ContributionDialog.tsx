@@ -247,7 +247,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
               </FormMessage>
               <DialogFooter>
                 <Button className="gap-1.5" disabled={isPending}>
-                  Next
+                  {session?.data ? "Next" : "Sign in with GitHub"}
                   {isPending ? (
                     <Loader2Icon className="animate-spin" />
                   ) : (
