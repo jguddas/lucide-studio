@@ -55,10 +55,14 @@ const metadataStepSchema = z.object({
 const ContributionDialog = ({ value }: { value: string }) => {
   const [step, setStep] = useQueryState("step", { defaultValue: "name" });
   const [name, setName] = useQueryState("name", { defaultValue: "" });
-  const [open, setOpen] = useQueryState("contributionDialog", {
+  const [open, _setOpen] = useQueryState("contributionDialog", {
     defaultValue: false,
     parse: (query) => query === "true",
   });
+  const setOpen = (value: boolean) => {
+    if (!value) setStep("name");
+    _setOpen(value);
+  };
   const session = useSession();
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
