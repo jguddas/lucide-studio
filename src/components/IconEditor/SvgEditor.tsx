@@ -204,14 +204,22 @@ const SvgEditor = ({
                 break;
               case "svg-editor-cp1":
                 if (movedPath.cp1 && scopedPath.cp1) {
-                  movedPath.cp1.x = limit(scopedPath.cp1.x + snapXDelta + x);
-                  movedPath.cp1.y = limit(scopedPath.cp1.y + snapYDelta + y);
+                  movedPath.cp1.x = limit(
+                    Math.round((scopedPath.cp1.x + snapXDelta + x) * 2) / 2,
+                  );
+                  movedPath.cp1.y = limit(
+                    Math.round((scopedPath.cp1.y + snapYDelta + y) * 2) / 2,
+                  );
                 }
                 break;
               case "svg-editor-cp2":
                 if (movedPath.cp2 && scopedPath.cp2) {
-                  movedPath.cp2.x = limit(scopedPath.cp2.x + snapXDelta + x);
-                  movedPath.cp2.y = limit(scopedPath.cp2.y + snapYDelta + y);
+                  movedPath.cp2.x = limit(
+                    Math.round((scopedPath.cp2.x + snapXDelta + x) * 2) / 2,
+                  );
+                  movedPath.cp2.y = limit(
+                    Math.round((scopedPath.cp2.y + snapYDelta + y) * 2) / 2,
+                  );
                 }
                 break;
               case "svg-editor-start":
