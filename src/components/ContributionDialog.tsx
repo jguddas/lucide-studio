@@ -29,6 +29,7 @@ import { useForm } from "react-hook-form";
 import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
+import { Checkbox } from "./ui/checkbox";
 
 const nameStepSchema = z.object({
   name: z
@@ -52,20 +53,22 @@ const metadataStepSchema = z.object({
   contributors: z.string().nonempty("Contributors are required."),
 });
 
+const updateIconChecklistStepSchema = z.object({
+  description: z.string().optional(),
+  iHaveReadTheContributionGuidelines: z.boolean().optional(),
+  iHaveCheckedIfThereWasAnExistingPRThatSolvesTheSameIssue: z
+    .boolean()
+    .optional(),
+});
+
 const ContributionDialog = ({ value }: { value: string }) => {
+  const [prUrl, setPrUrl] = useQueryState("pr");
   const [step, setStep] = useQueryState("step", { defaultValue: "name" });
   const [name, setName] = useQueryState("name", { defaultValue: "" });
-  const [open, _setOpen] = useQueryState("contributionDialog", {
+  const [open, _setOpen] = useQueryState("dialog", {
     defaultValue: false,
     parse: (query) => query === "true",
   });
-  const setOpen = (value: boolean) => {
-    if (!value) {
-      metadataStepForm.reset();
-      setStep("name");
-    }
-    _setOpen(value);
-  };
   const session = useSession();
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
@@ -74,6 +77,19 @@ const ContributionDialog = ({ value }: { value: string }) => {
   const metadataStepForm = useForm<z.infer<typeof metadataStepSchema>>({
     resolver: zodResolver(metadataStepSchema),
   });
+  const updateIconChecklistStepForm = useForm<
+    z.infer<typeof updateIconChecklistStepSchema>
+  >({
+    resolver: zodResolver(updateIconChecklistStepSchema),
+  });
+  const setOpen = (value: boolean) => {
+    if (!value) {
+      metadataStepForm.reset();
+      updateIconChecklistStepForm.reset();
+      setStep("name");
+    }
+    _setOpen(value);
+  };
 
   const watch = nameStepForm.watch;
 
@@ -91,6 +107,44 @@ const ContributionDialog = ({ value }: { value: string }) => {
       }
     });
   }, [watch, setName]);
+
+  const onOpenPrForUpdate = async (
+    values: z.infer<typeof updateIconChecklistStepSchema>,
+  ) => {
+    if (!prUrl) return;
+
+    const url = new URL(prUrl);
+
+    url.searchParams.set("quick_pull", "1");
+
+    url.searchParams.set(
+      "body",
+      `
+<!-- Thank you for contributing! -->
+
+<!-- Insert \`closes #issueNumber\` here if merging this PR will resolve an existing issue -->
+
+## What is the purpose of this pull request?
+- [x] Other: Icon update
+
+### Description
+${values.description}
+
+## Before Submitting
+- [${
+        values.iHaveReadTheContributionGuidelines ? "x" : " "
+      }] I've read the [Contribution Guidelines](https://github.com/lucide-icons/lucide/blob/main/CONTRIBUTING.md).
+- [${
+        values.iHaveCheckedIfThereWasAnExistingPRThatSolvesTheSameIssue
+          ? "x"
+          : " "
+      }] I've checked if there was an existing PR that solves the same issue.
+    `.trim(),
+    );
+
+    global?.window.open(url.toString(), "_blank");
+    setOpen(false);
+  };
 
   const { mutateAsync: onNameNext, isPending: isPendingNameNext } = useMutation(
     {
@@ -170,12 +224,20 @@ const ContributionDialog = ({ value }: { value: string }) => {
     },
     onSuccess: async (res) => {
       if (!res) return;
-      const { pullRequestCreationUrl, pullRequestExistingUrl } =
+      const { pullRequestCreationUrl, pullRequestExistingUrl, isNewIcon } =
         await res?.json();
-      const url = new URL(pullRequestExistingUrl ?? pullRequestCreationUrl);
-      global?.window.open(url, "_blank");
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setOpen(false);
+      const url = new URL(pullRequestExistingUrl || pullRequestCreationUrl);
+      if (pullRequestExistingUrl || isNewIcon) {
+        global?.window.open(url, "_blank");
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        setOpen(false);
+      }
+      if (prUrl !== url.toString()) {
+        setPrUrl(url.toString());
+      }
+      if (!isNewIcon) {
+        setStep("update-checklist");
+      }
     },
     onError: (error: Error) => {
       metadataStepForm.setError("root.serverError", {
@@ -208,7 +270,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
             <form
               key="name"
               onSubmit={nameStepForm.handleSubmit((vars) => onNameNext(vars))}
-              className="space-y-5"
+              className="space-y-3"
             >
               <FormField
                 control={nameStepForm.control}
@@ -271,14 +333,14 @@ const ContributionDialog = ({ value }: { value: string }) => {
               </DialogFooter>
             </form>
           </Form>
-        ) : (
+        ) : step === "metadata" ? (
           <Form {...metadataStepForm}>
             <form
               key="metadata"
               onSubmit={metadataStepForm.handleSubmit((vars) =>
                 onSubmit({ ...vars, name }),
               )}
-              className="space-y-5"
+              className="space-y-3"
             >
               <FormField
                 control={metadataStepForm.control}
@@ -355,6 +417,104 @@ const ContributionDialog = ({ value }: { value: string }) => {
                 <Button disabled={isPending}>
                   <span className="flex items-center gap-1.5">
                     Submit via GitHub
+                    {isPending ? (
+                      <Loader2Icon className="animate-spin" />
+                    ) : (
+                      <RocketIcon />
+                    )}
+                  </span>
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        ) : (
+          <Form {...updateIconChecklistStepForm}>
+            <form
+              key="update-checklist"
+              onSubmit={updateIconChecklistStepForm.handleSubmit((vars) =>
+                onOpenPrForUpdate(vars),
+              )}
+              className="space-y-3"
+            >
+              <FormField
+                control={updateIconChecklistStepForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      Description<span className="text-red-500">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea {...field} aria-required />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={updateIconChecklistStepForm.control}
+                name="iHaveReadTheContributionGuidelines"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        aria-required
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      I have read the{" "}
+                      <Button asChild variant="link" className="p-0">
+                        <a
+                          href="https://github.com/lucide-icons/lucide/blob/main/CONTRIBUTING.md"
+                          target="_blank"
+                        >
+                          contribution guidelines
+                        </a>
+                      </Button>
+                    </FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={updateIconChecklistStepForm.control}
+                name="iHaveCheckedIfThereWasAnExistingPRThatSolvesTheSameIssue"
+                render={({ field }) => (
+                  <FormItem className="flex items-center space-x-2 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        aria-required
+                      />
+                    </FormControl>
+                    <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                      I have checked if there was an existing PR that solves the
+                      same issue
+                    </FormLabel>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormMessage>
+                {metadataStepForm.formState.errors.root?.serverError.message}
+              </FormMessage>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setStep("metadata")}
+                  className="gap-1.5"
+                  disabled={isPending}
+                >
+                  <ChevronLeftIcon />
+                  Back
+                </Button>
+                <Button disabled={isPending}>
+                  <span className="flex items-center gap-1.5">
+                    Create Pull Request
                     {isPending ? (
                       <Loader2Icon className="animate-spin" />
                     ) : (
