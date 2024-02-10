@@ -39,7 +39,12 @@ export const POST = auth(async function POST(req) {
     const { sha, content: existingContent } =
       (await getFile(path, branch)) || {};
 
-    if (sha && existingContent.trim() === content.trim()) return;
+    if (
+      sha &&
+      Buffer.from(existingContent, "base64").toString("utf-8").trim() ===
+        content.trim()
+    )
+      return;
 
     await octokit.request(`PUT /repos/${user.login}/lucide/contents/${path}`, {
       message: sha ? `Updated ${path}` : `Added ${path}`,
