@@ -289,7 +289,14 @@ const ContributionDialog = ({ value }: { value: string }) => {
                       Tags<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea rows={10} {...field} aria-required />
+                      <Textarea
+                        rows={10}
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toLowerCase())
+                        }
+                        aria-required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -304,7 +311,13 @@ const ContributionDialog = ({ value }: { value: string }) => {
                       Categories<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea {...field} aria-required />
+                      <Textarea
+                        {...field}
+                        onChange={(e) =>
+                          field.onChange(e.target.value.toLowerCase())
+                        }
+                        aria-required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
