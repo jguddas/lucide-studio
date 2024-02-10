@@ -42,7 +42,7 @@ export const POST = auth(async function POST(req) {
 
     await octokit.request(`PUT /repos/${user.login}/lucide/contents/${path}`, {
       message: sha ? `Updated ${path}` : `Added ${path}`,
-      content: Buffer.from(content).toString("base64"),
+      content: Buffer.from(content.trim() + "\n").toString("base64"),
       branch,
       sha,
     });
