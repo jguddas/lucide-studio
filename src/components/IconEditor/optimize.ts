@@ -684,20 +684,19 @@ const getArcFromCurve = (
     segment[5] * 100,
     segment[6] * 100,
   ).arcs();
+
+  if (!arcs.length) return undefined;
+
   if (
-    arcs.length > 2 ||
-    arcs.filter(
-      // @ts-ignore
-      (val) =>
-        Math.abs(arcs[0].r - val.r) > 0.01 &&
-        isDistanceSmaller(arcs[0], val, arcs[0].r / 30),
-    ).length
+    arcs.length > 1 &&
+    (Math.abs(arcs[0].r - arcs[1].r) > 0.01 ||
+      isDistanceSmaller(arcs[0], arcs[1], arcs[0].r / 30))
   ) {
     return undefined;
   }
 
   let radius = arcs[0].r / 100;
-  if (radius % 1 < 0.01 || radius % 1 > 0.99) {
+  if (radius % 1 < 0.1 || radius % 1 > 0.9) {
     radius = Math.round(radius);
   }
   const sweep =
