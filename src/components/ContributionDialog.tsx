@@ -257,8 +257,8 @@ ${values.description}
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button className="gap-1.5">
-          Contribute to Lucide
           <RocketIcon />
+          Contribute to Lucide
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -326,12 +326,12 @@ ${values.description}
               </FormMessage>
               <DialogFooter>
                 <Button className="gap-1.5" disabled={isPending}>
-                  {session?.data ? "Next" : "Sign in with GitHub"}
                   {isPending ? (
                     <Loader2Icon className="animate-spin" />
                   ) : (
                     <ChevronRightIcon />
                   )}
+                  {session?.data ? "Next" : "Sign in with GitHub"}
                 </Button>
               </DialogFooter>
             </form>
@@ -419,12 +419,12 @@ ${values.description}
                 </Button>
                 <Button disabled={isPending}>
                   <span className="flex items-center gap-1.5">
-                    Submit via GitHub
                     {isPending ? (
                       <Loader2Icon className="animate-spin" />
                     ) : (
                       <RocketIcon />
                     )}
+                    Submit via GitHub
                   </span>
                 </Button>
               </DialogFooter>
