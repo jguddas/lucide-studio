@@ -270,11 +270,7 @@ const mergeLines = (svg: string) => {
                 ]
                   .map((val, _, arr) => ({
                     val,
-                    distance: Math.max(
-                      ...arr.map((b) =>
-                        getDistance([val.x, val.y], [b.x, b.y]),
-                      ),
-                    ),
+                    distance: Math.max(...arr.map((b) => getDistance(val, b))),
                   }))
                   .sort((a, b) => b.distance - a.distance);
 
@@ -647,8 +643,8 @@ const pathsToElement = (svg: string) => {
   return stringify(data);
 };
 
-function getDistance(point1: [number, number], point2: [number, number]) {
-  return Math.hypot(point1[0] - point2[0], point1[1] - point2[1]);
+function getDistance(point1: Point, point2: Point) {
+  return Math.hypot(point1.x - point2.x, point1.y - point2.y);
 }
 
 const getArcFromCurve = (
