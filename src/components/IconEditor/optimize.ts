@@ -655,6 +655,16 @@ const getArcFromCurve = (
   segment: CSegment,
   prevPoint: Point,
 ): ASegment | undefined => {
+  const c1 = { x: segment[1] - prevPoint.x, y: segment[2] - prevPoint.y };
+  const c2 = { x: segment[3] - segment[5], y: segment[4] - segment[6] };
+  if (
+    (c1.x === 0 && c1.y === 1 && c2.x === 1 && c2.y === 0) ||
+    (c1.x === 0 && c1.y === -1 && c2.x === -1 && c2.y === 0) ||
+    (c1.x === 1 && c1.y === 0 && c2.x === 0 && c2.y === -1) ||
+    (c1.x === -1 && c1.y === 0 && c2.x === 0 && c2.y === 1)
+  ) {
+    return ["A", 2, 2, 0, 0, 1, segment[5], segment[6]];
+  }
   const arcs = new Bezier(
     prevPoint.x * 100,
     prevPoint.y * 100,
