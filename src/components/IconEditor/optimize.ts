@@ -681,10 +681,10 @@ const getArcFromCurve = (
     segment[6] * 100,
   ).arcs();
 
-  if (!arcs.length) return undefined;
+  if (!arcs.length || arcs.length > 2) return undefined;
 
   if (
-    arcs.length > 1 &&
+    arcs.length === 2 &&
     (Math.abs(arcs[0].r - arcs[1].r) > 0.01 ||
       isDistanceSmaller(arcs[0], arcs[1], arcs[0].r / 30))
   ) {
