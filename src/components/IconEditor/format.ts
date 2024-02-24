@@ -18,7 +18,7 @@ const getChildren = (node: INode): INode[] => {
   ) {
     const order = {
       rect: ["x", "y", "width", "height", "rx", "ry"],
-      circle: ["cx", "cy", "r"],
+      circle: ["cx", "cy", "r", "fill"],
       ellipse: ["cx", "cy", "rx", "ry"],
       polygon: ["points"],
       polyline: ["points"],
