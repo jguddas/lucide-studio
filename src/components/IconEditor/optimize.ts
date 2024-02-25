@@ -30,7 +30,7 @@ const getSegmentInfo = (d: string) => {
   return { command, start, end };
 };
 
-const mergePaths = (svg: string, maxDistance = 0.1) => {
+const mergePaths = (svg: string, maxDistance = 0.01) => {
   const data = parseSync(svg);
   for (let i = 0; i < data.children.length; i++) {
     if (data.children[i].name === "path") {
