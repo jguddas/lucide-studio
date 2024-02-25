@@ -59,6 +59,29 @@ export default function Home() {
   const [value, setValue, { undo, redo }] = useValueState();
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      const link = (document.querySelector("link[rel*='icon']") ||
+        document.createElement("link")) as HTMLLinkElement;
+
+      const paths = Array.from(
+        document.querySelectorAll(".svg-preview-colored-path-group > path"),
+      );
+
+      const icon = paths.length
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths.map(
+            (path) => path.outerHTML,
+          )}</svg>`
+        : value;
+
+      link.type = "image/x-icon";
+      link.rel = "shortcut icon";
+      link.href = "data:image/svg+xml;utf8," + encodeURIComponent(icon);
+      document.getElementsByTagName("head")[0].appendChild(link);
+    }, 400);
+    return () => clearTimeout(timeout);
+  }, [value]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     const handleKeydown = (event: KeyboardEvent) => {
       const modifier = isMac ? event.metaKey : event.ctrlKey;
