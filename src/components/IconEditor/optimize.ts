@@ -1010,13 +1010,35 @@ const _mergeArcs = (svg: string) => {
               segment[6],
               segment[7],
             );
-            segments[j - 1][4] = isDistanceSmaller(center, newCenter, 0.1)
-              ? 1
-              : 0;
-            segments[j - 1][6] = segment[6];
-            segments[j - 1][7] = segment[7];
-            segments.splice(j, 1);
-            j--;
+
+            const isNewCenterSnapped = isDistanceSmaller(
+              newCenter,
+              { x: Math.round(newCenter.x), y: Math.round(newCenter.y) },
+              0.01,
+            );
+            const wasCenterSnapped = isDistanceSmaller(
+              center,
+              { x: Math.round(center.x), y: Math.round(center.y) },
+              0.01,
+            );
+            const wasPrevCenterSnapped = isDistanceSmaller(
+              prevCenter,
+              { x: Math.round(prevCenter.x), y: Math.round(prevCenter.y) },
+              0.01,
+            );
+
+            if (
+              isNewCenterSnapped ||
+              (!wasCenterSnapped && !wasPrevCenterSnapped)
+            ) {
+              segments[j - 1][4] = isDistanceSmaller(center, newCenter, 0.1)
+                ? 1
+                : 0;
+              segments[j - 1][6] = segment[6];
+              segments[j - 1][7] = segment[7];
+              segments.splice(j, 1);
+              j--;
+            }
           }
           command.segments = segments;
         }
