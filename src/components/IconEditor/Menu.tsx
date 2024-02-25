@@ -23,6 +23,7 @@ import {
   MoonIcon,
   RedoIcon,
   SparklesIcon,
+  TextSelectionIcon,
   SunIcon,
   UndoIcon,
 } from "lucide-react";
@@ -173,6 +174,26 @@ const Menu = ({
               </MenubarRadioGroup>
             </MenubarSubContent>
           </MenubarSub>
+        </MenubarContent>
+      </MenubarMenu>
+      <MenubarMenu>
+        <MenubarTrigger>Share</MenubarTrigger>
+        <MenubarContent>
+          <MenubarItem
+            onClick={() => {
+              window.navigator.clipboard.writeText(
+                `<a title="Open lucide studio" target="_blank" href="${
+                  window.location.href
+                }"><img alt="icons" width="120" src="https://lucide.dev/api/gh-icon/${Buffer.from(
+                  value,
+                ).toString("base64")}.svg"/><br/>Open lucide studio</a>`,
+              );
+            }}
+            className="gap-1.5"
+          >
+            <TextSelectionIcon />
+            Copy preview embed code to clipboard
+          </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
       {session.status === "authenticated" && session.data.user && (
