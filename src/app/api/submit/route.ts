@@ -94,7 +94,9 @@ export const POST = auth(async function POST(req) {
 
     pullRequestCreationUrl.searchParams.append(
       "title",
-      `${isNewIcon ? "Add" : "Update"} \`${icon.name}\` icon`,
+      `${isNewIcon ? "feat(icons): added" : "fix(icons): changed"} \`${
+        icon.name
+      }\` icon`,
     );
 
     return NextResponse.json({
