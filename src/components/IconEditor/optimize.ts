@@ -1077,6 +1077,7 @@ const mFixDots = memoize(catchErrors(fixDots));
 const runOptimizations = flow(
   mFormat,
   memoize(catchErrors(elementsToPath)),
+  memoize(catchErrors(smartClose)),
   mFixDots,
   memoize(catchErrors(mergeLines)),
   memoize(catchErrors(removeTinySegments)),
