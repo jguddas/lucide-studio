@@ -161,7 +161,51 @@ const SvgEditor = ({
             );
 
             let deltaTheta = 0;
-            while (deltaTheta < Math.PI * 2) {
+            while (deltaTheta < Math.PI) {
+              let plusPoint: Point = {
+                x:
+                  snapPath.circle.x +
+                  snapPath.circle.r * Math.cos(theta + deltaTheta),
+                y:
+                  snapPath.circle.y +
+                  snapPath.circle.r * Math.sin(theta + deltaTheta),
+              };
+
+              let minusPoint: Point = {
+                x:
+                  snapPath.circle.x +
+                  snapPath.circle.r * Math.cos(theta - deltaTheta),
+                y:
+                  snapPath.circle.y +
+                  snapPath.circle.r * Math.sin(theta - deltaTheta),
+              };
+
+              if (
+                getDistance(movedAbsolute, plusPoint) < 0.75 &&
+                plusPoint.x % 0.5 < 0.01 &&
+                plusPoint.y % 0.5 < 0.01
+              ) {
+                return {
+                  x: Math.round(plusPoint.x * 2) / 2 - snapTarget.x,
+                  y: Math.round(plusPoint.y * 2) / 2 - snapTarget.y,
+                };
+              }
+              if (
+                getDistance(movedAbsolute, minusPoint) < 0.75 &&
+                minusPoint.x % 0.5 < 0.01 &&
+                minusPoint.y % 0.5 < 0.01
+              ) {
+                return {
+                  x: Math.round(minusPoint.x * 2) / 2 - snapTarget.x,
+                  y: Math.round(minusPoint.y * 2) / 2 - snapTarget.y,
+                };
+              }
+
+              deltaTheta += 0.001;
+            }
+
+            deltaTheta = 0;
+            while (deltaTheta < Math.PI) {
               let plusPoint: Point = {
                 x:
                   snapPath.circle.x +
