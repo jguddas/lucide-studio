@@ -7,7 +7,7 @@ import { Path, Point } from "../SvgPreview/types";
 import getPaths, { getNodes } from "../SvgPreview/utils";
 import { stringify, INode } from "svgson";
 import throttle from "lodash/throttle";
-import { round } from "lodash";
+import { min, round } from "lodash";
 
 const nodesToSvg = (nodes: INode[]) => `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -31,6 +31,9 @@ const pathToPathNode = (path: Path) => ({
   attributes: { d: path.d },
 });
 
+const getDistance = (a: Point, b: Point) =>
+  Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+
 export type Selection = {
   startPosition: { x: number; y: number };
   type:
@@ -41,8 +44,6 @@ export type Selection = {
     | "svg-editor-cp1"
     | "svg-editor-cp2";
 } & Path;
-
-const limit = (val: number) => Math.max(0, Math.min(val, 24));
 
 const SvgEditor = ({
   src,
@@ -131,12 +132,127 @@ const SvgEditor = ({
 
         event.preventDefault();
 
-        const x =
-          ((clientX - dragTargetRef.current.startPosition.x) * 24) /
-          editorWidth;
-        const y =
-          ((clientY - dragTargetRef.current.startPosition.y) * 24) /
-          editorHeight;
+        const movedDelta = {
+          x:
+            ((clientX - dragTargetRef.current.startPosition.x) * 24) /
+            editorWidth,
+          y:
+            ((clientY - dragTargetRef.current.startPosition.y) * 24) /
+            editorHeight,
+        };
+
+        const getSnapDelta = (
+          currentPathIndex: number,
+          snapTargetKey: "prev" | "next" | "circle" | "cp1" | "cp2",
+        ) => {
+          const snapPath = scopedPaths[currentPathIndex];
+          const snapTarget = snapPath[snapTargetKey];
+          if (!snapTarget) return { x: 0, y: 0 };
+          const movedAbsolute = {
+            x: snapTarget.x + movedDelta.x,
+            y: snapTarget.y + movedDelta.y,
+          };
+
+          // snap to points where the circle is intersecting the grid
+          if (snapPath.circle) {
+            const theta = Math.atan2(
+              movedAbsolute.y - snapPath.circle.y,
+              movedAbsolute.x - snapPath.circle.x,
+            );
+
+            let deltaTheta = 0;
+            while (deltaTheta < Math.PI * 2) {
+              let plusPoint: Point = {
+                x:
+                  snapPath.circle.x +
+                  snapPath.circle.r * Math.cos(theta + deltaTheta),
+                y:
+                  snapPath.circle.y +
+                  snapPath.circle.r * Math.sin(theta + deltaTheta),
+              };
+
+              let minusPoint: Point = {
+                x:
+                  snapPath.circle.x +
+                  snapPath.circle.r * Math.cos(theta - deltaTheta),
+                y:
+                  snapPath.circle.y +
+                  snapPath.circle.r * Math.sin(theta - deltaTheta),
+              };
+
+              if (getDistance(movedAbsolute, plusPoint) < 1.5) {
+                if (plusPoint.x % 0.5 < 0.01) {
+                  return {
+                    x: Math.round(plusPoint.x * 2) / 2 - snapTarget.x,
+                    y: plusPoint.y - snapTarget.y,
+                  };
+                }
+                if (plusPoint.y % 0.5 < 0.01) {
+                  return {
+                    x: plusPoint.x - snapTarget.x,
+                    y: Math.round(plusPoint.y * 2) / 2 - snapTarget.y,
+                  };
+                }
+              }
+              if (getDistance(movedAbsolute, minusPoint) < 1.5) {
+                if (minusPoint.x % 0.5 < 0.01) {
+                  return {
+                    x: Math.round(minusPoint.x * 2) / 2 - snapTarget.x,
+                    y: minusPoint.y - snapTarget.y,
+                  };
+                }
+                if (minusPoint.y % 0.5 < 0.01) {
+                  return {
+                    x: minusPoint.x - snapTarget.x,
+                    y: Math.round(minusPoint.y * 2) / 2 - snapTarget.y,
+                  };
+                }
+              }
+
+              deltaTheta += 0.001;
+            }
+          }
+
+          // check if there is a point nearby
+          for (let i = 0; i < scopedPaths.length; i++) {
+            const scopedPath = scopedPaths[i];
+            if (
+              (i !== currentPathIndex || snapTargetKey !== "prev") &&
+              getDistance(movedAbsolute, scopedPath.prev) < 0.75
+            ) {
+              return {
+                x: scopedPath.prev.x - snapTarget.x,
+                y: scopedPath.prev.y - snapTarget.y,
+              };
+            }
+            if (
+              (i !== currentPathIndex || snapTargetKey !== "next") &&
+              getDistance(movedAbsolute, scopedPath.next) < 0.75
+            ) {
+              return {
+                x: scopedPath.next.x - snapTarget.x,
+                y: scopedPath.next.y - snapTarget.y,
+              };
+            }
+            if (
+              scopedPath.circle &&
+              (i !== currentPathIndex || snapTargetKey !== "circle") &&
+              getDistance(movedAbsolute, scopedPath.circle) < 0.75
+            ) {
+              return {
+                x: scopedPath.circle.x - snapTarget.x,
+                y: scopedPath.circle.y - snapTarget.y,
+              };
+            }
+          }
+
+          // snap to grid
+          return {
+            x: Math.round(movedAbsolute.x * 2) / 2 - snapTarget.x,
+            y: Math.round(movedAbsolute.y * 2) / 2 - snapTarget.y,
+          };
+        };
+
         for (let i = 0; i < scopedPaths.length; i++) {
           const movedPath = movedPaths[i];
           const scopedPath = scopedPaths[i];
@@ -146,90 +262,69 @@ const SvgEditor = ({
           ) {
             const n = scopedPaths[i].d.split(" ");
 
-            let snapSource: Point | undefined = undefined;
             switch (dragTargetRef.current.type) {
-              case "svg-editor-path":
-              case "svg-editor-circle":
-                snapSource = movedPath.circle ?? movedPath.prev;
-                break;
-              case "svg-editor-cp1":
-                snapSource = movedPath.cp1;
-                break;
-              case "svg-editor-cp2":
-                snapSource = movedPath.cp2;
-                break;
-              case "svg-editor-start":
-                snapSource = movedPath.prev;
-                break;
-              case "svg-editor-end":
-                snapSource = movedPath.next;
-                break;
-            }
-
-            const snapXDelta = snapSource
-              ? Math.round((snapSource.x + x) * 2) / 2 - snapSource.x - x
-              : 0;
-            const snapYDelta = snapSource
-              ? Math.round((snapSource.y + y) * 2) / 2 - snapSource.y - y
-              : 0;
-
-            switch (dragTargetRef.current.type) {
-              case "svg-editor-path":
-                movedPath.prev.x = limit(scopedPath.prev.x + snapXDelta + x);
-                movedPath.prev.y = limit(scopedPath.prev.y + snapYDelta + y);
-                movedPath.next.x = limit(scopedPath.next.x + snapXDelta + x);
-                movedPath.next.y = limit(scopedPath.next.y + snapYDelta + y);
+              case "svg-editor-path": {
+                const snapDelta = getSnapDelta(i, "prev");
+                movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
+                movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
+                movedPath.next.x = scopedPath.next.x + snapDelta.x;
+                movedPath.next.y = scopedPath.next.y + snapDelta.y;
                 if (movedPath.circle && scopedPath.circle) {
-                  movedPath.circle.x = scopedPath.circle.x + snapXDelta + x;
-                  movedPath.circle.y = scopedPath.circle.y + snapYDelta + y;
+                  movedPath.circle.x = scopedPath.circle.x + snapDelta.x;
+                  movedPath.circle.y = scopedPath.circle.y + snapDelta.y;
                 }
                 if (movedPath.cp1 && scopedPath.cp1) {
-                  movedPath.cp1.x = limit(scopedPath.cp1.x + snapXDelta + x);
-                  movedPath.cp1.y = limit(scopedPath.cp1.y + snapYDelta + y);
+                  movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
+                  movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
                 }
                 if (movedPath.cp2 && scopedPath.cp2) {
-                  movedPath.cp2.x = limit(scopedPath.cp2.x + snapXDelta + x);
-                  movedPath.cp2.y = limit(scopedPath.cp2.y + snapYDelta + y);
+                  movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
+                  movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
                 }
                 break;
-              case "svg-editor-circle":
-                movedPath.prev.x = limit(scopedPath.prev.x + snapXDelta + x);
-                movedPath.prev.y = limit(scopedPath.prev.y + snapYDelta + y);
-                movedPath.next.x = limit(scopedPath.next.x + snapXDelta + x);
-                movedPath.next.y = limit(scopedPath.next.y + snapYDelta + y);
-                if (movedPath.circle && scopedPath.circle) {
-                  movedPath.circle.x = scopedPath.circle.x + snapXDelta + x;
-                  movedPath.circle.y = scopedPath.circle.y + snapYDelta + y;
-                }
+              }
+              case "svg-editor-circle": {
+                const snapDelta = getSnapDelta(i, "circle");
+                movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
+                movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
+                movedPath.next.x = scopedPath.next.x + snapDelta.x;
+                movedPath.next.y = scopedPath.next.y + snapDelta.y;
+                movedPath.circle!.x = scopedPath.circle!.x + snapDelta.x;
+                movedPath.circle!.y = scopedPath.circle!.y + snapDelta.y;
                 break;
-              case "svg-editor-cp1":
+              }
+              case "svg-editor-cp1": {
+                const snapDelta = getSnapDelta(i, "cp1");
+                movedPath.cp1!.x = scopedPath.cp1!.x + snapDelta.x;
+                movedPath.cp1!.y = scopedPath.cp1!.y + snapDelta.y;
+                break;
+              }
+              case "svg-editor-cp2": {
+                const snapDelta = getSnapDelta(i, "cp2");
+                movedPath.cp2!.x = scopedPath.cp2!.x + snapDelta.x;
+                movedPath.cp2!.y = scopedPath.cp2!.y + snapDelta.y;
+                break;
+              }
+              case "svg-editor-start": {
+                const snapDelta = getSnapDelta(i, "prev");
+                movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
+                movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
                 if (movedPath.cp1 && scopedPath.cp1) {
-                  movedPath.cp1.x = limit(
-                    Math.round((scopedPath.cp1.x + snapXDelta + x) * 2) / 2,
-                  );
-                  movedPath.cp1.y = limit(
-                    Math.round((scopedPath.cp1.y + snapYDelta + y) * 2) / 2,
-                  );
+                  movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
+                  movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
                 }
                 break;
-              case "svg-editor-cp2":
+              }
+              case "svg-editor-end": {
+                const snapDelta = getSnapDelta(i, "next");
+                movedPath.next.x = scopedPath.next.x + snapDelta.x;
+                movedPath.next.y = scopedPath.next.y + snapDelta.y;
                 if (movedPath.cp2 && scopedPath.cp2) {
-                  movedPath.cp2.x = limit(
-                    Math.round((scopedPath.cp2.x + snapXDelta + x) * 2) / 2,
-                  );
-                  movedPath.cp2.y = limit(
-                    Math.round((scopedPath.cp2.y + snapYDelta + y) * 2) / 2,
-                  );
+                  movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
+                  movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
                 }
                 break;
-              case "svg-editor-start":
-                movedPath.prev.x = limit(scopedPath.prev.x + snapXDelta + x);
-                movedPath.prev.y = limit(scopedPath.prev.y + snapYDelta + y);
-                break;
-              case "svg-editor-end":
-                movedPath.next.x = limit(scopedPath.next.x + snapXDelta + x);
-                movedPath.next.y = limit(scopedPath.next.y + snapYDelta + y);
-                break;
+              }
             }
             if (movedPath.cp1) {
               n[3] = "C" + round(movedPath.cp1.x, 3);
