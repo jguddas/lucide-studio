@@ -8,7 +8,7 @@ import { QueryProvider } from "@/components/QueryProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Lucide | Lucide Studio",
+  title: "Lucide Studio",
   description: "Edit and create lucide icons",
 };
 
