@@ -7,7 +7,15 @@ export async function generateMetadata({ params, searchParams }: any) {
   return {
     title: "Lucide Studio",
     description: "Edit and create lucide icons",
-    openGraph: { images: [{ url }] },
+    openGraph: {
+      images: [
+        {
+          url,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
     twitter: { card: "summary_large_image", images: [{ url }] },
   };
 }
