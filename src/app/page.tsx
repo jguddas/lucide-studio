@@ -22,6 +22,12 @@ const useValueState = () => {
     defaultValue: emptyState,
     history: "push",
     parse: (query: string) => format(query),
+    serialize: (value) =>
+      format(value)
+        .replaceAll(/[\r\n]+/g, " ")
+        .replace(/\<\/?svg[^\>]*>/g, "")
+        .replaceAll(/>  </g, "")
+        .trim(),
   });
   const pointer = useRef<number>(0);
   const history = useRef<string[]>([value]);
