@@ -834,7 +834,7 @@ const optimizeHalfCircle = (svg: string) => {
           !isDistanceSmaller(
             { x: segment[6], y: segment[7] },
             prevPoint,
-            segment[1] * 2,
+            segment[1] * 2 - 0.001,
           ) &&
           segment[1]
         ) {
