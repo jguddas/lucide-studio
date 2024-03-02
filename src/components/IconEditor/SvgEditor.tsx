@@ -153,6 +153,39 @@ const SvgEditor = ({
             y: snapTarget.y + movedDelta.y,
           };
 
+          // check if there is a point nearby
+          for (let i = 0; i < scopedPaths.length; i++) {
+            const scopedPath = scopedPaths[i];
+            if (
+              (i !== currentPathIndex || snapTargetKey !== "prev") &&
+              getDistance(movedAbsolute, scopedPath.prev) < 0.75
+            ) {
+              return {
+                x: scopedPath.prev.x - snapTarget.x,
+                y: scopedPath.prev.y - snapTarget.y,
+              };
+            }
+            if (
+              (i !== currentPathIndex || snapTargetKey !== "next") &&
+              getDistance(movedAbsolute, scopedPath.next) < 0.75
+            ) {
+              return {
+                x: scopedPath.next.x - snapTarget.x,
+                y: scopedPath.next.y - snapTarget.y,
+              };
+            }
+            if (
+              scopedPath.circle &&
+              (i !== currentPathIndex || snapTargetKey !== "circle") &&
+              getDistance(movedAbsolute, scopedPath.circle) < 0.75
+            ) {
+              return {
+                x: scopedPath.circle.x - snapTarget.x,
+                y: scopedPath.circle.y - snapTarget.y,
+              };
+            }
+          }
+
           // snap to points where the circle is intersecting the grid
           if (snapPath.circle) {
             const theta = Math.atan2(
@@ -254,39 +287,6 @@ const SvgEditor = ({
               }
 
               deltaTheta += 0.001;
-            }
-          }
-
-          // check if there is a point nearby
-          for (let i = 0; i < scopedPaths.length; i++) {
-            const scopedPath = scopedPaths[i];
-            if (
-              (i !== currentPathIndex || snapTargetKey !== "prev") &&
-              getDistance(movedAbsolute, scopedPath.prev) < 0.75
-            ) {
-              return {
-                x: scopedPath.prev.x - snapTarget.x,
-                y: scopedPath.prev.y - snapTarget.y,
-              };
-            }
-            if (
-              (i !== currentPathIndex || snapTargetKey !== "next") &&
-              getDistance(movedAbsolute, scopedPath.next) < 0.75
-            ) {
-              return {
-                x: scopedPath.next.x - snapTarget.x,
-                y: scopedPath.next.y - snapTarget.y,
-              };
-            }
-            if (
-              scopedPath.circle &&
-              (i !== currentPathIndex || snapTargetKey !== "circle") &&
-              getDistance(movedAbsolute, scopedPath.circle) < 0.75
-            ) {
-              return {
-                x: scopedPath.circle.x - snapTarget.x,
-                y: scopedPath.circle.y - snapTarget.y,
-              };
             }
           }
 
