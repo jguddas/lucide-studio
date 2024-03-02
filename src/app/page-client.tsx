@@ -43,7 +43,7 @@ const useValueState = () => {
       format(value)
         .replaceAll(/[\r\n]+/g, " ")
         .replace(/\<\/?svg[^\>]*>/g, "")
-        .replaceAll(/>  </g, "")
+        .replaceAll(/> *</g, "><")
         .trim(),
   });
   const pointer = useRef<number>(0);
