@@ -28,7 +28,7 @@ const pathToPathNode = (path: Path) => ({
   type: "element",
   value: undefined,
   children: [],
-  attributes: { d: path.d },
+  attributes: { d: path.d.replace(/-?\d+(\.\d+)?/g, (n) => round(+n, 5) + "") },
 });
 
 const getDistance = (a: Point, b: Point) =>
