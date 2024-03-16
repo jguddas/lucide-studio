@@ -19,11 +19,11 @@ const toRelative = (line: string) => {
     .toRelative()
     .toString()
     .split(/(m[^a-z]*)/gi)
-    .slice(1);
+    .slice(1) as [string, string];
 };
 
-const oldSvg = fs.readFileSync(process.argv[2], "utf8");
-const newSvg = fs.readFileSync(process.argv[3], "utf8");
+const oldSvg = optimize(fs.readFileSync(process.argv[2], "utf8")) as string;
+const newSvg = optimize(fs.readFileSync(process.argv[3], "utf8")) as string;
 
 const newSvgLines = newSvg.split("\n");
 const oldSvgLines = oldSvg.split("\n");
@@ -52,9 +52,8 @@ const diff = Object.fromEntries(
     .filter(([_, b]) => b),
 );
 
-for (const file of process.argv.slice(4)) {
-  const input = fs.readFileSync(file, "utf8");
-  const output = input
+const magic = (input: string) =>
+  input
     .split("\n")
     .map((line) => {
       if (!line.startsWith("  <path d=")) return line;
@@ -71,8 +70,11 @@ for (const file of process.argv.slice(4)) {
     })
     .join("\n");
 
-  if (input !== output) {
+for (const file of process.argv.slice(4)) {
+  const input = fs.readFileSync(file, "utf8");
+
+  if (input !== magic(input)) {
     console.log("Writing", file);
-    fs.writeFileSync(file, optimize(output));
+    fs.writeFileSync(file, optimize(magic(optimize(input))));
   }
 }
