@@ -24,6 +24,7 @@ import {
   RedoIcon,
   SparklesIcon,
   TextSelectionIcon,
+  DraftingCompassIcon,
   SunIcon,
   UndoIcon,
 } from "lucide-react";
@@ -32,6 +33,7 @@ import format from "./format";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
 import { useQueryState } from "next-usequerystate";
+import arcify from "./arcify";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -141,6 +143,13 @@ const Menu = ({
             <SparklesIcon />
             Tidy
             <MenubarShortcut>{isMac ? "⇧⌘S" : "Shift+Ctrl+S"}</MenubarShortcut>
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => setValue(arcify(value))}
+            className="gap-1.5"
+          >
+            <DraftingCompassIcon />
+            Arcify
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
