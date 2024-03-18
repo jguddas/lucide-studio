@@ -80,6 +80,27 @@ const getClosestPointOnLine = (point: Point, line: [Point, Point]) => {
   };
 };
 
+const getClosestPointOnCircle = (
+  circle: { x: number; y: number; r: number },
+  point: Point,
+) => {
+  const dx = point.x - circle.x;
+  const dy = point.y - circle.y;
+  const distance = Math.sqrt(dx * dx + dy * dy);
+  return {
+    x: circle.x + (dx / distance) * circle.r,
+    y: circle.y + (dy / distance) * circle.r,
+  };
+};
+
+const isDistanceSmaller = (
+  { x: x1, y: y1 }: Point,
+  { x: x2, y: y2 }: Point,
+  threshold: number,
+) => {
+  return (x1 - x2) ** 2 + (y1 - y2) ** 2 <= threshold * threshold;
+};
+
 export default function arcify(svg: string) {
   const paths = getPaths(optimize(svg)).map((path) => ({ ...path }));
 
@@ -158,8 +179,34 @@ export default function arcify(svg: string) {
       `<path d="M${closestPointOnLineA.x} ${closestPointOnLineA.y}A ${radius} ${radius} 0 0 ${intersection.sweep} ${closestPointOnLineB.x} ${closestPointOnLineB.y}"/>`,
     );
 
+    const prevCorner = { x: path.prev.x, y: path.prev.y };
+
     path.prev = closestPointOnLineB;
     paths[prevPathIdx].next = closestPointOnLineA;
+
+    for (let i = 0; i < paths.length; i++) {
+      if (
+        ![
+          SVGPathData.LINE_TO,
+          SVGPathData.HORIZ_LINE_TO,
+          SVGPathData.VERT_LINE_TO,
+          SVGPathData.CLOSE_PATH,
+        ].includes(path.c.type)
+      )
+        continue;
+      if (isDistanceSmaller(paths[i].prev, prevCorner, 0.01)) {
+        paths[i].prev = getClosestPointOnCircle(
+          { ...intersection, r: radius },
+          paths[i].prev,
+        );
+      }
+      if (isDistanceSmaller(paths[i].next, prevCorner, 0.01)) {
+        paths[i].next = getClosestPointOnCircle(
+          { ...intersection, r: radius },
+          paths[i].next,
+        );
+      }
+    }
   }
   if (!newArcs.length) return svg;
   return optimize(
