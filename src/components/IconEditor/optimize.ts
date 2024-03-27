@@ -999,7 +999,7 @@ const _mergeArcs = (svg: string) => {
             isDistanceSmaller(center, prevCenter, 0.1) &&
             Math.abs(prevCenter.deltaAngle + center.deltaAngle) < Math.PI * 2
           ) {
-            const newCenter = getArcCenter(
+            const newCenterSweepPositive = getArcCenter(
               prevPrevSegment.at(-2) as number,
               prevPrevSegment.at(-1) as number,
               prevSegment[1],
@@ -1010,6 +1010,30 @@ const _mergeArcs = (svg: string) => {
               segment[6],
               segment[7],
             );
+
+            const newCenterSweepNegative = getArcCenter(
+              prevPrevSegment.at(-2) as number,
+              prevPrevSegment.at(-1) as number,
+              prevSegment[1],
+              prevSegment[2],
+              prevSegment[3],
+              0,
+              prevSegment[5],
+              segment[6],
+              segment[7],
+            );
+
+            const isNewCenterPositive =
+              getDistance(newCenterSweepPositive, center) <
+              getDistance(newCenterSweepNegative, center);
+
+            const newCenter = isNewCenterPositive
+              ? newCenterSweepPositive
+              : newCenterSweepNegative;
+
+            const isNewCenterSame =
+              isDistanceSmaller(newCenter, center, 0.0001) &&
+              isDistanceSmaller(newCenter, prevCenter, 0.0001);
 
             const isNewCenterSnapped = isDistanceSmaller(
               newCenter,
@@ -1028,12 +1052,11 @@ const _mergeArcs = (svg: string) => {
             );
 
             if (
+              isNewCenterSame ||
               isNewCenterSnapped ||
               (!wasCenterSnapped && !wasPrevCenterSnapped)
             ) {
-              segments[j - 1][4] = isDistanceSmaller(center, newCenter, 0.1)
-                ? 1
-                : 0;
+              segments[j - 1][4] = isNewCenterPositive ? 1 : 0;
               segments[j - 1][6] = segment[6];
               segments[j - 1][7] = segment[7];
               segments.splice(j, 1);
