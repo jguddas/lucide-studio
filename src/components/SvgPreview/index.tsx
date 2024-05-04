@@ -274,6 +274,66 @@ const Radii = ({
   );
 };
 
+const EndPointAlignmentCheck = ({
+  paths,
+  strokeWidth,
+  stroke,
+  ...props
+}: { paths: Path[] } & PathProps<"strokeWidth" | "stroke", any>) => {
+  return (
+    <g className="svg-preview-end-point-alignment-check-group" {...props}>
+      {paths.map(({ prev, next, d }, i) => {
+        return (
+          <React.Fragment key={i}>
+            <mask
+              key={`svg-preview-end-mask-${i}`}
+              id={`svg-preview-end-mask-${i}`}
+              maskUnits="userSpaceOnUse"
+              strokeOpacity="1"
+              strokeWidth={2}
+            >
+              <rect
+                x={0}
+                y={0}
+                width={24}
+                height={24}
+                fill="#000"
+                stroke="none"
+                rx={1}
+              />
+              {paths.map(({ d }, i2) =>
+                i === i2 ? null : <path stroke="#FFF" d={d} key={i2} />,
+              )}
+              {paths.map(({ d }, i2) =>
+                i === i2 ? null : (
+                  <path
+                    d={d}
+                    strokeWidth={
+                      (typeof strokeWidth === "string"
+                        ? parseFloat(strokeWidth)
+                        : strokeWidth) + 0.05
+                    }
+                    key={i2 + "-i"}
+                    stroke="#000"
+                  />
+                ),
+              )}
+            </mask>
+            <g
+              strokeWidth={strokeWidth}
+              stroke={stroke}
+              mask={`url(#svg-preview-end-mask-${i})`}
+            >
+              <path d={`M${prev.x} ${prev.y}h.01`} />
+              <path d={`M${next.x} ${next.y}h.01`} />
+            </g>
+          </React.Fragment>
+        );
+      })}
+    </g>
+  );
+};
+
 const Handles = ({
   paths,
   ...props
@@ -379,6 +439,7 @@ const SvgPreview = React.forwardRef<
         stroke="#FFF"
         strokeOpacity={0.3}
       />
+      <EndPointAlignmentCheck paths={paths} strokeWidth={0.12} stroke="red" />
       {children}
     </svg>
   );
