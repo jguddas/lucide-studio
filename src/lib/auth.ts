@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import { GitHubEmail, GitHubProfile } from "next-auth/providers/github";
+import { GitHubProfile } from "next-auth/providers/github";
 import { OAuthConfig } from "next-auth/providers";
 
 const GitHubProvider: OAuthConfig<GitHubProfile> = {

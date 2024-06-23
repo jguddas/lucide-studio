@@ -1,4 +1,9 @@
-import { ChevronRightIcon, LogInIcon } from "lucide-react";
+import {
+  ChevronRightIcon,
+  ChevronUpIcon,
+  LogInIcon,
+  SettingsIcon,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import { DialogFooter } from "../ui/dialog";
 import { Input } from "../ui/input";
@@ -17,7 +22,7 @@ import {
   FormMessage,
 } from "../ui/form";
 import { useForm } from "react-hook-form";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useQueryState } from "next-usequerystate";
 
 const nameStepSchema = z.object({
@@ -34,6 +39,7 @@ const nameStepSchema = z.object({
     .transform((value) =>
       value.toLowerCase().replaceAll("-", " ").trim().replaceAll(" ", "-"),
     ),
+  branch: z.string().optional(),
 });
 
 export type FormStepNamesData = z.infer<typeof nameStepSchema>;
@@ -51,15 +57,19 @@ export const FormStepNames = ({
 }: FormStepNamesProps) => {
   const session = useSession();
   const [name, setName] = useQueryState("name", { defaultValue: "" });
+  const [branch, setBranch] = useQueryState("branch", { defaultValue: "" });
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(
+    branch ? true : false,
+  );
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
-    defaultValues,
+    defaultValues: {
+      name,
+      branch,
+      ...defaultValues,
+    },
   });
 
-  const watch = nameStepForm.watch;
-  useEffect(() => {
-    watch((data) => data.name && setName(data.name));
-  }, [watch, setName]);
   useEffect(() => {
     nameStepForm.setValue("name", name);
   }, [name, nameStepForm]);
@@ -82,22 +92,25 @@ export const FormStepNames = ({
                 <Input
                   {...field}
                   aria-required
-                  onChange={(e) =>
-                    field.onChange(
-                      e.target.value.toLowerCase().replace(/[^\w]+/g, "-"),
-                    )
-                  }
-                  onBlur={(e) =>
-                    field.onChange(
-                      e.target.value
-                        .toLowerCase()
-                        .replace(/[^\w]+/g, " ")
-                        .trim()
-                        .replaceAll(" ", "-"),
-                    )
-                  }
+                  onChange={(e) => {
+                    const value = e.target.value
+                      .toLowerCase()
+                      .replace(/[^\w]+/g, "-");
+                    setName(value);
+                    field.onChange(value);
+                  }}
+                  onBlur={(e) => {
+                    const value = e.target.value
+                      .toLowerCase()
+                      .replace(/[^\w]+/g, " ")
+                      .trim()
+                      .replaceAll(" ", "-");
+                    setName(value);
+                    field.onChange(value);
+                  }}
                 />
               </FormControl>
+              <FormMessage />
               <FormDescription>
                 You need to follow the{" "}
                 <Button asChild variant="link" className="p-0">
@@ -110,10 +123,54 @@ export const FormStepNames = ({
                 </Button>{" "}
                 for your icon to be accepted.
               </FormDescription>
-              <FormMessage />
             </FormItem>
           )}
         />
+        {showAdvancedOptions ? (
+          <fieldset className="grid gap-6 rounded-lg border p-4 pt-2 relative">
+            <legend className="-ml-1 px-1 text-sm font-medium">
+              <button
+                type="button"
+                className="ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
+                onClick={() => setShowAdvancedOptions(false)}
+              >
+                Advanced Options
+              </button>
+            </legend>
+            <FormField
+              control={nameStepForm.control}
+              name="branch"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Branch name</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      aria-required
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setBranch(value);
+                        field.onChange(value);
+                      }}
+                      placeholder={name ? `studio/${name}` : ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </fieldset>
+        ) : (
+          <Button
+            variant="outline"
+            className="gap-1 -mr-1 px-2 h-6"
+            type="button"
+            onClick={() => setShowAdvancedOptions(true)}
+          >
+            <SettingsIcon className="w-4 h-4" />
+            Advanced Options
+          </Button>
+        )}
         <FormMessage>
           {nameStepForm.formState.errors.root?.serverError.message}
         </FormMessage>

@@ -73,7 +73,7 @@ type Step =
 
 const ContributionDialog = ({ value }: { value: string }) => {
   const session = useSession();
-  const [name, setName] = useQueryState("name", { defaultValue: "" });
+  const [name] = useQueryState("name", { defaultValue: "" });
   const [step, setStep] = useState<Step>({
     step: "name",
     data: {
@@ -107,7 +107,15 @@ const ContributionDialog = ({ value }: { value: string }) => {
           return;
         }
 
-        return (await fetch(`/api/metadata/${variables.name}`)).json();
+        const url = new URL(
+          `${global?.window?.location?.origin}/api/metadata/${variables.name}`,
+        );
+        url.searchParams.set(
+          "branch",
+          variables.branch || `studio/${variables.name}`,
+        );
+
+        return (await fetch(url)).json();
       },
       onSuccess: async (data, variables) => {
         if (step.step !== "name") throw new Error("Invalid step");

@@ -21,7 +21,7 @@ export const POST = auth(async function POST(req) {
     2,
   );
 
-  const branch = `studio/${icon.name}`;
+  const branch = icon.branch || `studio/${icon.name}`;
 
   const octokit = new Octokit({ auth: user.access_token });
 
