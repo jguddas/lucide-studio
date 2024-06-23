@@ -101,7 +101,14 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               e.target.selectionEnd === e.target.value.length
             ) {
               e.preventDefault();
-              onChange(format(e.clipboardData.getData("text/plain")));
+              const clipboardData = e.clipboardData.getData("text/plain");
+              const clipboardDataName = clipboardData.match(
+                /class="lucide lucide-(\w+)"/,
+              );
+              if (clipboardDataName && clipboardDataName[1]) {
+                setName(clipboardDataName[1]);
+              }
+              onChange(format(clipboardData));
               setSelected(undefined);
             }
           }}
