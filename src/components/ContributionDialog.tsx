@@ -1,4 +1,57 @@
-import { ChevronLeftIcon, ChevronRightIcon, RocketIcon } from "lucide-react";
+import {
+  AccessibilityIcon,
+  ArrowLeftRightIcon,
+  BackpackIcon,
+  CalendarIcon,
+  CameraIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CloudSunIcon,
+  DogIcon,
+  DumbbellIcon,
+  FlaskConicalIcon,
+  HammerIcon,
+  LeafIcon,
+  PersonStandingIcon,
+  RecycleIcon,
+  RocketIcon,
+  ShieldIcon,
+  ShoppingBagIcon,
+  ThumbsUpIcon,
+  TrainFrontIcon,
+  TriangleIcon,
+  TypeIcon,
+  UserIcon,
+  AlertTriangle,
+  CompassIcon,
+  SproutIcon,
+  PlayCircleIcon,
+  PiggyBankIcon,
+  HeartIcon,
+  DivideIcon,
+  FacebookIcon,
+  BuildingIcon,
+  PieChartIcon,
+  MessageCircleIcon,
+  WifiIcon,
+  DollarSignIcon,
+  MousePointer2Icon,
+  PaletteIcon,
+  CodeIcon,
+  SmartphoneIcon,
+  SmileIcon,
+  PanelLeftIcon,
+  CoffeeIcon,
+  RockingChairIcon,
+  Gamepad2Icon,
+  HomeIcon,
+  MailIcon,
+  MapIcon,
+  FileIcon,
+  ExternalLinkIcon,
+  GitPullRequestCreateArrowIcon,
+  ArrowBigUpDashIcon,
+} from "lucide-react";
 import { Button } from "./ui/button";
 import {
   Dialog,
@@ -30,6 +83,243 @@ import { useMutation } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Textarea } from "./ui/textarea";
 import { Checkbox } from "./ui/checkbox";
+import { Badge } from "./ui/badge";
+import { TagInput } from "./TagInput";
+
+const categoryOptions = [
+  {
+    value: "accessibility",
+    label: "Accessibility",
+    icon: AccessibilityIcon,
+  },
+  {
+    value: "account",
+    label: "Accounts & access",
+    icon: UserIcon,
+  },
+  {
+    value: "animals",
+    label: "Animals",
+    icon: DogIcon,
+  },
+  {
+    value: "arrows",
+    label: "Arrows",
+    icon: ArrowLeftRightIcon,
+  },
+  {
+    value: "brands",
+    label: "Brands",
+    icon: FacebookIcon,
+  },
+
+  {
+    value: "buildings",
+    label: "Buildings",
+    icon: BuildingIcon,
+  },
+  {
+    value: "charts",
+    label: "Charts",
+    icon: PieChartIcon,
+  },
+  {
+    value: "communication",
+    label: "Communication",
+    icon: MessageCircleIcon,
+  },
+  {
+    value: "connectivity",
+    label: "Connectivity",
+    icon: WifiIcon,
+  },
+  {
+    value: "currency",
+    label: "Currency",
+    icon: DollarSignIcon,
+  },
+  {
+    value: "cursors",
+    label: "Cursors",
+    icon: MousePointer2Icon,
+  },
+  {
+    value: "design",
+    label: "Design",
+    icon: PaletteIcon,
+  },
+  {
+    value: "development",
+    label: "Coding & development",
+    icon: CodeIcon,
+  },
+  {
+    value: "devices",
+    label: "Devices",
+    icon: SmartphoneIcon,
+  },
+  {
+    value: "emoji",
+    label: "Emoji",
+    icon: SmileIcon,
+  },
+  {
+    value: "files",
+    label: "File icons",
+    icon: FileIcon,
+  },
+  {
+    value: "food-beverage",
+    label: "Food & beverage",
+    icon: CoffeeIcon,
+  },
+  {
+    value: "furniture",
+    label: "Furniture",
+    icon: RockingChairIcon,
+  },
+  {
+    value: "gaming",
+    label: "Gaming",
+    icon: Gamepad2Icon,
+  },
+  {
+    value: "home",
+    label: "Home",
+    icon: HomeIcon,
+  },
+  {
+    value: "layout",
+    label: "Layout",
+    icon: PanelLeftIcon,
+  },
+  {
+    value: "mail",
+    label: "Mail",
+    icon: MailIcon,
+  },
+  {
+    value: "maps",
+    label: "Maps",
+    icon: MapIcon,
+  },
+  {
+    value: "maths",
+    label: "Maths",
+    icon: DivideIcon,
+  },
+  {
+    value: "medical",
+    label: "Medical",
+    icon: HeartIcon,
+  },
+  {
+    value: "money",
+    label: "Money",
+    icon: PiggyBankIcon,
+  },
+  {
+    value: "multimedia",
+    label: "Multimedia",
+    icon: PlayCircleIcon,
+  },
+  {
+    value: "nature",
+    label: "Nature",
+    icon: SproutIcon,
+  },
+  {
+    value: "navigation",
+    label: "Navigation",
+    icon: CompassIcon,
+  },
+  {
+    value: "notifications",
+    label: "Notifications",
+    icon: AlertTriangle,
+  },
+  {
+    value: "people",
+    label: "People",
+    icon: PersonStandingIcon,
+  },
+  {
+    value: "photography",
+    label: "Photography",
+    icon: CameraIcon,
+  },
+  {
+    value: "science",
+    label: "Science",
+    icon: FlaskConicalIcon,
+  },
+  {
+    value: "seasons",
+    label: "Seasons",
+    icon: LeafIcon,
+  },
+  {
+    value: "security",
+    label: "Security",
+    icon: ShieldIcon,
+  },
+  {
+    value: "shapes",
+    label: "Shapes",
+    icon: TriangleIcon,
+  },
+
+  {
+    value: "shopping",
+    label: "Shopping",
+    icon: ShoppingBagIcon,
+  },
+  {
+    value: "social",
+    label: "Social",
+    icon: ThumbsUpIcon,
+  },
+  {
+    value: "sports",
+    label: "Sports",
+    icon: DumbbellIcon,
+  },
+  {
+    value: "sustainability",
+    label: "Sustainability",
+    icon: RecycleIcon,
+  },
+  {
+    value: "text",
+    label: "Text formatting",
+    icon: TypeIcon,
+  },
+  {
+    value: "time",
+    label: "Time & calendar",
+    icon: CalendarIcon,
+  },
+  {
+    value: "tools",
+    label: "Tools",
+    icon: HammerIcon,
+  },
+  {
+    value: "transportation",
+    label: "Transportation",
+    icon: TrainFrontIcon,
+  },
+  {
+    value: "travel",
+    label: "Travel",
+    icon: BackpackIcon,
+  },
+  {
+    value: "weather",
+    label: "Weather",
+    icon: CloudSunIcon,
+  },
+];
 
 const nameStepSchema = z.object({
   name: z
@@ -256,9 +546,9 @@ ${values.description}
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-1.5">
-          <RocketIcon />
-          Contribute to Lucide
+        <Button className="gap-1.5" variant="github">
+          <GitPullRequestCreateArrowIcon />
+          Create Pull Request
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
@@ -354,8 +644,7 @@ ${values.description}
                       Tags<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea
-                        rows={10}
+                      <TagInput
                         {...field}
                         onChange={(e) =>
                           field.onChange(e.target.value.toLowerCase())
@@ -376,13 +665,42 @@ ${values.description}
                       Categories<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea
+                      <TagInput
                         {...field}
                         onChange={(e) =>
                           field.onChange(e.target.value.toLowerCase())
                         }
                         aria-required
-                      />
+                      >
+                        {field.value
+                          ?.split("\n")
+                          .map((line) => line.trim())
+                          .filter(Boolean)
+                          .map((category) => {
+                            const option = categoryOptions.find(
+                              (opt) => opt.value === category,
+                            );
+
+                            if (!option)
+                              return (
+                                <Badge key={category} variant="destructive">
+                                  {category}
+                                </Badge>
+                              );
+
+                            const Icon = option?.icon;
+                            return (
+                              <Badge
+                                key={category}
+                                className="gap-1"
+                                variant="outline"
+                              >
+                                <Icon className="w-4 h-4" />
+                                {option.label}
+                              </Badge>
+                            );
+                          })}
+                      </TagInput>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -397,7 +715,29 @@ ${values.description}
                       Contributors<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
-                      <Textarea {...field} aria-required />
+                      <TagInput {...field} aria-required>
+                        {field.value
+                          ?.split("\n")
+                          .map((line) => line.trim())
+                          .filter(Boolean)
+                          .map((contributor) => {
+                            return (
+                              <Badge
+                                key={contributor}
+                                className="gap-1 pl-1"
+                                variant="outline"
+                              >
+                                <img
+                                  className="rounded-full h-4"
+                                  src={`https://github.com/${contributor}.png?size=16`}
+                                  alt="[Unknown]"
+                                  aria-hidden
+                                />
+                                {contributor}
+                              </Badge>
+                            );
+                          })}
+                      </TagInput>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -422,9 +762,9 @@ ${values.description}
                     {isPending ? (
                       <Loader2Icon className="animate-spin" />
                     ) : (
-                      <RocketIcon />
+                      <ArrowBigUpDashIcon />
                     )}
-                    Submit via GitHub
+                    Push
                   </span>
                 </Button>
               </DialogFooter>
@@ -517,11 +857,11 @@ ${values.description}
                 </Button>
                 <Button disabled={isPending}>
                   <span className="flex items-center gap-1.5">
-                    Create Pull Request
+                    Open Pull Request
                     {isPending ? (
                       <Loader2Icon className="animate-spin" />
                     ) : (
-                      <RocketIcon />
+                      <ExternalLinkIcon />
                     )}
                   </span>
                 </Button>
