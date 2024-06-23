@@ -16,6 +16,9 @@ import { useForm } from "react-hook-form";
 import { Badge } from "../ui/badge";
 import { TagInput } from "./TagInput";
 import categoryOptions from "./category-options";
+import { Checkbox } from "../ui/checkbox";
+import { useSession } from "next-auth/react";
+import { tagStringToArray } from "./tag-string-to-array";
 
 const metadataStepSchema = z.object({
   categories: z.string().nonempty("Categories are required."),
@@ -38,10 +41,12 @@ export const FormStepMetadata = ({
   onBack,
   isPending,
 }: FormMetadataStepProps) => {
+  const session = useSession();
   const metadataStepForm = useForm<z.infer<typeof metadataStepSchema>>({
     resolver: zodResolver(metadataStepSchema),
     defaultValues,
   });
+  const userName = JSON.parse(session.data?.user?.image || "{}").login;
   return (
     <Form {...metadataStepForm}>
       <form
@@ -59,6 +64,7 @@ export const FormStepMetadata = ({
               <FormControl>
                 <TagInput
                   {...field}
+                  placeholder="Add one tag per line."
                   onChange={(e) => field.onChange(e.target.value.toLowerCase())}
                   aria-required
                 />
@@ -78,37 +84,30 @@ export const FormStepMetadata = ({
               <FormControl>
                 <TagInput
                   {...field}
+                  placeholder="Add categories."
                   onChange={(e) => field.onChange(e.target.value.toLowerCase())}
                   aria-required
                 >
-                  {field.value
-                    ?.split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
-                    .map((category) => {
-                      const option = categoryOptions.find(
-                        (opt) => opt.value === category,
-                      );
+                  {tagStringToArray(field.value).map((category) => {
+                    const option = categoryOptions.find(
+                      (opt) => opt.value === category,
+                    );
 
-                      if (!option)
-                        return (
-                          <Badge key={category} variant="destructive">
-                            {category}
-                          </Badge>
-                        );
-
-                      const Icon = option?.icon;
+                    if (!option)
                       return (
-                        <Badge
-                          key={category}
-                          className="gap-1"
-                          variant="outline"
-                        >
-                          <Icon className="w-4 h-4" />
-                          {option.label}
+                        <Badge key={category} variant="destructive">
+                          {category}
                         </Badge>
                       );
-                    })}
+
+                    const Icon = option?.icon;
+                    return (
+                      <Badge key={category} className="gap-1" variant="outline">
+                        <Icon className="w-4 h-4" />
+                        {option.label}
+                      </Badge>
+                    );
+                  })}
                 </TagInput>
               </FormControl>
               <FormMessage />
@@ -124,30 +123,59 @@ export const FormStepMetadata = ({
                 Contributors<span className="text-red-500">*</span>
               </FormLabel>
               <FormControl>
-                <TagInput {...field} aria-required>
-                  {field.value
-                    ?.split("\n")
-                    .map((line) => line.trim())
-                    .filter(Boolean)
-                    .map((contributor) => {
-                      return (
-                        <Badge
-                          key={contributor}
-                          className="gap-1 pl-1"
-                          variant="outline"
-                        >
-                          <img
-                            className="rounded-full h-4"
-                            src={`https://github.com/${contributor}.png?size=32`}
-                            alt="[Unknown]"
-                            aria-hidden
-                          />
-                          {contributor}
-                        </Badge>
-                      );
-                    })}
+                <TagInput
+                  {...field}
+                  aria-required
+                  placeholder="Add contributors."
+                >
+                  {tagStringToArray(field.value).map((contributor) => {
+                    return (
+                      <Badge
+                        key={contributor}
+                        className="gap-1 pl-1"
+                        variant="outline"
+                      >
+                        <img
+                          className="rounded-full h-4"
+                          src={`https://github.com/${contributor}.png?size=32`}
+                          alt="[Unknown]"
+                          aria-hidden
+                        />
+                        {contributor}
+                      </Badge>
+                    );
+                  })}
                 </TagInput>
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={metadataStepForm.control}
+          name="contributors"
+          render={({ field }) => (
+            <FormItem className="flex items-center space-x-2 space-y-0">
+              <FormControl>
+                <Checkbox
+                  aria-required
+                  checked={tagStringToArray(field.value).includes(userName)}
+                  onCheckedChange={(value) =>
+                    field.onChange(
+                      (value
+                        ? tagStringToArray(field.value).concat(userName)
+                        : tagStringToArray(field.value).filter(
+                            (contributor) => contributor !== userName,
+                          )
+                      ).join("\n"),
+                    )
+                  }
+                />
+              </FormControl>
+              <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                I have contributed to this SVG in a way that goes beyond
+                automated changes.
+              </FormLabel>
               <FormMessage />
             </FormItem>
           )}

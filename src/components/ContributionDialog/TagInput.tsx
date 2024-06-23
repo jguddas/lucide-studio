@@ -4,6 +4,7 @@ import { Badge } from "../ui/badge";
 import { cn } from "@/lib/utils";
 import { ChevronUpIcon, EditIcon } from "lucide-react";
 import { Button } from "../ui/button";
+import { tagStringToArray } from "./tag-string-to-array";
 
 export interface TagInputProps extends TextareaProps {}
 
@@ -24,17 +25,13 @@ export const TagInput = React.forwardRef<HTMLTextAreaElement, TagInputProps>(
     );
     const readState =
       children ??
-      (value?.toString() ?? valueState)
-        ?.split("\n")
-        .map((val) => val.trim())
-        .filter(Boolean)
-        .map((line, idx) => {
-          return (
-            <Badge key={idx} className="gap-1" variant="outline">
-              {line}
-            </Badge>
-          );
-        });
+      tagStringToArray(value?.toString() ?? valueState).map((line, idx) => {
+        return (
+          <Badge key={idx} className="gap-1" variant="outline">
+            {line}
+          </Badge>
+        );
+      });
     return (
       <div className="flex flex-col gap-1 rounded-md border border-input bg-background ">
         <div

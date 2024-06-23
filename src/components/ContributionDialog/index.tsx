@@ -26,6 +26,7 @@ import { useMutation } from "@tanstack/react-query";
 import prForUpdateUrl from "./pr-for-update-url";
 import prForNewUrl from "./pr-for-new-url";
 import { cn } from "@/lib/utils";
+import { tagStringToArray } from "./tag-string-to-array";
 
 type Step =
   | {
@@ -116,14 +117,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
             ...data,
             categories: data?.categories?.join("\n") || "",
             tags: data?.tags?.join("\n") || "",
-            contributors: [
-              ...(data?.contributors || []),
-              JSON.parse(session.data?.user?.image || "").login,
-            ]
-              .map((val) => val.trim())
-              .filter((val, idx, arr) => val && arr.indexOf(val) === idx)
-              .filter(Boolean)
-              .join("\n"),
+            contributors: data?.contributors?.join("\n") || "",
             ...(variables.name === step.data.name ? step.data : {}),
             ...variables,
           },
@@ -154,13 +148,9 @@ const ContributionDialog = ({ value }: { value: string }) => {
           body: JSON.stringify({
             ...step.data,
             ...variables,
-            contributors: variables.contributors
-              .split("\n")
-              .map((val) => val.trim()),
-            tags: variables.tags.split("\n").map((val) => val.trim()),
-            categories: variables.categories
-              .split("\n")
-              .map((val) => val.trim()),
+            contributors: tagStringToArray(variables.contributors),
+            tags: tagStringToArray(variables.tags),
+            categories: tagStringToArray(variables.categories),
             value,
           }),
         }).then(async (res) => {
