@@ -22,11 +22,11 @@ import {
   MinimizeIcon,
   MoonIcon,
   RedoIcon,
-  SparklesIcon,
   TextSelectionIcon,
   DraftingCompassIcon,
   SunIcon,
   UndoIcon,
+  WandSparklesIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import format from "./format";
@@ -140,7 +140,7 @@ const Menu = ({
             onClick={() => setValue(optimize(value))}
             className="gap-1.5"
           >
-            <SparklesIcon />
+            <WandSparklesIcon />
             Tidy
             <MenubarShortcut>{isMac ? "⇧⌘S" : "Shift+Ctrl+S"}</MenubarShortcut>
           </MenubarItem>

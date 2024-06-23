@@ -6,7 +6,7 @@ import optimize from "./optimize";
 import React, { useState } from "react";
 import format from "./format";
 import { Label } from "@/components/ui/label";
-import { SparklesIcon } from "lucide-react";
+import { WandSparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import getPaths from "@/components/SvgPreview/utils";
 import { useQueryState } from "next-usequerystate";
@@ -121,7 +121,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
             onMouseLeave={() => setNextValue(undefined)}
             onClick={() => onChange(optimize(value))}
           >
-            <SparklesIcon />
+            <WandSparklesIcon />
             Tidy
           </Button>
         </div>
