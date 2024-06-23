@@ -138,7 +138,7 @@ export const FormStepMetadata = ({
                         >
                           <img
                             className="rounded-full h-4"
-                            src={`https://github.com/${contributor}.png?size=16`}
+                            src={`https://github.com/${contributor}.png?size=32`}
                             alt="[Unknown]"
                             aria-hidden
                           />
