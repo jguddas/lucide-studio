@@ -13,9 +13,12 @@ export const TagInput = React.forwardRef<HTMLTextAreaElement, TagInputProps>(
     const [valueState, setValueState] = React.useState<string>(
       (defaultValue ?? "") + "",
     );
-    const [isEditing, setIsEditing] = React.useState(
+    const [isEditingState, setIsEditing] = React.useState(
       (value ?? valueState) === "",
     );
+    const isEditing =
+      isEditingState ||
+      tagStringToArray(value?.toString() || valueState).length === 0;
     const setValue = React.useCallback(
       (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setValueState(e.target.value);
@@ -43,7 +46,7 @@ export const TagInput = React.forwardRef<HTMLTextAreaElement, TagInputProps>(
           <div className="px-3 py-2 gap-1 flex flex-wrap items-center">
             {readState}
           </div>
-          {(value?.toString() || valueState)?.trim() && (
+          {tagStringToArray(value?.toString() || valueState).length > 0 && (
             <div className="flex">
               <Button
                 variant="ghost"
