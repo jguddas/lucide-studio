@@ -32,7 +32,7 @@ ${data.useCase ?? ""}
 ### Concept
 <!-- All of these requirements must be fulfilled. -->
 - [${
-      data.alternativeDesigns?.trim() ? "x" : " "
+      data.useCase?.trim() ? "x" : " "
     }] I have provided valid use cases for each icon.
 - [${
       data.isNotBrandIcon ? "x" : " "

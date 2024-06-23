@@ -17,7 +17,7 @@ import { Textarea } from "../ui/textarea";
 import { Checkbox } from "../ui/checkbox";
 
 const updateIconChecklistStepSchema = z.object({
-  description: z.string(),
+  description: z.string().optional(),
   iHaveReadTheContributionGuidelines: z.boolean().optional(),
 });
 

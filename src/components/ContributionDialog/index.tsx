@@ -24,6 +24,7 @@ import { signIn, useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 import prForUpdateUrl from "./pr-for-update-url";
 import prForNewUrl from "./pr-for-new-url";
+import { cn } from "@/lib/utils";
 
 type Step =
   | {
@@ -227,10 +228,44 @@ const ContributionDialog = ({ value }: { value: string }) => {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <div className="flex gap-2 -mt-1 mb-2 mr-6">
+          <div
+            className={cn(
+              "h-2 w-full bg-primary rounded-full",
+              step.step !== "name" && "opacity-10",
+            )}
+          />
+          <div
+            className={cn(
+              "h-2 w-full bg-primary rounded-full",
+              step.step !== "metadata" && "opacity-10",
+            )}
+          />
+          <div
+            className={cn(
+              "h-2 w-full bg-primary rounded-full",
+              step.step !== "new-checklist" &&
+                step.step !== "update-checklist" &&
+                "opacity-10",
+            )}
+          />
+        </div>
         <DialogHeader>
-          <DialogTitle>Contribute to Lucide</DialogTitle>
+          <DialogTitle>
+            {step.step === "name"
+              ? "Publish your changes to GitHub"
+              : step.step === "metadata"
+                ? "Add Metadata"
+                : step.step === "new-checklist"
+                  ? "New Icon Pull Request Checklist"
+                  : "Changed Icon Pull Request Checklist"}
+          </DialogTitle>
           <DialogDescription>
-            Suggest changes or additions to Lucide.
+            {step.step === "name"
+              ? "Suggest changes or additions to Lucide."
+              : step.step === "metadata"
+                ? "You can take a look at the existing icons for reference."
+                : "Let's fill the pull request description with the needed information."}
           </DialogDescription>
         </DialogHeader>
         {step.step === "name" ? (
