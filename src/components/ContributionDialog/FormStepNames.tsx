@@ -113,7 +113,7 @@ export const FormStepNames = ({
               <FormMessage />
               <FormDescription>
                 You need to follow the{" "}
-                <Button asChild variant="link" className="p-0">
+                <Button asChild variant="link" className="p-0 h-[unset]">
                   <a
                     href="https://lucide.dev/guide/design/icon-design-guide#naming-conventions"
                     target="_blank"
