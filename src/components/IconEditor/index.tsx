@@ -103,7 +103,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               e.preventDefault();
               const clipboardData = e.clipboardData.getData("text/plain");
               const clipboardDataName = clipboardData.match(
-                /class="lucide lucide-(\w+)"/,
+                /class="lucide lucide-([\w-]+)"/,
               );
               if (clipboardDataName && clipboardDataName[1]) {
                 setName(clipboardDataName[1]);
