@@ -571,7 +571,7 @@ ${values.description}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Name<span className="text-red-500">*</span>
+                      Icon name<span className="text-red-500">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
