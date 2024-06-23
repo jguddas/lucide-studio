@@ -288,7 +288,6 @@ const ContributionDialog = ({ value }: { value: string }) => {
             defaultValues={step.data}
             onSubmit={onSubmitNames}
             isPending={isPending}
-            onChange={({ name }) => name && setName(name)}
           />
         ) : step.step === "fork" ? (
           <DialogFooter>

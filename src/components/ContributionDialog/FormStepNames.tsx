@@ -18,6 +18,7 @@ import {
 } from "../ui/form";
 import { useForm } from "react-hook-form";
 import { useEffect } from "react";
+import { useQueryState } from "next-usequerystate";
 
 const nameStepSchema = z.object({
   name: z
@@ -39,18 +40,17 @@ export type FormStepNamesData = z.infer<typeof nameStepSchema>;
 
 type FormStepNamesProps = {
   onSubmit: (data: FormStepNamesData) => void;
-  onChange?: (data: Partial<FormStepNamesData>) => void;
   isPending: boolean;
   defaultValues: Partial<FormStepNamesData> & Record<string, any>;
 };
 
 export const FormStepNames = ({
   onSubmit,
-  onChange,
   isPending,
   defaultValues,
 }: FormStepNamesProps) => {
   const session = useSession();
+  const [name, setName] = useQueryState("name", { defaultValue: "" });
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
     defaultValues,
@@ -58,8 +58,11 @@ export const FormStepNames = ({
 
   const watch = nameStepForm.watch;
   useEffect(() => {
-    onChange && watch(onChange);
-  }, [watch, onChange]);
+    watch((data) => data.name && setName(data.name));
+  }, [watch, setName]);
+  useEffect(() => {
+    nameStepForm.setValue("name", name);
+  }, [name, nameStepForm]);
 
   return (
     <Form {...nameStepForm}>
