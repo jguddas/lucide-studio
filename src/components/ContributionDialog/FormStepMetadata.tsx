@@ -1,0 +1,183 @@
+import { ChevronLeftIcon, ArrowBigUpDashIcon } from "lucide-react";
+import { Button } from "../ui/button";
+import { DialogFooter } from "../ui/dialog";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2Icon } from "lucide-react";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "../ui/form";
+import { useForm } from "react-hook-form";
+import { Badge } from "../ui/badge";
+import { TagInput } from "./TagInput";
+import categoryOptions from "./category-options";
+
+const metadataStepSchema = z.object({
+  categories: z.string().nonempty("Categories are required."),
+  tags: z.string().nonempty("Tags are required."),
+  contributors: z.string().nonempty("Contributors are required."),
+});
+
+export type FormStepMetadataData = z.infer<typeof metadataStepSchema>;
+
+type FormMetadataStepProps = {
+  onSubmit: (data: z.infer<typeof metadataStepSchema>) => void;
+  onBack: () => void;
+  defaultValues: Partial<FormStepMetadataData> & Record<string, any>;
+  isPending: boolean;
+};
+
+export const FormStepMetadata = ({
+  onSubmit,
+  defaultValues,
+  onBack,
+  isPending,
+}: FormMetadataStepProps) => {
+  const metadataStepForm = useForm<z.infer<typeof metadataStepSchema>>({
+    resolver: zodResolver(metadataStepSchema),
+    defaultValues,
+  });
+  return (
+    <Form {...metadataStepForm}>
+      <form
+        onSubmit={metadataStepForm.handleSubmit(onSubmit)}
+        className="space-y-3"
+      >
+        <FormField
+          control={metadataStepForm.control}
+          name="tags"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Tags<span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <TagInput
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                  aria-required
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={metadataStepForm.control}
+          name="categories"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Categories<span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <TagInput
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                  aria-required
+                >
+                  {field.value
+                    ?.split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((category) => {
+                      const option = categoryOptions.find(
+                        (opt) => opt.value === category,
+                      );
+
+                      if (!option)
+                        return (
+                          <Badge key={category} variant="destructive">
+                            {category}
+                          </Badge>
+                        );
+
+                      const Icon = option?.icon;
+                      return (
+                        <Badge
+                          key={category}
+                          className="gap-1"
+                          variant="outline"
+                        >
+                          <Icon className="w-4 h-4" />
+                          {option.label}
+                        </Badge>
+                      );
+                    })}
+                </TagInput>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={metadataStepForm.control}
+          name="contributors"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>
+                Contributors<span className="text-red-500">*</span>
+              </FormLabel>
+              <FormControl>
+                <TagInput {...field} aria-required>
+                  {field.value
+                    ?.split("\n")
+                    .map((line) => line.trim())
+                    .filter(Boolean)
+                    .map((contributor) => {
+                      return (
+                        <Badge
+                          key={contributor}
+                          className="gap-1 pl-1"
+                          variant="outline"
+                        >
+                          <img
+                            className="rounded-full h-4"
+                            src={`https://github.com/${contributor}.png?size=16`}
+                            alt="[Unknown]"
+                            aria-hidden
+                          />
+                          {contributor}
+                        </Badge>
+                      );
+                    })}
+                </TagInput>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormMessage>
+          {metadataStepForm.formState.errors.root?.serverError.message}
+        </FormMessage>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onBack}
+            className="gap-1.5"
+            disabled={isPending}
+          >
+            <ChevronLeftIcon />
+            Back
+          </Button>
+          <Button disabled={isPending}>
+            <span className="flex items-center gap-1.5">
+              {isPending ? (
+                <Loader2Icon className="animate-spin" />
+              ) : (
+                <ArrowBigUpDashIcon />
+              )}
+              Push
+            </span>
+          </Button>
+        </DialogFooter>
+      </form>
+    </Form>
+  );
+};

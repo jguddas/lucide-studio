@@ -8,7 +8,6 @@ import Menu from "@/components/IconEditor/Menu";
 import ContributionDialog from "@/components/ContributionDialog";
 
 export async function generateMetadata({ params, searchParams }: any) {
-  console.log(params, searchParams);
   const queryParams = new URLSearchParams({});
 
   return {
