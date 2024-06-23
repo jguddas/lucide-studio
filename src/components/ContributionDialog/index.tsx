@@ -16,9 +16,14 @@ import {
   FormStepUpdateIconChecklist,
   FormStepUpdateIconChecklistData,
 } from "./FormStepUpdateIconChecklist";
+import {
+  FormStepNewIconChecklist,
+  FormStepNewIconChecklistData,
+} from "./FormStepNewIconChecklist";
 import { signIn, useSession } from "next-auth/react";
 import { useMutation } from "@tanstack/react-query";
 import prForUpdateUrl from "./pr-for-update-url";
+import prForNewUrl from "./pr-for-new-url";
 
 type Step =
   | {
@@ -26,13 +31,15 @@ type Step =
       data: Partial<
         FormStepNamesData &
           FormStepMetadataData &
-          FormStepUpdateIconChecklistData
+          FormStepUpdateIconChecklistData &
+          FormStepNewIconChecklistData
       >;
     }
   | {
       step: "metadata";
       data: FormStepNamesData &
-        Partial<FormStepMetadataData & FormStepUpdateIconChecklistData>;
+        Partial<FormStepMetadataData & FormStepUpdateIconChecklistData> &
+        FormStepNewIconChecklistData;
     }
   | {
       step: "update-checklist";
@@ -40,12 +47,29 @@ type Step =
         FormStepMetadataData & {
           prUrl: string;
         } & Partial<FormStepUpdateIconChecklistData>;
+    }
+  | {
+      step: "new-checklist";
+      data: FormStepNamesData &
+        FormStepMetadataData & {
+          prUrl: string;
+        } & Partial<FormStepNewIconChecklistData>;
     };
 
 const ContributionDialog = ({ value }: { value: string }) => {
   const session = useSession();
   const [name, setName] = useQueryState("name", { defaultValue: "" });
-  const [step, setStep] = useState<Step>({ step: "name", data: { name } });
+  const [step, setStep] = useState<Step>({
+    step: "name",
+    data: {
+      name,
+      isNotBrandIcon: true,
+      isNotHateSymbol: true,
+      isNotReligiousSymbol: true,
+      iHaveReadTheContributionGuidelines:
+        localStorage.getItem("iHaveReadTheContributionGuidelines") === "true",
+    },
+  });
   const [open, _setOpen] = useQueryState("dialog", {
     defaultValue: false,
     parse: (query) => query === "true",
@@ -142,10 +166,17 @@ const ContributionDialog = ({ value }: { value: string }) => {
         const { pullRequestCreationUrl, pullRequestExistingUrl, isNewIcon } =
           await res?.json();
         const url = new URL(pullRequestExistingUrl || pullRequestCreationUrl);
-        if (pullRequestExistingUrl || isNewIcon) {
+        if (pullRequestExistingUrl) {
           global?.window.open(url, "_blank");
           await new Promise((resolve) => setTimeout(resolve, 2000));
           setOpen(false);
+          return;
+        }
+        if (isNewIcon) {
+          setStep({
+            step: "new-checklist",
+            data: { ...step.data, ...variables, prUrl: url.toString() },
+          });
           return;
         }
         setStep({
@@ -158,19 +189,34 @@ const ContributionDialog = ({ value }: { value: string }) => {
       },
     });
 
-  const onSubmitUpdateIconChecklist = async (
+  const onSubmitUpdateIconChecklist = (
     variables: FormStepUpdateIconChecklistData,
   ) => {
     if (step.step !== "update-checklist") throw new Error("Invalid step");
+    if (variables.iHaveReadTheContributionGuidelines) {
+      localStorage.setItem("iHaveReadTheContributionGuidelines", "true");
+    }
     global?.window.open(
       prForUpdateUrl({ ...step.data, ...variables }),
       "_blank",
     );
     setOpen(false);
+    setStep({ step: "name", data: { ...variables, ...step.data } });
+  };
+
+  const onSubmitNewIconChecklist = (
+    variables: FormStepNewIconChecklistData,
+  ) => {
+    if (step.step !== "new-checklist") throw new Error("Invalid step");
+    if (variables.iHaveReadTheContributionGuidelines) {
+      localStorage.setItem("iHaveReadTheContributionGuidelines", "true");
+    }
+    global?.window.open(prForNewUrl({ ...step.data, ...variables }), "_blank");
+    setOpen(false);
+    setStep({ step: "name", data: { ...variables, ...step.data } });
   };
 
   const isPending = isPendingNames || isPendingSubmitMetadata;
-  console.log(step);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -201,6 +247,13 @@ const ContributionDialog = ({ value }: { value: string }) => {
               setStep({ step: "name", data: step.data });
             }}
             onSubmit={onSubmitMetadata}
+            isPending={isPending}
+          />
+        ) : step.step === "new-checklist" ? (
+          <FormStepNewIconChecklist
+            defaultValues={step.data}
+            onBack={() => setStep({ step: "metadata", data: step.data })}
+            onSubmit={onSubmitNewIconChecklist}
             isPending={isPending}
           />
         ) : (

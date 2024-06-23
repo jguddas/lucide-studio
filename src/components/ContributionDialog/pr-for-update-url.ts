@@ -18,15 +18,13 @@ const prForUpdateUrl = (
 - [x] Other: Icon update
 
 ### Description
-${data.description}
+${data.description ?? ""}
 
 ## Before Submitting
 - [${
       data.iHaveReadTheContributionGuidelines ? "x" : " "
     }] I've read the [Contribution Guidelines](https://github.com/lucide-icons/lucide/blob/main/CONTRIBUTING.md).
-- [${
-      data.iHaveCheckedIfThereWasAnExistingPRThatSolvesTheSameIssue ? "x" : " "
-    }] I've checked if there was an existing PR that solves the same issue.
+- [ ] I've checked if there was an existing PR that solves the same issue.
     `.trim(),
   );
 

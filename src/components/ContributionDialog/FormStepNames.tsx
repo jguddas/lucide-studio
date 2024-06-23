@@ -57,9 +57,10 @@ export const FormStepNames = ({
     defaultValues,
   });
 
+  const watch = nameStepForm.watch;
   useEffect(() => {
-    onChange && nameStepForm.watch(onChange);
-  }, [nameStepForm.watch, onChange]);
+    onChange && watch(onChange);
+  }, [watch, onChange]);
 
   return (
     <Form {...nameStepForm}>

@@ -19,9 +19,6 @@ import { Checkbox } from "../ui/checkbox";
 const updateIconChecklistStepSchema = z.object({
   description: z.string(),
   iHaveReadTheContributionGuidelines: z.boolean().optional(),
-  iHaveCheckedIfThereWasAnExistingPRThatSolvesTheSameIssue: z
-    .boolean()
-    .optional(),
 });
 
 export type FormStepUpdateIconChecklistData = z.infer<
@@ -97,26 +94,6 @@ export const FormStepUpdateIconChecklist = ({
             </FormItem>
           )}
         />
-        <FormField
-          control={updateIconChecklistStepForm.control}
-          name="iHaveCheckedIfThereWasAnExistingPRThatSolvesTheSameIssue"
-          render={({ field }) => (
-            <FormItem className="flex items-center space-x-2 space-y-0">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  aria-required
-                />
-              </FormControl>
-              <FormLabel className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                I have checked if there was an existing PR that solves the same
-                issue
-              </FormLabel>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
         <FormMessage>
           {
             updateIconChecklistStepForm.formState.errors.root?.serverError
@@ -136,7 +113,7 @@ export const FormStepUpdateIconChecklist = ({
           </Button>
           <Button disabled={isPending}>
             <span className="flex items-center gap-1.5">
-              Open Pull Request
+              Continue in GitHub
               {isPending ? (
                 <Loader2Icon className="animate-spin" />
               ) : (
