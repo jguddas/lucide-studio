@@ -1,7 +1,6 @@
 import { ChevronRightIcon, LogInIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { DialogFooter } from "../ui/dialog";
-import { useQueryState } from "next-usequerystate";
 import { Input } from "../ui/input";
 import { useSession } from "next-auth/react";
 import { zodResolver } from "@hookform/resolvers/zod";

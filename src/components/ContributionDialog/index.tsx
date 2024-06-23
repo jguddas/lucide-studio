@@ -1,9 +1,10 @@
-import { GitPullRequestCreateArrowIcon } from "lucide-react";
+import { GitForkIcon, GitPullRequestCreateArrowIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -37,10 +38,22 @@ type Step =
       >;
     }
   | {
+      step: "fork";
+      data: { forkExists: false } & Partial<
+        FormStepNamesData &
+          FormStepMetadataData &
+          FormStepUpdateIconChecklistData &
+          FormStepNewIconChecklistData
+      >;
+    }
+  | {
       step: "metadata";
       data: FormStepNamesData &
-        Partial<FormStepMetadataData & FormStepUpdateIconChecklistData> &
-        FormStepNewIconChecklistData;
+        Partial<
+          FormStepMetadataData &
+            FormStepUpdateIconChecklistData &
+            FormStepNewIconChecklistData
+        >;
     }
   | {
       step: "update-checklist";
@@ -68,7 +81,9 @@ const ContributionDialog = ({ value }: { value: string }) => {
       isNotHateSymbol: true,
       isNotReligiousSymbol: true,
       iHaveReadTheContributionGuidelines:
-        localStorage.getItem("iHaveReadTheContributionGuidelines") === "true",
+        global?.window?.localStorage.getItem(
+          "iHaveReadTheContributionGuidelines",
+        ) === "true",
     },
   });
   const [open, _setOpen] = useQueryState("dialog", {
@@ -94,9 +109,11 @@ const ContributionDialog = ({ value }: { value: string }) => {
         return (await fetch(`/api/metadata/${variables.name}`)).json();
       },
       onSuccess: async (data, variables) => {
+        if (step.step !== "name") throw new Error("Invalid step");
         setStep({
-          step: "metadata",
+          step: data?.forkExists === false ? "fork" : "metadata",
           data: {
+            ...data,
             categories: data?.categories?.join("\n") || "",
             tags: data?.tags?.join("\n") || "",
             contributors: [
@@ -112,7 +129,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
           },
         });
       },
-      onError: (_, variables) => {
+      onError: (error, variables) => {
         setStep({
           step: "metadata",
           data: {
@@ -195,7 +212,10 @@ const ContributionDialog = ({ value }: { value: string }) => {
   ) => {
     if (step.step !== "update-checklist") throw new Error("Invalid step");
     if (variables.iHaveReadTheContributionGuidelines) {
-      localStorage.setItem("iHaveReadTheContributionGuidelines", "true");
+      global?.window?.localStorage.setItem(
+        "iHaveReadTheContributionGuidelines",
+        "true",
+      );
     }
     global?.window.open(
       prForUpdateUrl({ ...step.data, ...variables }),
@@ -210,7 +230,10 @@ const ContributionDialog = ({ value }: { value: string }) => {
   ) => {
     if (step.step !== "new-checklist") throw new Error("Invalid step");
     if (variables.iHaveReadTheContributionGuidelines) {
-      localStorage.setItem("iHaveReadTheContributionGuidelines", "true");
+      global?.window?.localStorage.setItem(
+        "iHaveReadTheContributionGuidelines",
+        "true",
+      );
     }
     global?.window.open(prForNewUrl({ ...step.data, ...variables }), "_blank");
     setOpen(false);
@@ -232,7 +255,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
           <div
             className={cn(
               "h-2 w-full bg-primary rounded-full",
-              step.step !== "name" && "opacity-10",
+              step.step !== "name" && step.step !== "fork" && "opacity-10",
             )}
           />
           <div
@@ -252,7 +275,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
         </div>
         <DialogHeader>
           <DialogTitle>
-            {step.step === "name"
+            {step.step === "name" || step.step === "fork"
               ? "Publish your changes to GitHub"
               : step.step === "metadata"
                 ? "Add Metadata"
@@ -263,9 +286,11 @@ const ContributionDialog = ({ value }: { value: string }) => {
           <DialogDescription>
             {step.step === "name"
               ? "Suggest changes or additions to Lucide."
-              : step.step === "metadata"
-                ? "You can take a look at the existing icons for reference."
-                : "Let's fill the pull request description with the needed information."}
+              : step.step === "fork"
+                ? "There is no fork of Lucide in your account."
+                : step.step === "metadata"
+                  ? "You can take a look at the existing icons for reference."
+                  : "Let's fill the pull request description with the needed information."}
           </DialogDescription>
         </DialogHeader>
         {step.step === "name" ? (
@@ -275,6 +300,24 @@ const ContributionDialog = ({ value }: { value: string }) => {
             isPending={isPending}
             onChange={({ name }) => name && setName(name)}
           />
+        ) : step.step === "fork" ? (
+          <DialogFooter>
+            <Button
+              className="gap-1.5"
+              disabled={isPending}
+              type="button"
+              onClick={() => {
+                global?.window.open(
+                  "https://github.com/lucide-icons/lucide/fork",
+                  "_blank",
+                );
+                setStep({ step: "name", data: step.data });
+              }}
+            >
+              <GitForkIcon />
+              Create Fork
+            </Button>
+          </DialogFooter>
         ) : step.step === "metadata" ? (
           <FormStepMetadata
             defaultValues={step.data}

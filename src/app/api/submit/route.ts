@@ -61,9 +61,7 @@ export const POST = auth(async function POST(req) {
       .request(`GET /repos/${user.login}/lucide/commits/main`)
       .catch((err) => {
         if (err.status === 404)
-          throw new Error(
-            `Could not find your fork of lucide! https://github.com/lucide-icons/lucide/fork`,
-          );
+          throw new Error("Could not find your fork of lucide!");
         throw err;
       });
 
