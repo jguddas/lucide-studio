@@ -84,7 +84,7 @@ export const FormStepMetadata = ({
               <FormControl>
                 <TagInput
                   {...field}
-                  placeholder="Add categories."
+                  placeholder="Add one category per line."
                   onChange={(e) => field.onChange(e.target.value.toLowerCase())}
                   aria-required
                 >
@@ -126,7 +126,7 @@ export const FormStepMetadata = ({
                 <TagInput
                   {...field}
                   aria-required
-                  placeholder="Add contributors."
+                  placeholder="Add one contributor per line."
                 >
                   {tagStringToArray(field.value).map((contributor) => {
                     return (

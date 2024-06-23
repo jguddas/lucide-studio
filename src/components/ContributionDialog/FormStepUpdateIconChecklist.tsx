@@ -88,6 +88,7 @@ export const FormStepUpdateIconChecklist = ({
                   >
                     contribution guidelines
                   </a>
+                  .
                 </Button>
               </FormLabel>
               <FormMessage />
