@@ -34,6 +34,7 @@ import prForNewUrl from "./pr-for-new-url";
 import { cn } from "@/lib/utils";
 import { tagStringToArray } from "./tag-string-to-array";
 import { toast } from "sonner";
+import { useLocalStorage } from "usehooks-ts";
 
 type Step =
   | {
@@ -81,6 +82,13 @@ type Step =
 const ContributionDialog = ({ value }: { value: string }) => {
   const session = useSession();
   const [name] = useQueryState("name", { defaultValue: "" });
+  const [
+    iHaveReadTheContributionGuidelines,
+    setIHaveReadTheContributionGuidelines,
+  ] = useLocalStorage(
+    `${session.data?.user?.name}:iHaveReadTheContributionGuidelines`,
+    false,
+  );
   const [step, setStep] = useState<Step>({
     step: "name",
     data: {
@@ -88,10 +96,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
       isNotBrandIcon: true,
       isNotHateSymbol: true,
       isNotReligiousSymbol: true,
-      iHaveReadTheContributionGuidelines:
-        global?.window?.localStorage.getItem(
-          "iHaveReadTheContributionGuidelines",
-        ) === "true",
+      iHaveReadTheContributionGuidelines,
     },
   });
   const [open, _setOpen] = useQueryState("dialog", {
@@ -230,12 +235,9 @@ const ContributionDialog = ({ value }: { value: string }) => {
     variables: FormStepUpdateIconChecklistData,
   ) => {
     if (step.step !== "update-checklist") throw new Error("Invalid step");
-    if (variables.iHaveReadTheContributionGuidelines) {
-      global?.window?.localStorage.setItem(
-        "iHaveReadTheContributionGuidelines",
-        "true",
-      );
-    }
+    setIHaveReadTheContributionGuidelines(
+      variables.iHaveReadTheContributionGuidelines || false,
+    );
     global?.window.open(
       prForUpdateUrl({ ...step.data, ...variables }),
       "_blank",
@@ -248,12 +250,9 @@ const ContributionDialog = ({ value }: { value: string }) => {
     variables: FormStepNewIconChecklistData,
   ) => {
     if (step.step !== "new-checklist") throw new Error("Invalid step");
-    if (variables.iHaveReadTheContributionGuidelines) {
-      global?.window?.localStorage.setItem(
-        "iHaveReadTheContributionGuidelines",
-        "true",
-      );
-    }
+    setIHaveReadTheContributionGuidelines(
+      variables.iHaveReadTheContributionGuidelines || false,
+    );
     global?.window.open(prForNewUrl({ ...step.data, ...variables }), "_blank");
     setOpen(false);
     setStep({ step: "name", data: { ...variables, ...step.data } });
