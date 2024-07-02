@@ -13,9 +13,13 @@ export const POST = auth(async function POST(req) {
   const metadata = JSON.stringify(
     {
       $schema: "../icon.schema.json",
+      deprecated: icon.deprecated,
+      deprecationReason: icon.deprecationReason,
+      toBeRemovedInVersion: icon.toBeRemovedInVersion,
       contributors: icon.contributors,
       tags: icon.tags,
       categories: icon.categories,
+      aliases: icon.aliases,
     },
     null,
     2,
