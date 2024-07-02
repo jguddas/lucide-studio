@@ -1,4 +1,10 @@
-import { GitForkIcon, GitPullRequestCreateArrowIcon } from "lucide-react";
+import {
+  CircleCheck,
+  CircleCheckIcon,
+  ExternalLinkIcon,
+  GitForkIcon,
+  GitPullRequestCreateArrowIcon,
+} from "lucide-react";
 import { Button } from "../ui/button";
 import {
   Dialog,
@@ -27,6 +33,7 @@ import prForUpdateUrl from "./pr-for-update-url";
 import prForNewUrl from "./pr-for-new-url";
 import { cn } from "@/lib/utils";
 import { tagStringToArray } from "./tag-string-to-array";
+import { toast } from "sonner";
 
 type Step =
   | {
@@ -183,8 +190,22 @@ const ContributionDialog = ({ value }: { value: string }) => {
           await res?.json();
         const url = new URL(pullRequestExistingUrl || pullRequestCreationUrl);
         if (pullRequestExistingUrl) {
-          global?.window.open(url, "_blank");
-          await new Promise((resolve) => setTimeout(resolve, 2000));
+          toast(
+            <div className="flex w-full items-center justify-between">
+              <span className="flex gap-1.5 items-center">
+                <CircleCheckIcon aria-label="success" />
+                Pull request has been updated.
+              </span>
+              <Button
+                type="button"
+                onClick={() => global?.window.open(url, "_blank")}
+                className="flex items-center gap-1.5"
+              >
+                <ExternalLinkIcon />
+                Open PR
+              </Button>
+            </div>,
+          );
           setOpen(false);
           return;
         }

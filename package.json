@@ -32,6 +32,7 @@
     "react-dom": "^18.2.0",
     "react-hook-form": "^7.49.2",
     "react-simple-code-editor": "^0.13.1",
+    "sonner": "^1.5.0",
     "svg-path-commander": "^2.0.9",
     "svg-pathdata": "^6.0.3",
     "svgo": "^3.1.0",
