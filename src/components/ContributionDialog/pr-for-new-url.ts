@@ -15,7 +15,7 @@ const prForNewUrl = (
 <!-- Insert \`closes #issueNumber\` here if merging this PR will resolve an existing issue -->
 
 ## What is the purpose of this pull request?
-- [x] Other: Icon update
+- [x] New Icon
 
 ### Description
 Added new \`${data.name}\` icon.
