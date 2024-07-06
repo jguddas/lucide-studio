@@ -263,7 +263,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-1.5" variant="github">
+        <Button className="gap-1.5 w-full sm:w-[unset]" variant="github">
           <GitPullRequestCreateArrowIcon />
           Create Pull Request
         </Button>
