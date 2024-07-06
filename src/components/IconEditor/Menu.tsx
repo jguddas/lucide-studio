@@ -27,6 +27,7 @@ import {
   SunIcon,
   UndoIcon,
   WandSparklesIcon,
+  createLucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import format from "./format";
@@ -34,6 +35,18 @@ import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
 import { useQueryState } from "next-usequerystate";
 import arcify from "./arcify";
+import { toast } from "sonner";
+
+const ColorfulDownloadIcon = createLucideIcon("ColorfulDownloadIcon", [
+  ["path", { stroke: "#1982c4", d: "M 12 15 L 12 3" }],
+  ["path", { stroke: "#4267AC", d: "M 21 15 L 21 19" }],
+  ["path", { stroke: "#6a4c93", d: "M 21 19 A2 2 0 0 1 19 21" }],
+  ["path", { stroke: "#B55379", d: "M 19 21 L 5 21" }],
+  ["path", { stroke: "#FF595E", d: "M 5 21 A2 2 0 0 1 3 19" }],
+  ["path", { stroke: "#FF7655", d: "M 3 19 L 3 15" }],
+  ["path", { stroke: "#ff924c", d: "M 7 10 L 12 15" }],
+  ["path", { stroke: "#FFAE43", d: "M 12 15 L 17 10" }],
+]);
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -112,6 +125,29 @@ const Menu = ({
           >
             <DownloadIcon />
             Download as SVG
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => {
+              const paths = document.querySelector(
+                ".svg-preview-colored-path-group",
+              )?.innerHTML;
+
+              if (!paths) return toast.error("No paths to download");
+
+              const svg = new Blob(
+                [format(paths, { filterAttributes: false, sortNodes: false })],
+                { type: "image/svg+xml" },
+              );
+              const url = URL.createObjectURL(svg);
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `colorful-${name || "icon"}.svg`;
+              a.click();
+            }}
+            className="gap-1.5"
+          >
+            <ColorfulDownloadIcon />
+            Download as colorful SVG
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>

@@ -1,9 +1,16 @@
 import { INode, parseSync, stringify } from "svgson";
 import commander from "svg-path-commander";
 
-const getChildren = (node: INode): INode[] => {
+type Options = {
+  filterNodes?: boolean;
+  sortNodes?: boolean;
+  filterAttributes?: boolean;
+  sortAttributes?: boolean;
+};
+
+const getChildren = (node: INode, options?: Options): INode[] => {
   if (node.children && Array.isArray(node.children) && node.children.length) {
-    return node.children.flatMap(getChildren);
+    return node.children.flatMap((value) => getChildren(value, options));
   }
   if (
     [
@@ -28,11 +35,19 @@ const getChildren = (node: INode): INode[] => {
 
     if (!order) return [];
 
-    node.attributes = Object.fromEntries(
-      Object.entries(node.attributes)
-        .filter(([key]) => order.includes(key))
-        .sort(([a], [b]) => order.indexOf(a) - order.indexOf(b)),
-    );
+    const filtered =
+      options?.filterAttributes === false
+        ? Object.entries(node.attributes)
+        : Object.entries(node.attributes).filter(([key]) =>
+            order.includes(key),
+          );
+
+    const sorted =
+      options?.sortAttributes === false
+        ? filtered
+        : filtered.sort(([a], [b]) => order.indexOf(a) - order.indexOf(b));
+
+    node.attributes = Object.fromEntries(sorted);
 
     if (node.name === "path") {
       const pattern = /m([^m]*)/gi;
@@ -47,7 +62,7 @@ const getChildren = (node: INode): INode[] => {
               type: "element",
               value: "",
               children: [],
-              attributes: { d: val },
+              attributes: { ...node.attributes, d: val },
             })) || []
         );
       }
@@ -57,9 +72,29 @@ const getChildren = (node: INode): INode[] => {
   return [];
 };
 
-const format = (svg: string) => {
+const format = (svg: string, options?: Options) => {
   const data = parseSync(svg.includes("<svg") ? svg : `<svg>${svg}</svg>`);
-  const children = getChildren(data);
+  const children = getChildren(data, options).map(
+    (c) => "  " + stringify(c).replace(/\/>$/, " />"),
+  );
+
+  const sorted =
+    options?.sortNodes === false
+      ? children
+      : children.sort((a, b) => {
+          const isPathA = a.includes("<path");
+          const isPathB = b.includes("<path");
+          if (isPathA && !isPathB) return -1;
+          if (!isPathA && isPathB) return 1;
+          return a.localeCompare(b);
+        });
+
+  const filtered =
+    options?.filterNodes === false
+      ? sorted
+      : sorted.filter(
+          (val, idx, arr) => arr.findIndex((v) => v === val) === idx,
+        );
 
   return `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -72,17 +107,7 @@ const format = (svg: string) => {
   stroke-linecap="round"
   stroke-linejoin="round"
 >
-${children
-  .map((c) => "  " + stringify(c).replace(/\/>$/, " />"))
-  .sort((a, b) => {
-    const isPathA = a.includes("<path");
-    const isPathB = b.includes("<path");
-    if (isPathA && !isPathB) return -1;
-    if (!isPathA && isPathB) return 1;
-    return a.localeCompare(b);
-  })
-  .filter((val, idx, arr) => arr.findIndex((v) => v === val) === idx)
-  .join("\n")}
+${filtered.join("\n")}
 </svg>`;
 };
 
