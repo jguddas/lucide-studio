@@ -229,7 +229,7 @@ const Menu = ({
               window.navigator.clipboard.writeText(
                 `<a title="Open lucide studio" target="_blank" href="${
                   window.location.href
-                }"><img alt="icons" width="100%" src="https://lucide.dev/api/gh-icon/${name ? `${name}/` : ""}${Buffer.from(
+                }"><img alt="icons" width="200px" src="https://lucide.dev/api/gh-icon/${name ? `${name}/` : ""}${Buffer.from(
                   value,
                 ).toString("base64")}.svg"/><br/>Open lucide studio</a>`,
               );
