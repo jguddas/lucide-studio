@@ -1,4 +1,5 @@
 import svgson from "svgson";
+import { camelCase, upperFirst } from "lodash";
 
 export type LucideIconNode = readonly [string, Record<string, string>]
   | readonly [string, Record<string, string>, LucideIconNode[]];
@@ -12,6 +13,6 @@ export const toLucideIconDataCode = async (svg: string, name?: string | null): P
 
   const parsed = await svgson.parse(svg);
   return `
-export const ${name ?? 'Foobar'}Icon = ${JSON.stringify(parsed.children.map(mapNode), undefined, 2)};
+export const ${upperFirst(camelCase(name ?? 'foobar'))}Icon = ${JSON.stringify(parsed.children.map(mapNode), undefined, 2)};
 `;
 }
