@@ -20,9 +20,12 @@ export const getPatternMatches = (paths: Path[]) => {
   for (const [patternName, pattern] of patterns) {
     if (!pattern.vectors.isSubsetOf(vectorSet)) continue;
 
-    for (let i = 0; i < paths.length; i++) {
-      if (!pattern.vectors.has(vectors[i])) continue;
-      const points = getPoints(paths, paths[i].prev);
+    for (let i = 0; i < paths.length * 2; i++) {
+      if (!pattern.vectors.has(vectors[Math.floor(i / 2)])) continue;
+      const points = getPoints(
+        paths,
+        paths[Math.floor(i / 2)][i % 2 ? "prev" : "next"],
+      );
       const pointSet = new Set(points);
       if (!pattern.points.isSubsetOf(pointSet)) continue;
       const matchedPaths: Path[] = [];
@@ -33,7 +36,7 @@ export const getPatternMatches = (paths: Path[]) => {
       ) {
         if (!pattern.vectors.has(vectors[j])) continue;
         if (
-          !pattern.points.has(points[j * 2]) &&
+          !pattern.points.has(points[j * 2]) ||
           !pattern.points.has(points[j * 2 + 1])
         )
           continue;
