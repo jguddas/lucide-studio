@@ -248,7 +248,7 @@ const Menu = ({
             className="gap-1.5"
           >
             <BracesIcon />
-            Copy LucideIconData code to clipboard
+            Copy lucide icon data code to clipboard
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
