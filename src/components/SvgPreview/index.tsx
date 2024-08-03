@@ -35,7 +35,7 @@ const Grid = ({
         new Array(Math.floor(24 - 1))
           .fill(null)
           .map((_, i) => i)
-          .filter((i) => showSubGrid || i % 3 !== 2)
+          .filter((i) => !showSubGrid || i % 3 !== 2)
           .flatMap((i) => [
             `M${props.strokeWidth} ${i + 1}h${24 - props.strokeWidth * 2}`,
             `M${i + 1} ${props.strokeWidth}v${24 - props.strokeWidth * 2}`,
@@ -43,7 +43,7 @@ const Grid = ({
           .join("")
       }
     />
-    {!showSubGrid && (
+    {showSubGrid && (
       <path
         d={
           props.d ||
@@ -394,7 +394,7 @@ const SvgPreview = React.forwardRef<
           stroke="#777"
           strokeOpacity={0.3}
           radius={1}
-          showSubGrid={patternMatches.length > 0}
+          showSubGrid={!patternMatches.length}
         />
       )}
       <Shadow
