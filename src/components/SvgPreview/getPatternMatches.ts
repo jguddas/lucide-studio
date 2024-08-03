@@ -35,11 +35,7 @@ export const getPatternMatches = (paths: Path[]) => {
         j++
       ) {
         if (!pattern.vectors.has(vectors[j])) continue;
-        if (
-          !pattern.points.has(points[j * 2]) ||
-          !pattern.points.has(points[j * 2 + 1])
-        )
-          continue;
+        if (!pattern.points.has(points[j])) continue;
         matchedPaths.push(paths[j]);
       }
       if (matchedPaths.length !== pattern.size) continue;
@@ -49,24 +45,23 @@ export const getPatternMatches = (paths: Path[]) => {
   return output;
 };
 
-const getVectors = (paths: Path[]) =>
-  paths.map(({ next, prev, c }) =>
-    [
-      c.type === 8 || c.type === 4 || c.type === 1 ? 16 : c.type,
-      Math.round(Math.abs(next.x - prev.x) * 1000) / 1000,
+export const getVectors = (paths: Path[]) =>
+  paths.map(
+    ({ next, prev, c }) =>
+      (c.type === 8 || c.type === 4 || c.type === 1 ? 16 : c.type) +
+      "|" +
+      Math.round(Math.abs(next.x - prev.x) * 1000) / 1000 +
+      "|" +
       Math.round(Math.abs(next.y - prev.y) * 1000) / 1000,
-    ].join("|"),
   );
 
-const getPoints = (
+export const getPoints = (
   paths: Path[],
   offset: { x: number; y: number } = { x: 0, y: 0 },
 ) =>
-  paths.flatMap(({ prev, next }) => [
-    Math.round((prev.x - offset.x) * 1000) / 1000 +
+  paths.map(
+    ({ prev, next }) =>
+      Math.round(((prev.x + next.x) / 2 - offset.x) * 1000) / 1000 +
       "|" +
-      Math.round((prev.y - offset.y) * 1000) / 1000,
-    Math.round((next.x - offset.x) * 1000) / 1000 +
-      "|" +
-      Math.round((next.y - offset.y) * 1000) / 1000,
-  ]);
+      Math.round(((prev.y + next.y) / 2 - offset.y) * 1000) / 1000,
+  );
