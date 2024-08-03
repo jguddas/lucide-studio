@@ -330,7 +330,7 @@ const BoundingBox = ({
         <path
           mask={`url(#svg-preview-bounding-box-mask-${id})`}
           id={`svg-preview-bounding-box-${id}`}
-          d={`M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5`}
+          d={`M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5z`}
         />
         <text
           fill={props.stroke}
