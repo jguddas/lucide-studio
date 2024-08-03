@@ -320,34 +320,27 @@ const BoundingBox = ({
         maskUnits="userSpaceOnUse"
       >
         <rect x={-1} y={-1} width={26} height={26} fill="#fff" />
-        <text
-          x={x1 - 1 + 0.75}
-          y={y1 - 1}
-          fontSize={0.75}
-          strokeWidth={0.4}
-          dominantBaseline="middle"
-        >
-          {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
+        <text fontSize={0.75} strokeWidth={0.4} dominantBaseline="middle">
+          <textPath href={`#svg-preview-bounding-box-${id}`}>
+            {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
+          </textPath>
         </text>
       </mask>
       <g fillOpacity={props.strokeOpacity} {...props}>
-        <rect
+        <path
           mask={`url(#svg-preview-bounding-box-mask-${id})`}
-          x={x1 - 1}
-          y={y1 - 1}
-          width={x2 - x1 + 2}
-          height={y2 - y1 + 2}
-          rx={0.5}
+          id={`svg-preview-bounding-box-${id}`}
+          d={`M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5`}
         />
         <text
           fill={props.stroke}
-          x={x1 - 1 + 0.75}
-          y={y1 - 1}
           fontSize={0.75}
           strokeWidth={0.06}
           dominantBaseline="middle"
         >
-          {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
+          <textPath href={`#svg-preview-bounding-box-${id}`}>
+            {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
+          </textPath>
         </text>
       </g>
     </>
