@@ -14,20 +14,21 @@ import {
 } from "@/components/ui/menubar";
 import optimize from "@/components/IconEditor/optimize";
 import {
+  BracesIcon,
   BrushIcon,
+  createLucideIcon,
   DownloadIcon,
+  DraftingCompassIcon,
   FolderUpIcon,
   LogOutIcon,
   MaximizeIcon,
   MinimizeIcon,
   MoonIcon,
   RedoIcon,
-  TextSelectionIcon,
-  DraftingCompassIcon,
   SunIcon,
+  TextSelectionIcon,
   UndoIcon,
   WandSparklesIcon,
-  createLucideIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import format from "./format";
@@ -36,6 +37,7 @@ import { signOut, useSession } from "next-auth/react";
 import { useQueryState } from "next-usequerystate";
 import arcify from "./arcify";
 import { toast } from "sonner";
+import { toLucideIconDataCode } from "./toLucideIconDataCode";
 
 const ColorfulDownloadIcon = createLucideIcon("ColorfulDownloadIcon", [
   ["path", { stroke: "#1982c4", d: "M 12 15 L 12 3" }],
@@ -238,6 +240,17 @@ const Menu = ({
           >
             <TextSelectionIcon />
             Copy preview embed code to clipboard
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => {
+              toLucideIconDataCode(value, name).then((data) =>
+                window.navigator.clipboard.writeText(data),
+              );
+            }}
+            className="gap-1.5"
+          >
+            <BracesIcon />
+            Copy data code to clipboard
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
