@@ -387,7 +387,7 @@ const BoundingBox = ({
           strokeWidth={0.4}
           dominantBaseline="middle"
         >
-          {label} ({Math.round(x2 - x1)}x{Math.round(y2 - y1)})
+          {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
         </text>
       </mask>
       <g fillOpacity={props.strokeOpacity} {...props}>
@@ -407,7 +407,7 @@ const BoundingBox = ({
           strokeWidth={0.06}
           dominantBaseline="middle"
         >
-          {label} ({Math.round(x2 - x1)}x{Math.round(y2 - y1)})
+          {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
         </text>
       </g>
     </>
