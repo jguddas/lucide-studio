@@ -1,5 +1,5 @@
-import { SVGProps } from 'react';
-import { getCommands } from './utils';
+import { SVGProps } from "react";
+import { getCommands } from "./utils";
 
 export type Point = { x: number; y: number };
 
@@ -15,9 +15,18 @@ export type Path = {
 };
 
 export type PathProps<
-  RequiredProps extends keyof SVGProps<SVGPathElement | SVGRectElement | SVGCircleElement>,
-  NeverProps extends keyof SVGProps<SVGPathElement | SVGRectElement | SVGCircleElement>
-> = Required<Pick<React.SVGProps<SVGElement & SVGRectElement & SVGCircleElement>, RequiredProps>> &
+  RequiredProps extends keyof SVGProps<
+    SVGPathElement | SVGRectElement | SVGCircleElement
+  >,
+  NeverProps extends keyof SVGProps<
+    SVGPathElement | SVGRectElement | SVGCircleElement
+  >,
+> = Required<
+  Pick<
+    React.SVGProps<SVGElement & SVGRectElement & SVGCircleElement>,
+    RequiredProps
+  >
+> &
   Omit<
     React.SVGProps<SVGPathElement & SVGRectElement & SVGCircleElement>,
     RequiredProps & NeverProps

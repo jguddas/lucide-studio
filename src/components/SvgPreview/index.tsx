@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useId } from "react";
 import { PathProps, Path } from "./types";
 import getPaths, { assert } from "./utils";
+import { svgPathBbox } from "svg-path-bbox";
+import memoize from "lodash/memoize";
+import { getPatternMatches } from "./getPatternMatches";
 
 const Grid = ({
   radius,
   fill,
+  showSubGrid,
   ...props
 }: {
   strokeWidth: number;
+  showSubGrid: boolean;
   radius: number;
 } & PathProps<"stroke", "strokeWidth">) => (
   <g className="svg-preview-grid-group" strokeLinecap="butt" {...props}>
@@ -21,14 +26,16 @@ const Grid = ({
       fill={fill}
     />
     <path
-      strokeDasharray={"0 0.1 " + "0.1 0.15 ".repeat(11) + "0 0.15"}
+      strokeDasharray={
+        "0 0.1 " + "0.1 0.15 ".repeat(showSubGrid ? 11 : 95) + "0 0.15"
+      }
       strokeWidth={0.1}
       d={
         props.d ||
         new Array(Math.floor(24 - 1))
           .fill(null)
           .map((_, i) => i)
-          .filter((i) => i % 3 !== 2)
+          .filter((i) => showSubGrid || i % 3 !== 2)
           .flatMap((i) => [
             `M${props.strokeWidth} ${i + 1}h${24 - props.strokeWidth * 2}`,
             `M${i + 1} ${props.strokeWidth}v${24 - props.strokeWidth * 2}`,
@@ -36,20 +43,22 @@ const Grid = ({
           .join("")
       }
     />
-    <path
-      d={
-        props.d ||
-        new Array(Math.floor(24 - 1))
-          .fill(null)
-          .map((_, i) => i)
-          .filter((i) => i % 3 === 2)
-          .flatMap((i) => [
-            `M${props.strokeWidth} ${i + 1}h${24 - props.strokeWidth * 2}`,
-            `M${i + 1} ${props.strokeWidth}v${24 - props.strokeWidth * 2}`,
-          ])
-          .join("")
-      }
-    />
+    {!showSubGrid && (
+      <path
+        d={
+          props.d ||
+          new Array(Math.floor(24 - 1))
+            .fill(null)
+            .map((_, i) => i)
+            .filter((i) => i % 3 === 2)
+            .flatMap((i) => [
+              `M${props.strokeWidth} ${i + 1}h${24 - props.strokeWidth * 2}`,
+              `M${i + 1} ${props.strokeWidth}v${24 - props.strokeWidth * 2}`,
+            ])
+            .join("")
+        }
+      />
+    )}
   </g>
 );
 
@@ -353,6 +362,58 @@ const Handles = ({
   </g>
 );
 
+const mSvgPathBbox = memoize(svgPathBbox);
+const BoundingBox = ({
+  label,
+  paths,
+  ...props
+}: { label: string; paths: Path[] } & PathProps<
+  "stroke" | "strokeWidth" | "strokeOpacity",
+  any
+>) => {
+  const id = useId();
+  const [x1, y1, x2, y2] = mSvgPathBbox(paths.map(({ d }) => d).join(""));
+  return (
+    <>
+      <mask
+        id={`svg-preview-bounding-box-mask-${id}`}
+        maskUnits="userSpaceOnUse"
+      >
+        <rect x={-1} y={-1} width={26} height={26} fill="#fff" />
+        <text
+          x={x1 - 1 + 0.75}
+          y={y1 - 1}
+          fontSize={0.75}
+          strokeWidth={0.4}
+          dominantBaseline="middle"
+        >
+          {label} ({Math.round(x2 - x1)}x{Math.round(y2 - y1)})
+        </text>
+      </mask>
+      <g fillOpacity={props.strokeOpacity} {...props}>
+        <rect
+          mask={`url(#svg-preview-bounding-box-mask-${id})`}
+          x={x1 - 1}
+          y={y1 - 1}
+          width={x2 - x1 + 2}
+          height={y2 - y1 + 2}
+          rx={0.5}
+        />
+        <text
+          fill={props.stroke}
+          x={x1 - 1 + 0.75}
+          y={y1 - 1}
+          fontSize={0.75}
+          strokeWidth={0.06}
+          dominantBaseline="middle"
+        >
+          {label} ({Math.round(x2 - x1)}x{Math.round(y2 - y1)})
+        </text>
+      </g>
+    </>
+  );
+};
+
 const SvgPreview = React.forwardRef<
   SVGSVGElement,
   {
@@ -361,6 +422,7 @@ const SvgPreview = React.forwardRef<
   } & React.SVGProps<SVGSVGElement>
 >(({ src, children, showGrid = false, ...props }, ref) => {
   const paths = typeof src === "string" ? getPaths(src) : src;
+  const patternMatches = getPatternMatches(paths);
 
   const darkModeCss = `
   .dark .svg
@@ -387,7 +449,13 @@ const SvgPreview = React.forwardRef<
     >
       <style>{darkModeCss}</style>
       {showGrid && (
-        <Grid strokeWidth={0.1} stroke="#777" strokeOpacity={0.3} radius={1} />
+        <Grid
+          strokeWidth={0.1}
+          stroke="#777"
+          strokeOpacity={0.3}
+          radius={1}
+          showSubGrid={patternMatches.length > 0}
+        />
       )}
       <Shadow
         paths={paths}
@@ -440,6 +508,19 @@ const SvgPreview = React.forwardRef<
         strokeOpacity={0.3}
       />
       <EndPointAlignmentCheck paths={paths} strokeWidth={0.12} stroke="red" />
+      <>
+        {patternMatches.map(({ patternName, paths }, idx) => (
+          <BoundingBox
+            {...props}
+            key={idx}
+            label={patternName}
+            paths={paths}
+            strokeWidth={0.12}
+            stroke="#777"
+            strokeOpacity={0.3}
+          />
+        ))}
+      </>
       {children}
     </svg>
   );
