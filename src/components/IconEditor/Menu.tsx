@@ -16,6 +16,7 @@ import optimize from "@/components/IconEditor/optimize";
 import {
   BracesIcon,
   BrushIcon,
+  CodeXmlIcon,
   DownloadIcon,
   DraftingCompassIcon,
   FolderUpIcon,
@@ -35,8 +36,8 @@ import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
 import { useQueryState } from "next-usequerystate";
 import arcify from "./arcify";
-import { toast } from "sonner";
-import { toLucideIconDataCode } from "./toLucideIconDataCode";
+import { toDataCode } from "./toDataCode";
+import { toReactCode } from "./toReactCode";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -208,7 +209,7 @@ const Menu = ({
           </MenubarItem>
           <MenubarItem
             onClick={() => {
-              toLucideIconDataCode(value, name).then((data) =>
+              toDataCode(value, name).then((data) =>
                 window.navigator.clipboard.writeText(data),
               );
             }}
@@ -216,6 +217,17 @@ const Menu = ({
           >
             <BracesIcon />
             Copy data code to clipboard
+          </MenubarItem>
+          <MenubarItem
+            onClick={() => {
+              toReactCode(value, name).then((data) =>
+                window.navigator.clipboard.writeText(data),
+              );
+            }}
+            className="gap-1.5"
+          >
+            <CodeXmlIcon />
+            Copy react code to clipboard
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
