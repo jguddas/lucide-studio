@@ -139,8 +139,6 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   ${selected
     .map(
       ({ c: { id, idx } }) => `
-  .svg-editor-segment-${id}-${idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
-  .svg-editor-segment-${id}-${idx}:active { cursor: grabbing !important }
   .icon-editor-highlight-segment-${id}-${idx} {
     box-shadow: 0 0 0 2px black !important;
   }`,

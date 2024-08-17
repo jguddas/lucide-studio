@@ -490,37 +490,41 @@ const SvgEditor = ({
           <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.5" />
         </filter>
         <mask id="svg-editor-opacity-mask" maskUnits="userSpaceOnUse">
-          <rect x={-1} y={-1} width={26} height={26} fill="white" />
-          <rect
-            x={-1}
-            y={-1}
-            width={26}
-            height={26}
-            fill="black"
-            fillOpacity={0.5}
-          />
+          <rect x={0} y={0} width={24} height={24} stroke="none" fill="black" />
+          {selected.map(({ c: { id, idx } }, i) => (
+            <React.Fragment key={i}>
+              <path
+                d={paths.find((p) => p.c.id === id && p.c.idx === idx)?.d ?? ""}
+                stroke="white"
+                strokeWidth={2.25}
+              />
+            </React.Fragment>
+          ))}
+          {selected.map(({ c: { id, idx } }, i) => (
+            <React.Fragment key={i}>
+              <path
+                d={paths.find((p) => p.c.id === id && p.c.idx === idx)?.d ?? ""}
+                stroke="black"
+              />
+            </React.Fragment>
+          ))}
         </mask>
-        <g
-          strokeWidth={1.5}
-          strokeOpacity={0}
+        <rect
+          x={0}
+          y={0}
+          width={24}
+          height={24}
+          className="fill-black dark:fill-white"
+          stroke="none"
           mask="url(#svg-editor-opacity-mask)"
-        >
+        />
+        <g strokeWidth={1.5} strokeOpacity={0}>
           {paths.map(({ d, c, next, prev, circle, cp1, cp2 }, i) => (
             <React.Fragment key={i}>
               <path
                 className={`svg-editor-path svg-editor-segment-${c.id}-${c.idx}`}
                 d={d}
               />
-            </React.Fragment>
-          ))}
-        </g>
-        <g
-          strokeWidth={1.5}
-          strokeOpacity={0}
-          mask="url(#svg-editor-opacity-mask)"
-        >
-          {paths.map(({ d, c, next, prev, circle, cp1, cp2 }, i) => (
-            <React.Fragment key={i}>
               <path
                 className={`svg-editor-start svg-editor-segment-${c.id}-${c.idx}`}
                 d={`M${prev.x} ${prev.y}h.01`}
