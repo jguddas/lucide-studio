@@ -113,6 +113,15 @@ const SvgEditor = ({
             type: className.split(" ")[0],
           };
           onSelectionChange((selection) => {
+            if (event.shiftKey && !selection.length) {
+              return paths
+                .filter((p) => p.c.id === id)
+                .map((p) => ({
+                  ...p,
+                  startPosition: { x: clientX, y: clientY },
+                  type: className.split(" ")[0],
+                }));
+            }
             const alreadySelected = selection.some(
               (s) => s.c.id === id && s.c.idx === idx,
             );

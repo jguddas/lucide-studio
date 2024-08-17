@@ -33,6 +33,12 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
           onChange={(value) => onChange(format(value))}
           onSelectionChange={setSelected}
         />
+        <span className="text-xs text-muted-foreground hidden lg:inline-block">
+          Tip:{" "}
+          {selected.length
+            ? "Shift-click to add or remove segments from the selection."
+            : "Shift-click to select the full element."}
+        </span>
       </div>
       <div className="relative flex flex-col gap-1.5 w-full">
         <Label htmlFor="source-editor">Source</Label>
