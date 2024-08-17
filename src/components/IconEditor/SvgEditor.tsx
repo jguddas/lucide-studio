@@ -453,17 +453,17 @@ const SvgEditor = ({
         scopedPathsString = movedPathsString;
         movedPaths = JSON.parse(movedPathsString);
         const nodes = getNodes(src);
-        onChange(
-          nodesToSvg(
-            nodes.flatMap((val, id) =>
-              // @ts-ignore
-              id === dragTargetRef.current?.c.id ||
-              selected.some(({ c }) => c.id === id)
-                ? movedPaths.filter(({ c }) => c.id === id).map(pathToPathNode)
-                : [val],
-            ),
-          ),
+        const nextNodes = nodes.flatMap((val, id) =>
+          // @ts-ignore
+          id === dragTargetRef.current?.c.id ||
+          selected.some(({ c }) => c.id === id)
+            ? movedPaths.filter(({ c }) => c.id === id).map(pathToPathNode)
+            : [val],
         );
+        onChange(nodesToSvg(nextNodes as any));
+        if (nextNodes.length !== nodes.length) {
+          onSelectionChange([]);
+        }
       }
       dragTargetRef.current = undefined;
     };
