@@ -113,10 +113,13 @@ const SvgEditor = ({
             type: className.split(" ")[0],
           };
           onSelectionChange((selection) => {
-            if (
-              event.shiftKey ||
-              selection.some((s) => s.c.id === id && s.c.idx === idx)
-            ) {
+            const alreadySelected = selection.some(
+              (s) => s.c.id === id && s.c.idx === idx,
+            );
+            if (event.shiftKey && alreadySelected) {
+              return selection.filter((s) => s.c.id !== id || s.c.idx !== idx);
+            }
+            if (event.shiftKey || alreadySelected) {
               return [...selection, dragTargetRef.current!];
             }
             return [dragTargetRef.current!];
@@ -445,7 +448,8 @@ const SvgEditor = ({
           nodesToSvg(
             nodes.flatMap((val, id) =>
               // @ts-ignore
-              id === dragTargetRef.current?.c.id
+              id === dragTargetRef.current?.c.id ||
+              selected.some(({ c }) => c.id === id)
                 ? movedPaths.filter(({ c }) => c.id === id).map(pathToPathNode)
                 : [val],
             ),
