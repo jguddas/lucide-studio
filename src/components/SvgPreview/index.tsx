@@ -306,13 +306,14 @@ const mSvgPathBbox = memoize(svgPathBbox);
 const BoundingBox = ({
   label,
   paths,
+  bounds: [x1, y1, x2, y2],
   ...props
-}: { label: string; paths: Path[] } & PathProps<
-  "stroke" | "strokeWidth" | "strokeOpacity",
-  any
->) => {
+}: {
+  label: string;
+  bounds: [number, number, number, number];
+  paths: Path[];
+} & PathProps<"stroke" | "strokeWidth" | "strokeOpacity", any>) => {
   const id = useId();
-  const [x1, y1, x2, y2] = mSvgPathBbox(paths.map(({ d }) => d).join(""));
   return (
     <>
       <mask
@@ -346,6 +347,11 @@ const BoundingBox = ({
     </>
   );
 };
+
+const areBoundingBoxesIntersecting = (
+  a: [number, number, number, number],
+  b: [number, number, number, number],
+) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
 
 const SvgPreview = React.forwardRef<
   SVGSVGElement,
@@ -441,17 +447,31 @@ const SvgPreview = React.forwardRef<
         strokeOpacity={0.3}
       />
       <>
-        {patternMatches.map(({ patternName, paths }, idx) => (
-          <BoundingBox
-            {...props}
-            key={idx}
-            label={patternName}
-            paths={paths}
-            strokeWidth={0.12}
-            stroke="#777"
-            strokeOpacity={0.3}
-          />
-        ))}
+        {patternMatches
+          .map((patternMatch) => ({
+            ...patternMatch,
+            bounds: mSvgPathBbox(patternMatch.paths.map((p) => p.d).join(" ")),
+          }))
+          .filter(({ bounds }, idx, arr) =>
+            arr.every(
+              (other, otherIdx) =>
+                other === arr[idx] ||
+                idx < otherIdx ||
+                !areBoundingBoxesIntersecting(bounds, other.bounds),
+            ),
+          )
+          .map(({ patternName, paths, bounds }, idx) => (
+            <BoundingBox
+              {...props}
+              key={idx}
+              bounds={bounds}
+              label={patternName}
+              paths={paths}
+              strokeWidth={0.12}
+              stroke="#777"
+              strokeOpacity={0.3}
+            />
+          ))}
       </>
       {children}
     </svg>
