@@ -7,7 +7,7 @@ import { Path, Point } from "../SvgPreview/types";
 import getPaths, { getNodes } from "../SvgPreview/utils";
 import { stringify, INode } from "svgson";
 import throttle from "lodash/throttle";
-import { min, round } from "lodash";
+import { round } from "lodash";
 
 const nodesToSvg = (nodes: INode[]) => `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -48,11 +48,15 @@ export type Selection = {
 const SvgEditor = ({
   src,
   onChange,
+  selected,
   onSelectionChange,
 }: {
   src: string;
   onChange: (svg: string) => unknown;
-  onSelectionChange: (selection: Selection | undefined) => unknown;
+  selected: Selection[];
+  onSelectionChange: (
+    fn: ((selection: Selection[]) => Selection[]) | Selection[],
+  ) => unknown;
 }) => {
   const [paths, setPaths] = useState<Path[]>(() => getPaths(src));
   const dragTargetRef = useRef<Selection | undefined>(undefined);
@@ -79,7 +83,10 @@ const SvgEditor = ({
       if (event.target?.getAttribute("role") === "menuitem") {
         return;
       }
-      if (className?.startsWith("svg-editor-")) {
+      if (
+        className?.startsWith("svg-editor-") ||
+        className?.startsWith("svg-preview-bounding-box-label")
+      ) {
         event.preventDefault();
 
         const id = parseInt(className.split("-").at(-2));
@@ -99,19 +106,31 @@ const SvgEditor = ({
 
         event.preventDefault();
 
-        dragTargetRef.current = path
-          ? {
-              ...path,
-              startPosition: { x: clientX, y: clientY },
-              type: className.split(" ")[0],
+        if (path) {
+          dragTargetRef.current = {
+            ...path,
+            startPosition: { x: clientX, y: clientY },
+            type: className.split(" ")[0],
+          };
+          onSelectionChange((selection) => {
+            if (
+              event.shiftKey ||
+              selection.some((s) => s.c.id === id && s.c.idx === idx)
+            ) {
+              return [...selection, dragTargetRef.current!];
             }
-          : undefined;
-        onSelectionChange(dragTargetRef.current);
+            return [dragTargetRef.current!];
+          });
+        } else {
+          onSelectionChange([]);
+          dragTargetRef.current = undefined;
+        }
+
         return;
       }
       // @ts-ignore
       if (event.target?.closest("svg")?.id === "svg-editor") {
-        onSelectionChange(undefined);
+        onSelectionChange([]);
       }
     };
 
@@ -297,96 +316,119 @@ const SvgEditor = ({
           };
         };
 
-        for (let i = 0; i < scopedPaths.length; i++) {
+        const targetI = scopedPaths.findIndex(
+          (p) =>
+            p.c.id === dragTargetRef.current?.c?.id &&
+            p.c.idx === dragTargetRef.current?.c?.idx,
+        );
+
+        if (targetI === -1) return;
+
+        const snapDelta = getSnapDelta(
+          targetI,
+          (
+            {
+              "svg-editor-path": "prev",
+              "svg-editor-start": "prev",
+              "svg-editor-end": "next",
+              "svg-editor-circle": "circle",
+              "svg-editor-cp1": "cp1",
+              "svg-editor-cp2": "cp2",
+            } as const
+          )[dragTargetRef.current.type],
+        );
+
+        for (const {
+          c: { id, idx },
+        } of selected) {
+          const i = scopedPaths.findIndex(
+            (p) => p.c.id === id && p.c.idx === idx,
+          );
+
           const movedPath = movedPaths[i];
           const scopedPath = scopedPaths[i];
-          if (
-            scopedPath.c.id === dragTargetRef.current.c.id &&
-            scopedPath.c.idx === dragTargetRef.current.c.idx
-          ) {
-            const n = scopedPaths[i].d.split(" ");
 
-            switch (dragTargetRef.current.type) {
-              case "svg-editor-path": {
-                const snapDelta = getSnapDelta(i, "prev");
-                movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
-                movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
-                movedPath.next.x = scopedPath.next.x + snapDelta.x;
-                movedPath.next.y = scopedPath.next.y + snapDelta.y;
-                if (movedPath.circle && scopedPath.circle) {
-                  movedPath.circle.x = scopedPath.circle.x + snapDelta.x;
-                  movedPath.circle.y = scopedPath.circle.y + snapDelta.y;
-                }
-                if (movedPath.cp1 && scopedPath.cp1) {
-                  movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
-                  movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
-                }
-                if (movedPath.cp2 && scopedPath.cp2) {
-                  movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
-                  movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
-                }
-                break;
+          switch (dragTargetRef.current.type) {
+            case "svg-editor-path": {
+              movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
+              movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
+              movedPath.next.x = scopedPath.next.x + snapDelta.x;
+              movedPath.next.y = scopedPath.next.y + snapDelta.y;
+              if (movedPath.circle && scopedPath.circle) {
+                movedPath.circle.x = scopedPath.circle.x + snapDelta.x;
+                movedPath.circle.y = scopedPath.circle.y + snapDelta.y;
               }
-              case "svg-editor-circle": {
-                const snapDelta = getSnapDelta(i, "circle");
-                movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
-                movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
-                movedPath.next.x = scopedPath.next.x + snapDelta.x;
-                movedPath.next.y = scopedPath.next.y + snapDelta.y;
-                movedPath.circle!.x = scopedPath.circle!.x + snapDelta.x;
-                movedPath.circle!.y = scopedPath.circle!.y + snapDelta.y;
-                break;
+              if (movedPath.cp1 && scopedPath.cp1) {
+                movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
+                movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
               }
-              case "svg-editor-cp1": {
-                const snapDelta = getSnapDelta(i, "cp1");
-                movedPath.cp1!.x = scopedPath.cp1!.x + snapDelta.x;
-                movedPath.cp1!.y = scopedPath.cp1!.y + snapDelta.y;
-                break;
+              if (movedPath.cp2 && scopedPath.cp2) {
+                movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
+                movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
               }
-              case "svg-editor-cp2": {
-                const snapDelta = getSnapDelta(i, "cp2");
-                movedPath.cp2!.x = scopedPath.cp2!.x + snapDelta.x;
-                movedPath.cp2!.y = scopedPath.cp2!.y + snapDelta.y;
-                break;
-              }
-              case "svg-editor-start": {
-                const snapDelta = getSnapDelta(i, "prev");
-                movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
-                movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
-                if (movedPath.cp1 && scopedPath.cp1) {
-                  movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
-                  movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
-                }
-                break;
-              }
-              case "svg-editor-end": {
-                const snapDelta = getSnapDelta(i, "next");
-                movedPath.next.x = scopedPath.next.x + snapDelta.x;
-                movedPath.next.y = scopedPath.next.y + snapDelta.y;
-                if (movedPath.cp2 && scopedPath.cp2) {
-                  movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
-                  movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
-                }
-                break;
-              }
+              break;
             }
-            if (movedPath.cp1) {
-              n[3] = "C" + round(movedPath.cp1.x, 3);
-              n[4] = round(movedPath.cp1.y, 3) + "";
+            case "svg-editor-circle": {
+              if (i !== targetI) break;
+              movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
+              movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
+              movedPath.next.x = scopedPath.next.x + snapDelta.x;
+              movedPath.next.y = scopedPath.next.y + snapDelta.y;
+              movedPath.circle!.x = scopedPath.circle!.x + snapDelta.x;
+              movedPath.circle!.y = scopedPath.circle!.y + snapDelta.y;
+              break;
             }
-            if (movedPath.cp2) {
-              n[5] = round(movedPath.cp2.x, 3) + "";
-              n[6] = round(movedPath.cp2.y, 3) + "";
+            case "svg-editor-cp1": {
+              if (i !== targetI) break;
+              movedPath.cp1!.x = scopedPath.cp1!.x + snapDelta.x;
+              movedPath.cp1!.y = scopedPath.cp1!.y + snapDelta.y;
+              break;
             }
-            n[1] = round(movedPath.prev.x, 3) + "";
-            n[2] = round(movedPath.prev.y, 3) + "";
-            n[n.length - 2] = round(movedPath.next.x, 3) + "";
-            n[n.length - 1] = round(movedPath.next.y, 3) + "";
-            if (movedPath.d !== n.join(" ")) {
-              movedPath.d = n.join(" ");
-              movedPaths[i] = movedPath;
-              setPaths(movedPaths.slice(0));
+            case "svg-editor-cp2": {
+              if (i !== targetI) break;
+              movedPath.cp2!.x = scopedPath.cp2!.x + snapDelta.x;
+              movedPath.cp2!.y = scopedPath.cp2!.y + snapDelta.y;
+              break;
             }
+            case "svg-editor-start": {
+              if (i !== targetI) break;
+              movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
+              movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
+              if (movedPath.cp1 && scopedPath.cp1) {
+                movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
+                movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
+              }
+              break;
+            }
+            case "svg-editor-end": {
+              if (i !== targetI) break;
+              movedPath.next.x = scopedPath.next.x + snapDelta.x;
+              movedPath.next.y = scopedPath.next.y + snapDelta.y;
+              if (movedPath.cp2 && scopedPath.cp2) {
+                movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
+                movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
+              }
+              break;
+            }
+          }
+
+          const n = scopedPaths[i].d.split(" ");
+          if (movedPath.cp1) {
+            n[3] = "C" + round(movedPath.cp1.x, 3);
+            n[4] = round(movedPath.cp1.y, 3) + "";
+          }
+          if (movedPath.cp2) {
+            n[5] = round(movedPath.cp2.x, 3) + "";
+            n[6] = round(movedPath.cp2.y, 3) + "";
+          }
+          n[1] = round(movedPath.prev.x, 3) + "";
+          n[2] = round(movedPath.prev.y, 3) + "";
+          n[n.length - 2] = round(movedPath.next.x, 3) + "";
+          n[n.length - 1] = round(movedPath.next.y, 3) + "";
+          if (movedPath.d !== n.join(" ")) {
+            movedPath.d = n.join(" ");
+            movedPaths[i] = movedPath;
+            setPaths(movedPaths.slice(0));
           }
         }
       }
@@ -430,7 +472,7 @@ const SvgEditor = ({
       document.removeEventListener("touchmove", onMouseMove);
       document.removeEventListener("touchend", onMouseUp);
     };
-  }, [src, onChange, onSelectionChange]);
+  }, [src, selected, onChange, onSelectionChange]);
 
   return (
     <>

@@ -19,7 +19,7 @@ interface IconEditorProps {
 const IconEditor = ({ value, onChange }: IconEditorProps) => {
   const [, setName] = useQueryState("name");
   const [focus, setFocus] = useState(false);
-  const [selected, setSelected] = useState<Selection | undefined>(undefined);
+  const [selected, setSelected] = useState<Selection[]>([]);
   const [nextValue, setNextValue] = useState<string | undefined>(undefined);
   return (
     <div className="flex gap-5 flex-col lg:flex-row">
@@ -29,6 +29,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         </Label>
         <SvgEditor
           src={nextValue || value}
+          selected={selected}
           onChange={(value) => onChange(format(value))}
           onSelectionChange={setSelected}
         />
@@ -38,18 +39,15 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         <Editor
           textareaId="source-editor"
           value={nextValue || value}
-          onClick={(e) => {
+          onSelect={(_e) => {
+            const e = _e as any as React.ChangeEvent<HTMLTextAreaElement>;
+            const { selectionStart, selectionEnd } = e.target;
+
             const highlights = highlight(value);
-            // @ts-ignore
-            const selectionStart = e.target?.selectionStart as
-              | number
-              | undefined;
-            // @ts-ignore
-            const selectionEnd = e.target?.selectionEnd as number | undefined;
-            if (!selectionStart || selectionStart !== selectionEnd) return;
-            for (let i = selectionStart || 0; i >= 0; i--) {
+
+            const newSelection: Selection[] = [];
+            for (let i = selectionEnd || 0; i >= 0; i--) {
               if (i < selectionStart - 1 && highlights[i].includes("</span>")) {
-                setSelected(undefined);
                 break;
               }
               if (highlights[i].includes("icon-editor-highlight")) {
@@ -65,18 +63,16 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                       p.c.id + "" === match[1] && p.c.idx + "" === match[2],
                   );
 
-                setSelected(
-                  path
-                    ? {
-                        ...path,
-                        startPosition: { x: 0, y: 0 },
-                        type: "svg-editor-path",
-                      }
-                    : undefined,
-                );
-                break;
+                if (path) {
+                  newSelection.push({
+                    ...path,
+                    startPosition: { x: 0, y: 0 },
+                    type: "svg-editor-path",
+                  });
+                }
               }
             }
+            setSelected(newSelection);
           }}
           onPaste={(e) => {
             if (e.clipboardData.files.length > 0) {
@@ -89,7 +85,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                 const result = e.target?.result;
                 if (typeof result === "string") {
                   onChange(format(result));
-                  setSelected(undefined);
+                  setSelected([]);
                 }
               };
               reader.readAsText(e.clipboardData.files[0]);
@@ -109,7 +105,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                 setName(clipboardDataName[1]);
               }
               onChange(format(clipboardData));
-              setSelected(undefined);
+              setSelected([]);
             }
           }}
           onValueChange={onChange}
@@ -136,13 +132,20 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
       <style>
         {`
   textarea.npm__react-simple-code-editor__textarea:focus { outline: none }
+  .svg-preview-bounding-box-label:hover { cursor: pointer; user-select: none }
+  .svg-preview-bounding-box-label:active { cursor: grabbing }
   .svg-editor-path:hover, .svg-editor-start:hover, .svg-editor-end:hover, .svg-editor-circle:hover, .svg-editor-cp1:hover, .svg-editor-cp2:hover { stroke: black; stroke-opacity: 0.5 }
   .svg-editor-path, .svg-editor-start, .svg-editor-end, .svg-editor-circle, .svg-editor-cp1, .svg-editor-cp2 { cursor: pointer }
-  .svg-editor-segment-${selected?.c.id}-${selected?.c.idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
-  .svg-editor-segment-${selected?.c.id}-${selected?.c.idx}:active { cursor: grabbing !important }
-  .icon-editor-highlight-segment-${selected?.c.id}-${selected?.c.idx} {
+  ${selected
+    .map(
+      ({ c: { id, idx } }) => `
+  .svg-editor-segment-${id}-${idx}.svg-editor-path { stroke: black; stroke-opacity: 0.5 }
+  .svg-editor-segment-${id}-${idx}:active { cursor: grabbing !important }
+  .icon-editor-highlight-segment-${id}-${idx} {
     box-shadow: 0 0 0 2px black !important;
-  }
+  }`,
+    )
+    .join("")}
         `}
       </style>
     </div>
