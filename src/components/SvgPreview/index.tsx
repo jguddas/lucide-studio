@@ -339,7 +339,11 @@ const BoundingBox = ({
           strokeWidth={0.06}
           dominantBaseline="middle"
         >
-          <textPath href={`#svg-preview-bounding-box-${id}`}>
+          <textPath
+            href={`#svg-preview-bounding-box-${id}`}
+            className="svg-preview-bounding-box-label-path"
+            data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
+          >
             {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
           </textPath>
         </text>

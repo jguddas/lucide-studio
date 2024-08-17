@@ -159,8 +159,8 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
       <style>
         {`
   textarea.npm__react-simple-code-editor__textarea:focus { outline: none }
-  .svg-preview-bounding-box-label:hover { cursor: pointer; user-select: none }
-  .svg-preview-bounding-box-label:active { cursor: grabbing }
+  .svg-preview-bounding-box-label-path:hover { cursor: pointer; user-select: none }
+  .svg-preview-bounding-box-label-path:active { cursor: grabbing }
   .svg-editor-path:hover, .svg-editor-start:hover, .svg-editor-end:hover, .svg-editor-circle:hover, .svg-editor-cp1:hover, .svg-editor-cp2:hover { stroke: black; stroke-opacity: 0.5 }
   .svg-editor-path, .svg-editor-start, .svg-editor-end, .svg-editor-circle, .svg-editor-cp1, .svg-editor-cp2 { cursor: pointer }
   ${selected

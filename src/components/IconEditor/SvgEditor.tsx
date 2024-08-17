@@ -89,13 +89,6 @@ const SvgEditor = ({
       ) {
         event.preventDefault();
 
-        const id = parseInt(className.split("-").at(-2));
-        const idx = parseInt(className.split("-").at(-1));
-
-        const path = getPaths(src).find(
-          (p) => p.c.id === id && p.c.idx === idx,
-        );
-
         // @ts-ignore
         const clientX = event.clientX ?? event.touches[0].clientX;
         // @ts-ignore
@@ -104,35 +97,64 @@ const SvgEditor = ({
         // @ts-ignore
         if (event.touches?.length > 1) return;
 
-        event.preventDefault();
+        // @ts-ignore
+        const dataIds = event.target?.getAttribute("data-ids")?.split(" ") as
+          | string[]
+          | undefined;
+
+        const id = parseInt(
+          dataIds?.[0]?.split("-")[0] || className.split("-").at(-2),
+        );
+        const idx = parseInt(
+          dataIds?.[0]?.split("-")[1] || className.split("-").at(-1),
+        );
+
+        const paths = getPaths(src);
+        const path = paths.find((p) => p.c.id === id && p.c.idx === idx);
 
         if (path) {
           dragTargetRef.current = {
             ...path,
             startPosition: { x: clientX, y: clientY },
-            type: className.split(" ")[0],
+            type: dataIds?.length ? "svg-editor-path" : className.split(" ")[0],
           };
-          onSelectionChange((selection) => {
-            if (event.shiftKey && !selection.length) {
-              return paths
-                .filter((p) => p.c.id === id)
-                .map((p) => ({
-                  ...p,
+          if (dataIds?.length) {
+            onSelectionChange(
+              dataIds
+                ?.map((id) => id.split("-"))
+                .map(([id, idx]) => ({
+                  ...(paths.find(
+                    (p) => p.c.id === parseInt(id) && p.c.idx === parseInt(idx),
+                  ) as Path),
                   startPosition: { x: clientX, y: clientY },
-                  type: className.split(" ")[0],
-                }));
-            }
-            const alreadySelected = selection.some(
-              (s) => s.c.id === id && s.c.idx === idx,
+                  type: "svg-editor-path",
+                })) || [],
             );
-            if (event.shiftKey && alreadySelected) {
-              return selection.filter((s) => s.c.id !== id || s.c.idx !== idx);
-            }
-            if (event.shiftKey || alreadySelected) {
-              return [...selection, dragTargetRef.current!];
-            }
-            return [dragTargetRef.current!];
-          });
+          } else {
+            onSelectionChange((selection) => {
+              if (event.shiftKey && !selection.length) {
+                return paths
+                  .filter((p) => p.c.id === id)
+                  .map((p) => ({
+                    ...p,
+                    startPosition: { x: clientX, y: clientY },
+                    type: className.split(" ")[0],
+                  }));
+              }
+              const alreadySelected = selection.some(
+                (s) => s.c.id === id && s.c.idx === idx,
+              );
+              if (event.shiftKey && alreadySelected) {
+                return selection.filter(
+                  (s) => s.c.id !== id || s.c.idx !== idx,
+                );
+              }
+              if (event.shiftKey || alreadySelected) {
+                return [...selection, dragTargetRef.current!];
+              }
+              return [dragTargetRef.current!];
+            });
+          }
         } else {
           onSelectionChange([]);
           dragTargetRef.current = undefined;
@@ -523,7 +545,7 @@ const SvgEditor = ({
           y={0}
           width={24}
           height={24}
-          className="fill-black dark:fill-white"
+          className="fill-black dark:fill-white pointer-events-none"
           stroke="none"
           mask="url(#svg-editor-opacity-mask)"
         />
