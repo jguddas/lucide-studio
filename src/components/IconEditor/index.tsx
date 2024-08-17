@@ -45,22 +45,24 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
 
             const highlights = highlight(value);
 
+            const paths = getPaths(value);
             const newSelection: Selection[] = [];
             for (let i = selectionEnd || 0; i >= 0; i--) {
               if (i < selectionStart - 1 && highlights[i].includes("</span>")) {
                 break;
               }
               if (highlights[i].includes("icon-editor-highlight")) {
-                const match = highlights[i].match(
+                const matchPath = highlights[i].match(
                   /icon-editor-highlight-segment-(\d+)-(\d+)/,
                 );
 
                 const path =
-                  match?.[1] &&
-                  match?.[2] &&
-                  getPaths(value).find(
+                  matchPath?.[1] &&
+                  matchPath?.[2] &&
+                  paths.find(
                     (p) =>
-                      p.c.id + "" === match[1] && p.c.idx + "" === match[2],
+                      p.c.id + "" === matchPath[1] &&
+                      p.c.idx + "" === matchPath[2],
                   );
 
                 if (path) {
@@ -69,6 +71,25 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                     startPosition: { x: 0, y: 0 },
                     type: "svg-editor-path",
                   });
+                  continue;
+                }
+
+                const matchElement = highlights[i].match(
+                  /icon-editor-highlight-(\d+)/,
+                );
+
+                const element =
+                  !!matchElement?.[1] &&
+                  paths.filter((p) => p.c.id + "" === matchElement[1]);
+
+                if (element && element.length) {
+                  for (const path of element) {
+                    newSelection.push({
+                      ...path,
+                      startPosition: { x: 0, y: 0 },
+                      type: "svg-editor-path",
+                    });
+                  }
                 }
               }
             }
@@ -139,6 +160,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   ${selected
     .map(
       ({ c: { id, idx } }) => `
+  .icon-editor-highlight-${id},
   .icon-editor-highlight-segment-${id}-${idx} {
     box-shadow: 0 0 0 2px black !important;
   }`,
