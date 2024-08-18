@@ -10,6 +10,7 @@ import { WandSparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import getPaths from "@/components/SvgPreview/utils";
 import { useQueryState } from "next-usequerystate";
+import debounce from "lodash/debounce";
 
 interface IconEditorProps {
   value: string;
@@ -22,6 +23,60 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   const [focus, setFocus] = useState(false);
   const [selected, setSelected] = useState<Selection[]>([]);
   const [nextValue, setNextValue] = useState<string | undefined>(undefined);
+
+  const onSelect = debounce((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { selectionStart, selectionEnd } = e.target;
+
+    const highlights = highlight(value);
+
+    const paths = getPaths(value);
+    const newSelection: Selection[] = [];
+    for (let i = selectionEnd || 0; i >= 0; i--) {
+      if (i < selectionStart - 1 && highlights[i].includes("</span>")) {
+        break;
+      }
+      if (highlights[i].includes("icon-editor-highlight")) {
+        const matchPath = highlights[i].match(
+          /icon-editor-highlight-segment-(\d+)-(\d+)/,
+        );
+
+        const path =
+          matchPath?.[1] &&
+          matchPath?.[2] &&
+          paths.find(
+            (p) =>
+              p.c.id + "" === matchPath[1] && p.c.idx + "" === matchPath[2],
+          );
+
+        if (path) {
+          newSelection.push({
+            ...path,
+            startPosition: { x: 0, y: 0 },
+            type: "svg-editor-path",
+          });
+          continue;
+        }
+
+        const matchElement = highlights[i].match(/icon-editor-highlight-(\d+)/);
+
+        const element =
+          !!matchElement?.[1] &&
+          paths.filter((p) => p.c.id + "" === matchElement[1]);
+
+        if (element && element.length) {
+          for (const path of element) {
+            newSelection.push({
+              ...path,
+              startPosition: { x: 0, y: 0 },
+              type: "svg-editor-path",
+            });
+          }
+        }
+      }
+    }
+    setSelected(newSelection);
+  });
+
   return (
     <div className="flex gap-5 flex-col lg:flex-row">
       <div className="flex flex-col gap-1.5 h-[min-content] w-full lg:w-[480px]">
@@ -46,62 +101,8 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         <Editor
           textareaId="source-editor"
           value={nextValue || value}
-          onSelect={(_e) => {
-            const e = _e as any as React.ChangeEvent<HTMLTextAreaElement>;
-            const { selectionStart, selectionEnd } = e.target;
-
-            const highlights = highlight(value);
-
-            const paths = getPaths(value);
-            const newSelection: Selection[] = [];
-            for (let i = selectionEnd || 0; i >= 0; i--) {
-              if (i < selectionStart - 1 && highlights[i].includes("</span>")) {
-                break;
-              }
-              if (highlights[i].includes("icon-editor-highlight")) {
-                const matchPath = highlights[i].match(
-                  /icon-editor-highlight-segment-(\d+)-(\d+)/,
-                );
-
-                const path =
-                  matchPath?.[1] &&
-                  matchPath?.[2] &&
-                  paths.find(
-                    (p) =>
-                      p.c.id + "" === matchPath[1] &&
-                      p.c.idx + "" === matchPath[2],
-                  );
-
-                if (path) {
-                  newSelection.push({
-                    ...path,
-                    startPosition: { x: 0, y: 0 },
-                    type: "svg-editor-path",
-                  });
-                  continue;
-                }
-
-                const matchElement = highlights[i].match(
-                  /icon-editor-highlight-(\d+)/,
-                );
-
-                const element =
-                  !!matchElement?.[1] &&
-                  paths.filter((p) => p.c.id + "" === matchElement[1]);
-
-                if (element && element.length) {
-                  for (const path of element) {
-                    newSelection.push({
-                      ...path,
-                      startPosition: { x: 0, y: 0 },
-                      type: "svg-editor-path",
-                    });
-                  }
-                }
-              }
-            }
-            setSelected(newSelection);
-          }}
+          onSelect={(_e) => onSelect(_e as any)}
+          onClick={(_e) => onSelect(_e as any)}
           onPaste={(e) => {
             if (e.clipboardData.files.length > 0) {
               e.preventDefault();
