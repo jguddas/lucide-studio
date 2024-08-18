@@ -7,7 +7,8 @@ import { Path, Point } from "../SvgPreview/types";
 import getPaths, { getNodes } from "../SvgPreview/utils";
 import { stringify, INode } from "svgson";
 import throttle from "lodash/throttle";
-import { round } from "lodash";
+import round from "lodash/round";
+import debounce from "lodash/debounce";
 
 const nodesToSvg = (nodes: INode[]) => `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -75,6 +76,11 @@ const SvgEditor = ({
     } catch (e) {
       console.error(e);
     }
+
+    let isMenuOpen = false;
+    const onMenuUpdate = debounce(() => {
+      isMenuOpen = !!document.body.querySelector("[role='menu']");
+    });
 
     const onMouseDown = (event: MouseEvent | TouchEvent) => {
       //@ts-ignore
@@ -162,8 +168,13 @@ const SvgEditor = ({
 
         return;
       }
-      // @ts-ignore
-      if (event.target?.closest("svg")?.id === "svg-editor") {
+      if (
+        // @ts-ignore
+        !event.target.closest(
+          "button, a, input, textarea, select, details, [role='menuitem'], [role='menu']",
+        ) &&
+        !isMenuOpen
+      ) {
         onSelectionChange([]);
       }
     };
@@ -498,10 +509,14 @@ const SvgEditor = ({
     document.addEventListener("touchmove", onMouseMove);
     document.addEventListener("touchend", onMouseUp);
 
+    document.addEventListener("dismissableLayer.update", onMenuUpdate);
+
     return () => {
       document.removeEventListener("mousedown", onMouseDown);
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+
+      document.removeEventListener("dismissableLayer.update", onMenuUpdate);
 
       document.removeEventListener("touchstart", onMouseDown);
       document.removeEventListener("touchmove", onMouseMove);
