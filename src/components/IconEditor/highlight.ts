@@ -178,7 +178,7 @@ const highlight = (src: string) => {
   ) => {
     if (!src[start] || !src[end]) return src;
     src[start] =
-      `<span class="icon-editor-highlight-${selector}" style="position: relative;box-shadow: 0 0 0 1px white;color: #fff; background-color: ${color}; border-radius: 2px">` +
+      `<span class="icon-editor-highlight icon-editor-highlight-${selector}" style="position: relative; color: #fff; background-color: ${color}; border-radius: 2px">` +
       src[start];
     src[end - 1] = src[end - 1] + "</span>";
     return src;
