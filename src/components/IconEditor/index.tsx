@@ -172,7 +172,12 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
   .icon-editor-highlight-${id},
   .icon-editor-highlight-segment-${id}-${idx} {
     box-shadow: 0 0 0 2px black !important;
-  }`,
+  }
+  .icon-editor-highlight-${id}:is(.dark *),
+  .icon-editor-highlight-segment-${id}-${idx}:is(.dark *) {
+    box-shadow: 0 0 0 2px white !important;
+  }
+  `,
     )
     .join("")}
         `}
