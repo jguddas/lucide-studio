@@ -9,6 +9,7 @@ import { stringify, INode } from "svgson";
 import throttle from "lodash/throttle";
 import round from "lodash/round";
 import debounce from "lodash/debounce";
+import format from "./format";
 
 const nodesToSvg = (nodes: INode[]) => `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -493,10 +494,21 @@ const SvgEditor = ({
             ? movedPaths.filter(({ c }) => c.id === id).map(pathToPathNode)
             : [val],
         );
+        const nextPaths = getPaths(format(nodesToSvg(nextNodes as any)));
         onChange(nodesToSvg(nextNodes as any));
-        if (nextNodes.length !== nodes.length) {
-          onSelectionChange([]);
-        }
+        onSelectionChange(
+          selected
+            .map((selected) => {
+              const d = movedPaths.find(
+                (p) => p.c.id === selected.c.id && p.c.idx === selected.c.idx,
+              )?.d;
+              if (!d) return undefined;
+              const nextPath = nextPaths.find((nextPath) => nextPath.d === d);
+              if (!nextPath) return undefined;
+              return { ...selected, ...nextPath };
+            })
+            .filter(Boolean) as Selection[],
+        );
       }
       dragTargetRef.current = undefined;
     };

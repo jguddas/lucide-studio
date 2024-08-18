@@ -1,5 +1,6 @@
 import { INode, parseSync, stringify } from "svgson";
 import commander from "svg-path-commander";
+import memoize from "lodash/memoize";
 
 type Options = {
   filterNodes?: boolean;
@@ -111,4 +112,4 @@ ${filtered.join("\n")}
 </svg>`;
 };
 
-export default format;
+export default memoize(format);
