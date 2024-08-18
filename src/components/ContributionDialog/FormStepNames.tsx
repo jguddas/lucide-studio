@@ -39,6 +39,7 @@ const nameStepSchema = z.object({
     .transform((value) =>
       value.toLowerCase().replaceAll("-", " ").trim().replaceAll(" ", "-"),
     ),
+  base: z.string().optional(),
   branch: z.string().optional(),
 });
 
@@ -57,15 +58,17 @@ export const FormStepNames = ({
 }: FormStepNamesProps) => {
   const session = useSession();
   const [name, setName] = useQueryState("name", { defaultValue: "" });
+  const [base, setBase] = useQueryState("base", { defaultValue: "" });
   const [branch, setBranch] = useQueryState("branch", { defaultValue: "" });
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(
-    branch ? true : false,
+    !!branch || (name && base && name !== base),
   );
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
     defaultValues: {
       name,
       branch,
+      base: base || name,
       ...defaultValues,
     },
   });
@@ -127,7 +130,7 @@ export const FormStepNames = ({
           )}
         />
         {showAdvancedOptions ? (
-          <fieldset className="grid gap-6 rounded-lg border p-4 pt-2 relative">
+          <fieldset className="grid gap-4 rounded-lg border p-4 pt-2 relative">
             <legend className="-ml-1 px-1 text-sm font-medium">
               <button
                 type="button"
@@ -153,6 +156,28 @@ export const FormStepNames = ({
                         field.onChange(value);
                       }}
                       placeholder={name ? `studio/${name}` : ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={nameStepForm.control}
+              name="base"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Based on icon</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      aria-required
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setBase(value);
+                        field.onChange(value);
+                      }}
+                      placeholder={name}
                     />
                   </FormControl>
                   <FormMessage />

@@ -1,5 +1,4 @@
 import {
-  CircleCheck,
   CircleCheckIcon,
   ExternalLinkIcon,
   GitForkIcon,
@@ -119,15 +118,36 @@ const ContributionDialog = ({ value }: { value: string }) => {
           return;
         }
 
-        const url = new URL(
-          `${global?.window?.location?.origin}/api/metadata/${variables.name}`,
-        );
-        url.searchParams.set(
-          "branch",
-          variables.branch || `studio/${variables.name}`,
-        );
+        try {
+          const url = new URL(
+            `${global?.window?.location?.origin}/api/metadata/${variables.name}`,
+          );
+          url.searchParams.set(
+            "branch",
+            variables.branch || `studio/${variables.name}`,
+          );
 
-        return (await fetch(url)).json();
+          return await (await fetch(url)).json();
+        } catch (error) {
+          if (!variables.base) throw error;
+
+          const urlBase = new URL(
+            `${global?.window?.location?.origin}/api/metadata/${variables.base}`,
+          );
+          urlBase.searchParams.set(
+            "branch",
+            variables.branch || `studio/${variables.name}`,
+          );
+
+          const baseMetadata = await (await fetch(urlBase)).json();
+          return {
+            ...baseMetadata,
+            contributors: [
+              ...baseMetadata.contributors,
+              JSON.parse(session.data?.user?.image || "").login,
+            ],
+          };
+        }
       },
       onSuccess: async (data, variables) => {
         if (step.step !== "name") throw new Error("Invalid step");
@@ -147,6 +167,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
         setStep({
           step: "metadata",
           data: {
+            base: undefined,
             contributors: JSON.parse(session.data?.user?.image || "").login,
             ...(variables.name === step.data.name ? step.data : {}),
             ...variables,
