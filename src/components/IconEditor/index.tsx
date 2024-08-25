@@ -133,6 +133,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               );
               if (clipboardDataName && clipboardDataName[1]) {
                 setName(clipboardDataName[1]);
+                setBase(clipboardDataName[1]);
               }
               onChange(format(clipboardData));
               setSelected([]);
