@@ -24,6 +24,9 @@ import {
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { useQueryState } from "next-usequerystate";
+import { TagInput } from "./TagInput";
+import { tagStringToArray } from "./tag-string-to-array";
+import { Badge } from "../ui/badge";
 
 const nameStepSchema = z.object({
   name: z
@@ -58,7 +61,11 @@ export const FormStepNames = ({
 }: FormStepNamesProps) => {
   const session = useSession();
   const [name, setName] = useQueryState("name", { defaultValue: "" });
-  const [base, setBase] = useQueryState("base", { defaultValue: "" });
+  const [base, setBase] = useQueryState("base", {
+    defaultValue: "",
+    parse: (query: string) => decodeURIComponent(query),
+    serialize: (value) => encodeURIComponent(value),
+  });
   const [branch, setBranch] = useQueryState("branch", { defaultValue: "" });
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(
     !!branch || (name && base && name !== base),
@@ -167,18 +174,33 @@ export const FormStepNames = ({
               name="base"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Based on icon</FormLabel>
+                  <FormLabel>Based on icons</FormLabel>
                   <FormControl>
-                    <Input
+                    <TagInput
                       {...field}
-                      aria-required
                       onChange={(e) => {
-                        const value = e.target.value;
-                        setBase(value);
-                        field.onChange(value);
+                        const nextBase = e.target.value
+                          .toLowerCase()
+                          .replace(/(\w)[\s,]$/, "$1\n");
+                        field.onChange(nextBase);
+                        setBase(nextBase);
                       }}
-                      placeholder={name}
-                    />
+                      aria-required
+                    >
+                      {tagStringToArray(field.value).map((name) => {
+                        return (
+                          <Badge key={name} className="gap-1" variant="outline">
+                            <img
+                              className="h-4"
+                              src={`https://unpkg.com/lucide-static/icons/${name}.svg`}
+                              alt="[Unknown]"
+                              aria-hidden
+                            />
+                            {name}
+                          </Badge>
+                        );
+                      })}
+                    </TagInput>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

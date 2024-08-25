@@ -1,4 +1,5 @@
 import { FormStepNewIconChecklistData } from "./FormStepNewIconChecklist";
+import { tagStringToArray } from "./tag-string-to-array";
 
 const prForNewUrl = (
   data: FormStepNewIconChecklistData & {
@@ -50,8 +51,14 @@ ${data.useCase ?? ""}
 ### Author, credits & license
 <!-- Please choose one of the following, and put an "x" next to it. -->
 - [ ] The icons are solely my own creation.
-- [${data.base ? "x" : " "}] The icons were originally created in #<issueNumber> by @${data.base ? data.contributors.split("\n")[0] : "<githubUser>"}
-- [${data.base ? "x" : " "}] I've based them on the following Lucide icons: ${data.base ? `\`${data.base}\`` : "<!-- provide the list of icons -->"}
+- [${data.base ? "x" : " "}] The icons were originally created in #<issueNumber> by @${data.base ? tagStringToArray(data.contributors)[0] : "<githubUser>"}
+- [${data.base ? "x" : " "}] I've based them on the following Lucide icons: ${
+      data.base
+        ? tagStringToArray(data.base)
+            .map((val) => `\`${val}\``)
+            .join(", ")
+        : "<!-- provide the list of icons -->"
+    }
 - [ ] I've based them on the following design: <!-- provide source URL and license permitting use -->
 
 ### Naming

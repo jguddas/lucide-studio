@@ -131,15 +131,29 @@ const ContributionDialog = ({ value }: { value: string }) => {
         } catch (error) {
           if (!variables.base) throw error;
 
-          const urlBase = new URL(
-            `${global?.window?.location?.origin}/api/metadata/${variables.base}`,
-          );
-          urlBase.searchParams.set(
-            "branch",
-            variables.branch || `studio/${variables.name}`,
-          );
+          const baseMetadata = (
+            await Promise.all(
+              tagStringToArray(variables.base).map(async (base) => {
+                const urlBase = new URL(
+                  `${global?.window?.location?.origin}/api/metadata/${base}`,
+                );
+                urlBase.searchParams.set(
+                  "branch",
+                  variables.branch || `studio/${variables.name}`,
+                );
 
-          const baseMetadata = await (await fetch(urlBase)).json();
+                return (await fetch(urlBase)).json();
+              }),
+            )
+          ).reduce((acc, metadata) => {
+            return {
+              ...acc,
+              categories: [...acc.categories, ...metadata.categories],
+              tags: [...acc.tags, ...metadata.tags],
+              contributors: [...acc.contributors, ...metadata.contributors],
+            };
+          }, {});
+
           return {
             ...baseMetadata,
             contributors: [
