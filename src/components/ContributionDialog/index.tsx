@@ -133,7 +133,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
 
           const baseMetadata = (
             await Promise.all(
-              tagStringToArray(variables.base).map(async (base) => {
+              tagStringToArray(variables.base).map((base) => {
                 const urlBase = new URL(
                   `${global?.window?.location?.origin}/api/metadata/${base}`,
                 );
@@ -142,17 +142,24 @@ const ContributionDialog = ({ value }: { value: string }) => {
                   variables.branch || `studio/${variables.name}`,
                 );
 
-                return (await fetch(urlBase)).json();
+                return fetch(urlBase)
+                  .then((res) => res.json())
+                  .catch(() => ({}));
               }),
             )
-          ).reduce((acc, metadata) => {
-            return {
+          ).reduce(
+            (acc, metadata) => ({
               ...acc,
               categories: [...acc.categories, ...metadata.categories],
               tags: [...acc.tags, ...metadata.tags],
               contributors: [...acc.contributors, ...metadata.contributors],
-            };
-          }, {});
+            }),
+            {
+              categories: [],
+              tags: [],
+              contributors: [],
+            },
+          );
 
           return {
             ...baseMetadata,
