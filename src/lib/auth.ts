@@ -8,7 +8,7 @@ const GitHubProvider: OAuthConfig<GitHubProfile> = {
   type: "oauth",
   authorization: {
     url: "https://github.com/login/oauth/authorize",
-    params: { scope: "read:user repo" },
+    params: { scope: "read:user public_repo" },
   },
   token: "https://github.com/login/oauth/access_token",
   userinfo: {
