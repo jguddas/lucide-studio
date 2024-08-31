@@ -53,6 +53,8 @@ export const TagInput = React.forwardRef<HTMLTextAreaElement, TagInputProps>(
                 type="button"
                 size="icon"
                 className={"rounded-l-none w-10 h-full"}
+                aria-label="edit tags"
+                aria-pressed={isEditing}
                 onClick={() => {
                   setIsEditing((state) => {
                     return !state;
