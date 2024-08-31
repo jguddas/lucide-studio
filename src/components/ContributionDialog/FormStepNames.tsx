@@ -68,7 +68,7 @@ export const FormStepNames = ({
   });
   const [branch, setBranch] = useQueryState("branch", { defaultValue: "" });
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(
-    !!branch || (name && base && name !== base),
+    !!branch || (!!base && name !== base),
   );
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
