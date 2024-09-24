@@ -322,7 +322,7 @@ const BoundingBox = ({
   label: string;
   bounds: [number, number, number, number];
   paths: Path[];
-} & PathProps<"stroke" | "strokeWidth" | "strokeOpacity", any>) => {
+} & PathProps<any, any>) => {
   const id = useId();
   return (
     <>
@@ -378,6 +378,19 @@ const SvgPreview = React.forwardRef<
   const subGridSize = size % 3 === 0 ? 3 : size % 5 === 0 ? 5 : 0;
   const paths = typeof src === "string" ? getPaths(src) : src;
   const patternMatches = getPatternMatches(paths);
+  const patternMatchesWithBounds = patternMatches
+    .map((patternMatch) => ({
+      ...patternMatch,
+      bounds: mSvgPathBbox(patternMatch.paths.map((p) => p.d).join(" ")),
+    }))
+    .filter(({ bounds }, idx, arr) =>
+      arr.every(
+        (other, otherIdx) =>
+          other === arr[idx] ||
+          idx < otherIdx ||
+          !areBoundingBoxesIntersecting(bounds, other.bounds),
+      ),
+    );
 
   const darkModeCss = `
   .dark .svg
@@ -409,10 +422,31 @@ const SvgPreview = React.forwardRef<
           subGridSize={patternMatches.length ? 0 : subGridSize}
           strokeWidth={0.1}
           stroke="#777"
+          mask="url(#svg-preview-grid-mask)"
           strokeOpacity={0.3}
           radius={1}
         />
       )}
+      <mask id="svg-preview-grid-mask" maskUnits="userSpaceOnUse">
+        <rect
+          stroke="none"
+          fill="#fff"
+          x={0}
+          y={0}
+          width={size}
+          height={size}
+        />
+        {patternMatchesWithBounds.map(({ patternName, paths, bounds }, idx) => (
+          <BoundingBox
+            {...props}
+            key={idx}
+            bounds={bounds}
+            label={patternName}
+            paths={paths}
+            strokeWidth={0.12}
+          />
+        ))}
+      </mask>
       <Shadow
         size={size}
         paths={paths}
@@ -466,33 +500,18 @@ const SvgPreview = React.forwardRef<
         stroke="#FFF"
         strokeOpacity={0.3}
       />
-      <>
-        {patternMatches
-          .map((patternMatch) => ({
-            ...patternMatch,
-            bounds: mSvgPathBbox(patternMatch.paths.map((p) => p.d).join(" ")),
-          }))
-          .filter(({ bounds }, idx, arr) =>
-            arr.every(
-              (other, otherIdx) =>
-                other === arr[idx] ||
-                idx < otherIdx ||
-                !areBoundingBoxesIntersecting(bounds, other.bounds),
-            ),
-          )
-          .map(({ patternName, paths, bounds }, idx) => (
-            <BoundingBox
-              {...props}
-              key={idx}
-              bounds={bounds}
-              label={patternName}
-              paths={paths}
-              strokeWidth={0.12}
-              stroke="#777"
-              strokeOpacity={0.3}
-            />
-          ))}
-      </>
+      {patternMatchesWithBounds.map(({ patternName, paths, bounds }, idx) => (
+        <BoundingBox
+          {...props}
+          key={idx}
+          bounds={bounds}
+          label={patternName}
+          paths={paths}
+          strokeWidth={0.12}
+          stroke="#777"
+          strokeOpacity={0.3}
+        />
+      ))}
       {children}
     </svg>
   );
