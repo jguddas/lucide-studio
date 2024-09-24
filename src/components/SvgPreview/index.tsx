@@ -8,18 +8,20 @@ import { getPatternMatches } from "./getPatternMatches";
 const Grid = ({
   radius,
   fill,
-  showSubGrid,
+  size,
+  subGridSize = 0,
   ...props
 }: {
+  size: number;
   strokeWidth: number;
-  showSubGrid: boolean;
+  subGridSize?: number;
   radius: number;
 } & PathProps<"stroke", "strokeWidth">) => (
   <g className="svg-preview-grid-group" strokeLinecap="butt" {...props}>
     <rect
       className="svg-preview-grid-rect"
-      width={24 - props.strokeWidth}
-      height={24 - props.strokeWidth}
+      width={size - props.strokeWidth}
+      height={size - props.strokeWidth}
       x={props.strokeWidth / 2}
       y={props.strokeWidth / 2}
       rx={radius}
@@ -27,33 +29,35 @@ const Grid = ({
     />
     <path
       strokeDasharray={
-        "0 0.1 " + "0.1 0.15 ".repeat(showSubGrid ? 11 : 95) + "0 0.15"
+        "0 0.1 " +
+        "0.1 0.15 ".repeat(subGridSize ? subGridSize * 4 - 1 : 95) +
+        "0 0.15"
       }
       strokeWidth={0.1}
       d={
         props.d ||
-        new Array(Math.floor(24 - 1))
+        new Array(Math.floor(size - 1))
           .fill(null)
           .map((_, i) => i)
-          .filter((i) => !showSubGrid || i % 3 !== 2)
+          .filter((i) => !subGridSize || i % subGridSize !== subGridSize - 1)
           .flatMap((i) => [
-            `M${props.strokeWidth} ${i + 1}h${24 - props.strokeWidth * 2}`,
-            `M${i + 1} ${props.strokeWidth}v${24 - props.strokeWidth * 2}`,
+            `M${props.strokeWidth} ${i + 1}h${size - props.strokeWidth * 2}`,
+            `M${i + 1} ${props.strokeWidth}v${size - props.strokeWidth * 2}`,
           ])
           .join("")
       }
     />
-    {showSubGrid && (
+    {!!subGridSize && (
       <path
         d={
           props.d ||
-          new Array(Math.floor(24 - 1))
+          new Array(Math.floor(size - 1))
             .fill(null)
             .map((_, i) => i)
-            .filter((i) => i % 3 === 2)
+            .filter((i) => i % subGridSize === subGridSize - 1)
             .flatMap((i) => [
-              `M${props.strokeWidth} ${i + 1}h${24 - props.strokeWidth * 2}`,
-              `M${i + 1} ${props.strokeWidth}v${24 - props.strokeWidth * 2}`,
+              `M${props.strokeWidth} ${i + 1}h${size - props.strokeWidth * 2}`,
+              `M${i + 1} ${props.strokeWidth}v${size - props.strokeWidth * 2}`,
             ])
             .join("")
         }
@@ -65,8 +69,10 @@ const Grid = ({
 const Shadow = ({
   radius,
   paths,
+  size,
   ...props
 }: {
+  size: number;
   radius: number;
   paths: Path[];
 } & PathProps<"stroke" | "strokeWidth" | "strokeOpacity", "d">) => {
@@ -95,8 +101,8 @@ const Shadow = ({
             <rect
               x={0}
               y={0}
-              width={24}
-              height={24}
+              width={size}
+              height={size}
               fill="#fff"
               stroke="none"
               rx={radius}
@@ -153,12 +159,15 @@ const ColoredPath = ({
 const ControlPath = ({
   paths,
   radius,
+  size,
   pointSize,
   ...props
-}: { pointSize: number; paths: Path[]; radius: number } & PathProps<
-  "stroke" | "strokeWidth",
-  "d"
->) => {
+}: {
+  pointSize: number;
+  size: number;
+  paths: Path[];
+  radius: number;
+} & PathProps<"stroke" | "strokeWidth", "d">) => {
   const controlPaths = paths.map((path, i) => {
     const element = paths.filter((p) => p.c.id === path.c.id);
     const lastElement = element.at(-1)?.next;
@@ -192,8 +201,8 @@ const ControlPath = ({
                 <rect
                   x="0"
                   y="0"
-                  width="24"
-                  height="24"
+                  width={size}
+                  height={size}
                   fill="#fff"
                   stroke="none"
                   rx={radius}
@@ -243,8 +252,9 @@ const ControlPath = ({
 
 const Radii = ({
   paths,
+  size,
   ...props
-}: { paths: Path[] } & PathProps<
+}: { paths: Path[]; size: number } & PathProps<
   "strokeWidth" | "stroke" | "strokeDasharray" | "strokeOpacity",
   any
 >) => {
@@ -360,10 +370,12 @@ const areBoundingBoxesIntersecting = (
 const SvgPreview = React.forwardRef<
   SVGSVGElement,
   {
+    size?: number;
     src: string | ReturnType<typeof getPaths>;
     showGrid?: boolean;
   } & React.SVGProps<SVGSVGElement>
->(({ src, children, showGrid = false, ...props }, ref) => {
+>(({ src, children, size = 24, showGrid = false, ...props }, ref) => {
+  const subGridSize = size % 3 === 0 ? 3 : size % 5 === 0 ? 5 : 0;
   const paths = typeof src === "string" ? getPaths(src) : src;
   const patternMatches = getPatternMatches(paths);
 
@@ -380,9 +392,9 @@ const SvgPreview = React.forwardRef<
     <svg
       ref={ref}
       xmlns="http://www.w3.org/2000/svg"
-      width={24}
-      height={24}
-      viewBox="0 0 24 24"
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
       fill="none"
       stroke="currentColor"
       strokeWidth={2}
@@ -393,14 +405,16 @@ const SvgPreview = React.forwardRef<
       <style>{darkModeCss}</style>
       {showGrid && (
         <Grid
+          size={size}
+          subGridSize={patternMatches.length ? 0 : subGridSize}
           strokeWidth={0.1}
           stroke="#777"
           strokeOpacity={0.3}
           radius={1}
-          showSubGrid={!patternMatches.length}
         />
       )}
       <Shadow
+        size={size}
         paths={paths}
         strokeWidth={4}
         stroke="#777"
@@ -431,6 +445,7 @@ const SvgPreview = React.forwardRef<
         ]}
       />
       <Radii
+        size={size}
         paths={paths}
         strokeWidth={0.12}
         strokeDasharray="0 0.25 0.25"
@@ -438,6 +453,7 @@ const SvgPreview = React.forwardRef<
         strokeOpacity={0.3}
       />
       <ControlPath
+        size={size}
         radius={1}
         paths={paths}
         pointSize={1}
