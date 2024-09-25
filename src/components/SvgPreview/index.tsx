@@ -8,11 +8,13 @@ import { getPatternMatches } from "./getPatternMatches";
 const Grid = ({
   radius,
   fill,
-  size,
+  height,
+  width,
   subGridSize = 0,
   ...props
 }: {
-  size: number;
+  height: number;
+  width: number;
   strokeWidth: number;
   subGridSize?: number;
   radius: number;
@@ -20,8 +22,8 @@ const Grid = ({
   <g className="svg-preview-grid-group" strokeLinecap="butt" {...props}>
     <rect
       className="svg-preview-grid-rect"
-      width={size - props.strokeWidth}
-      height={size - props.strokeWidth}
+      width={width - props.strokeWidth}
+      height={height - props.strokeWidth}
       x={props.strokeWidth / 2}
       y={props.strokeWidth / 2}
       rx={radius}
@@ -36,30 +38,44 @@ const Grid = ({
       strokeWidth={0.1}
       d={
         props.d ||
-        new Array(Math.floor(size - 1))
-          .fill(null)
-          .map((_, i) => i)
-          .filter((i) => !subGridSize || i % subGridSize !== subGridSize - 1)
-          .flatMap((i) => [
-            `M${props.strokeWidth} ${i + 1}h${size - props.strokeWidth * 2}`,
-            `M${i + 1} ${props.strokeWidth}v${size - props.strokeWidth * 2}`,
-          ])
-          .join("")
+        [
+          ...new Array(Math.floor(width - 1))
+            .fill(null)
+            .map((_, i) => i)
+            .filter((i) => !subGridSize || i % subGridSize !== subGridSize - 1)
+            .flatMap((i) => [
+              `M${i + 1} ${props.strokeWidth}v${height - props.strokeWidth * 2}`,
+            ]),
+          ...new Array(Math.floor(height - 1))
+            .fill(null)
+            .map((_, i) => i)
+            .filter((i) => !subGridSize || i % subGridSize !== subGridSize - 1)
+            .flatMap((i) => [
+              `M${props.strokeWidth} ${i + 1}h${width - props.strokeWidth * 2}`,
+            ]),
+        ].join("")
       }
     />
     {!!subGridSize && (
       <path
         d={
           props.d ||
-          new Array(Math.floor(size - 1))
-            .fill(null)
-            .map((_, i) => i)
-            .filter((i) => i % subGridSize === subGridSize - 1)
-            .flatMap((i) => [
-              `M${props.strokeWidth} ${i + 1}h${size - props.strokeWidth * 2}`,
-              `M${i + 1} ${props.strokeWidth}v${size - props.strokeWidth * 2}`,
-            ])
-            .join("")
+          [
+            ...new Array(Math.floor(width - 1))
+              .fill(null)
+              .map((_, i) => i)
+              .filter((i) => i % subGridSize === subGridSize - 1)
+              .flatMap((i) => [
+                `M${i + 1} ${props.strokeWidth}v${height - props.strokeWidth * 2}`,
+              ]),
+            ...new Array(Math.floor(height - 1))
+              .fill(null)
+              .map((_, i) => i)
+              .filter((i) => i % subGridSize === subGridSize - 1)
+              .flatMap((i) => [
+                `M${props.strokeWidth} ${i + 1}h${width - props.strokeWidth * 2}`,
+              ]),
+          ].join("")
         }
       />
     )}
@@ -69,10 +85,8 @@ const Grid = ({
 const Shadow = ({
   radius,
   paths,
-  size,
   ...props
 }: {
-  size: number;
   radius: number;
   paths: Path[];
 } & PathProps<"stroke" | "strokeWidth" | "strokeOpacity", "d">) => {
@@ -101,8 +115,8 @@ const Shadow = ({
             <rect
               x={0}
               y={0}
-              width={size}
-              height={size}
+              width="100%"
+              height="100%"
               fill="#fff"
               stroke="none"
               rx={radius}
@@ -159,12 +173,10 @@ const ColoredPath = ({
 const ControlPath = ({
   paths,
   radius,
-  size,
   pointSize,
   ...props
 }: {
   pointSize: number;
-  size: number;
   paths: Path[];
   radius: number;
 } & PathProps<"stroke" | "strokeWidth", "d">) => {
@@ -201,8 +213,8 @@ const ControlPath = ({
                 <rect
                   x="0"
                   y="0"
-                  width={size}
-                  height={size}
+                  width="100%"
+                  height="100%"
                   fill="#fff"
                   stroke="none"
                   rx={radius}
@@ -252,9 +264,8 @@ const ControlPath = ({
 
 const Radii = ({
   paths,
-  size,
   ...props
-}: { paths: Path[]; size: number } & PathProps<
+}: { paths: Path[] } & PathProps<
   "strokeWidth" | "stroke" | "strokeDasharray" | "strokeOpacity",
   any
 >) => {
@@ -316,10 +327,8 @@ const mSvgPathBbox = memoize(svgPathBbox);
 const mGetPatternMatches = memoize(getPatternMatches);
 const PatternMatches = ({
   paths,
-  size,
   ...props
 }: {
-  size: number;
   paths: Path[];
 } & PathProps<any, any>) => {
   const patternMatches = mGetPatternMatches(paths);
@@ -346,8 +355,8 @@ const PatternMatches = ({
           fill="#fff"
           x={0}
           y={0}
-          width={size}
-          height={size}
+          width="100%"
+          height="100%"
         />
         {patternMatchesWithBounds.map(
           ({ patternName, bounds: [x1, y1, x2, y2] }, idx) => (
@@ -370,8 +379,8 @@ const PatternMatches = ({
           fill="#fff"
           x={0}
           y={0}
-          width={size}
-          height={size}
+          width="100%"
+          height="100%"
         />
         {patternMatchesWithBounds.map(
           ({ patternName, bounds: [x1, y1, x2, y2] }, idx) => (
@@ -427,24 +436,31 @@ const PatternMatches = ({
   );
 };
 
-const areBoundingBoxesIntersecting = (
-  a: [number, number, number, number],
-  b: [number, number, number, number],
-) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-
 const SvgPreview = React.forwardRef<
   SVGSVGElement,
   {
-    size?: number;
+    height?: number;
+    width?: number;
     src: string | ReturnType<typeof getPaths>;
     showGrid?: boolean;
   } & React.SVGProps<SVGSVGElement>
->(({ src, children, size = 24, showGrid = false, ...props }, ref) => {
-  const subGridSize = size % 3 === 0 ? 3 : size % 5 === 0 ? 5 : 0;
-  const paths = typeof src === "string" ? getPaths(src) : src;
-  const patternMatches = mGetPatternMatches(paths);
+>(
+  (
+    { src, children, height = 24, width = 24, showGrid = false, ...props },
+    ref,
+  ) => {
+    const subGridSize =
+      Math.max(height, width) % 3 === 0
+        ? Math.max(height, width) > 24
+          ? 12
+          : 3
+        : Math.max(height, width) % 5 === 0
+          ? 5
+          : 0;
+    const paths = typeof src === "string" ? getPaths(src) : src;
+    const patternMatches = mGetPatternMatches(paths);
 
-  const darkModeCss = `
+    const darkModeCss = `
   .dark .svg
   .dark .svg-preview-grid-group,
   .dark .svg-preview-radii-group,
@@ -453,97 +469,95 @@ const SvgPreview = React.forwardRef<
     stroke: ###;
   }
 `;
-  return (
-    <svg
-      ref={ref}
-      xmlns="http://www.w3.org/2000/svg"
-      width={size}
-      height={size}
-      viewBox={`0 0 ${size} ${size}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <style>{darkModeCss}</style>
-      {showGrid && (
-        <Grid
-          size={size}
-          subGridSize={patternMatches.length ? 0 : subGridSize}
-          strokeWidth={0.1}
+    return (
+      <svg
+        ref={ref}
+        xmlns="http://www.w3.org/2000/svg"
+        width={width}
+        height={height}
+        viewBox={`0 0 ${width} ${height}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={2}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        {...props}
+      >
+        <style>{darkModeCss}</style>
+        {showGrid && (
+          <Grid
+            height={height}
+            width={width}
+            subGridSize={patternMatches.length ? 0 : subGridSize}
+            strokeWidth={0.1}
+            stroke="#777"
+            mask="url(#svg-preview-bounding-box-mask)"
+            strokeOpacity={0.3}
+            radius={1}
+          />
+        )}
+        <Shadow
+          paths={paths}
+          strokeWidth={4}
           stroke="#777"
-          mask="url(#svg-preview-bounding-box-mask)"
-          strokeOpacity={0.3}
           radius={1}
+          strokeOpacity={0.15}
         />
-      )}
-      <Shadow
-        size={size}
-        paths={paths}
-        strokeWidth={4}
-        stroke="#777"
-        radius={1}
-        strokeOpacity={0.15}
-      />
-      <Handles
-        paths={paths}
-        strokeWidth={0.12}
-        stroke="#777"
-        strokeOpacity={0.6}
-      />
-      <ColoredPath
-        paths={paths}
-        colors={[
-          "#1982c4",
-          "#4267AC",
-          "#6a4c93",
-          "#B55379",
-          "#FF595E",
-          "#FF7655",
-          "#ff924c",
-          "#FFAE43",
-          "#ffca3a",
-          "#C5CA30",
-          "#8ac926",
-          "#52A675",
-        ]}
-      />
-      <Radii
-        size={size}
-        paths={paths}
-        strokeWidth={0.12}
-        strokeDasharray="0 0.25 0.25"
-        stroke="#777"
-        strokeOpacity={0.3}
-      />
-      <ControlPath
-        size={size}
-        radius={1}
-        paths={paths}
-        pointSize={1}
-        stroke="#fff"
-        strokeWidth={0.125}
-      />
-      <Handles
-        paths={paths}
-        strokeWidth={0.12}
-        stroke="#FFF"
-        strokeOpacity={0.3}
-      />
-      <PatternMatches
-        size={size}
-        paths={paths}
-        strokeWidth={0.12}
-        stroke="#777"
-        strokeOpacity={0.3}
-      />
+        <Handles
+          paths={paths}
+          strokeWidth={0.12}
+          stroke="#777"
+          strokeOpacity={0.6}
+        />
+        <ColoredPath
+          paths={paths}
+          colors={[
+            "#1982c4",
+            "#4267AC",
+            "#6a4c93",
+            "#B55379",
+            "#FF595E",
+            "#FF7655",
+            "#ff924c",
+            "#FFAE43",
+            "#ffca3a",
+            "#C5CA30",
+            "#8ac926",
+            "#52A675",
+          ]}
+        />
+        <Radii
+          paths={paths}
+          strokeWidth={0.12}
+          strokeDasharray="0 0.25 0.25"
+          stroke="#777"
+          strokeOpacity={0.3}
+        />
+        <ControlPath
+          radius={1}
+          paths={paths}
+          pointSize={1}
+          stroke="#fff"
+          strokeWidth={0.125}
+        />
+        <Handles
+          paths={paths}
+          strokeWidth={0.12}
+          stroke="#FFF"
+          strokeOpacity={0.3}
+        />
+        <PatternMatches
+          paths={paths}
+          strokeWidth={0.12}
+          stroke="#777"
+          strokeOpacity={0.3}
+        />
 
-      {children}
-    </svg>
-  );
-});
+        {children}
+      </svg>
+    );
+  },
+);
 
 SvgPreview.displayName = "SvgPreview";
 
