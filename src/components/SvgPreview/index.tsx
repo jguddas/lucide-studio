@@ -1,7 +1,7 @@
 import React, { useId } from "react";
 import { PathProps, Path } from "./types";
 import getPaths, { assert } from "./utils";
-import { svgPathBbox } from "svg-path-bbox";
+import { BBox, svgPathBbox } from "svg-path-bbox";
 import memoize from "lodash/memoize";
 import { getPatternMatches } from "./getPatternMatches";
 
@@ -313,50 +313,115 @@ const Handles = ({
 );
 
 const mSvgPathBbox = memoize(svgPathBbox);
-const BoundingBox = ({
-  label,
+const mGetPatternMatches = memoize(getPatternMatches);
+const PatternMatches = ({
   paths,
-  bounds: [x1, y1, x2, y2],
+  size,
   ...props
 }: {
-  label: string;
-  bounds: [number, number, number, number];
+  size: number;
   paths: Path[];
 } & PathProps<any, any>) => {
-  const id = useId();
+  const patternMatches = mGetPatternMatches(paths);
+  const patternMatchesWithBounds = patternMatches.map((patternMatch) => {
+    const [x1, y1, x2, y2] = mSvgPathBbox(
+      patternMatch.paths.map((p) => p.d).join(" "),
+    );
+    const patternSize = Math.max(x2 - x1, y2 - y1);
+    return {
+      ...patternMatch,
+      bounds: [
+        (x2 - x1 - patternSize) * 0.5 + x1 - 1,
+        (y2 - y1 - patternSize) * 0.5 + y1 - 1,
+        (x2 - x1 - patternSize) * 0.5 + x1 + patternSize + 1,
+        (y2 - y1 - patternSize) * 0.5 + y1 + patternSize + 1,
+      ] satisfies BBox,
+    };
+  });
   return (
     <>
-      <mask
-        id={`svg-preview-bounding-box-mask-${id}`}
-        maskUnits="userSpaceOnUse"
-      >
-        <rect x={-1} y={-1} width={26} height={26} fill="#fff" />
-        <text fontSize={0.75} strokeWidth={0.4} dominantBaseline="middle">
-          <textPath href={`#svg-preview-bounding-box-${id}`}>
-            {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
-          </textPath>
-        </text>
-      </mask>
-      <g fillOpacity={props.strokeOpacity} {...props}>
-        <path
-          mask={`url(#svg-preview-bounding-box-mask-${id})`}
-          id={`svg-preview-bounding-box-${id}`}
-          d={`M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5z`}
+      <mask id="svg-preview-bounding-box-path-mask" maskUnits="userSpaceOnUse">
+        <rect
+          stroke="none"
+          fill="#fff"
+          x={0}
+          y={0}
+          width={size}
+          height={size}
         />
-        <text
-          fill={props.stroke}
-          fontSize={0.75}
-          strokeWidth={0.06}
-          dominantBaseline="middle"
-        >
-          <textPath
-            href={`#svg-preview-bounding-box-${id}`}
-            className="svg-preview-bounding-box-label-path"
-            data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
-          >
-            {label} ({Math.round(x2 - x1 + 2)}x{Math.round(y2 - y1 + 2)})
-          </textPath>
-        </text>
+        {patternMatchesWithBounds.map(
+          ({ patternName, bounds: [x1, y1, x2, y2] }, idx) => (
+            <text
+              key={idx}
+              fontSize={0.75}
+              strokeWidth={0.4}
+              dominantBaseline="middle"
+            >
+              <textPath href={`#svg-preview-bounding-box-${idx}`}>
+                {patternName}.{Math.round(x2 - x1 + 2)}.svg
+              </textPath>
+            </text>
+          ),
+        )}
+      </mask>
+      <mask id="svg-preview-bounding-box-mask" maskUnits="userSpaceOnUse">
+        <rect
+          stroke="none"
+          fill="#fff"
+          x={0}
+          y={0}
+          width={size}
+          height={size}
+        />
+        {patternMatchesWithBounds.map(
+          ({ patternName, bounds: [x1, y1, x2, y2] }, idx) => (
+            <>
+              <text fontSize={0.75} strokeWidth={0.4} dominantBaseline="middle">
+                <textPath href={`#svg-preview-bounding-box-${idx}`}>
+                  {patternName}.{Math.round(x2 - x1 + 2)}.svg
+                </textPath>
+              </text>
+              <path
+                strokeWidth={props.strokeWidth}
+                mask="url(#svg-preview-bounding-box-mask)"
+                id={`svg-preview-bounding-box-${idx}`}
+                d={`M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5z`}
+              />
+            </>
+          ),
+        )}
+      </mask>
+      <g {...props}>
+        <path
+          strokeWidth={props.strokeWidth}
+          mask="url(#svg-preview-bounding-box-path-mask)"
+          d={patternMatchesWithBounds
+            .map(
+              ({ bounds: [x1, y1, x2, y2] }) =>
+                `M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5L${x1} ${y1 - 1}`,
+            )
+            .join(" ")}
+        />
+        {patternMatchesWithBounds.map(
+          ({ patternName, paths, bounds: [x1, y1, x2, y2] }, idx) => (
+            <text
+              key={idx}
+              fill={props.stroke}
+              fontSize={0.75}
+              strokeWidth={0.06}
+              dominantBaseline="middle"
+              fillOpacity={props.strokeOpacity}
+            >
+              <textPath
+                href={`#svg-preview-bounding-box-${idx}`}
+                className="svg-preview-bounding-box-label-path"
+                data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
+              >
+                {patternName}.{Math.round(x2 - x1 + 2)}.svg
+              </textPath>
+            </text>
+          ),
+        )}
       </g>
     </>
   );
@@ -377,20 +442,7 @@ const SvgPreview = React.forwardRef<
 >(({ src, children, size = 24, showGrid = false, ...props }, ref) => {
   const subGridSize = size % 3 === 0 ? 3 : size % 5 === 0 ? 5 : 0;
   const paths = typeof src === "string" ? getPaths(src) : src;
-  const patternMatches = getPatternMatches(paths);
-  const patternMatchesWithBounds = patternMatches
-    .map((patternMatch) => ({
-      ...patternMatch,
-      bounds: mSvgPathBbox(patternMatch.paths.map((p) => p.d).join(" ")),
-    }))
-    .filter(({ bounds }, idx, arr) =>
-      arr.every(
-        (other, otherIdx) =>
-          other === arr[idx] ||
-          idx < otherIdx ||
-          !areBoundingBoxesIntersecting(bounds, other.bounds),
-      ),
-    );
+  const patternMatches = mGetPatternMatches(paths);
 
   const darkModeCss = `
   .dark .svg
@@ -422,31 +474,11 @@ const SvgPreview = React.forwardRef<
           subGridSize={patternMatches.length ? 0 : subGridSize}
           strokeWidth={0.1}
           stroke="#777"
-          mask="url(#svg-preview-grid-mask)"
+          mask="url(#svg-preview-bounding-box-mask)"
           strokeOpacity={0.3}
           radius={1}
         />
       )}
-      <mask id="svg-preview-grid-mask" maskUnits="userSpaceOnUse">
-        <rect
-          stroke="none"
-          fill="#fff"
-          x={0}
-          y={0}
-          width={size}
-          height={size}
-        />
-        {patternMatchesWithBounds.map(({ patternName, paths, bounds }, idx) => (
-          <BoundingBox
-            {...props}
-            key={idx}
-            bounds={bounds}
-            label={patternName}
-            paths={paths}
-            strokeWidth={0.12}
-          />
-        ))}
-      </mask>
       <Shadow
         size={size}
         paths={paths}
@@ -500,18 +532,14 @@ const SvgPreview = React.forwardRef<
         stroke="#FFF"
         strokeOpacity={0.3}
       />
-      {patternMatchesWithBounds.map(({ patternName, paths, bounds }, idx) => (
-        <BoundingBox
-          {...props}
-          key={idx}
-          bounds={bounds}
-          label={patternName}
-          paths={paths}
-          strokeWidth={0.12}
-          stroke="#777"
-          strokeOpacity={0.3}
-        />
-      ))}
+      <PatternMatches
+        size={size}
+        paths={paths}
+        strokeWidth={0.12}
+        stroke="#777"
+        strokeOpacity={0.3}
+      />
+
       {children}
     </svg>
   );
