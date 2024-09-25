@@ -42,7 +42,17 @@ export const getPatternMatches = (paths: Path[]) => {
       output.push({ patternName, paths: matchedPaths });
     }
   }
-  return output;
+  return output.filter(
+    (val, idx, arr) =>
+      arr.findIndex(
+        (t) =>
+          t.patternName === val.patternName &&
+          t.paths.every(
+            ({ c: { id, idx } }, i) =>
+              id === val.paths[i].c.id && idx === val.paths[i].c.idx,
+          ),
+      ) === idx,
+  );
 };
 
 export const getVectors = (paths: Path[]) =>
