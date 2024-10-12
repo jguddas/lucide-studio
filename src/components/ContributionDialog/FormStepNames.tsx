@@ -38,7 +38,6 @@ const nameStepSchema = z.object({
       /^[a-z][a-z0-9-]*$/,
       "Name must start with a letter and contain only letters, numbers and dashes.",
     )
-    .regex(/^[a-z][a-z0-9-]*[a-z]$/, "Name must not end with a number")
     .transform((value) =>
       value.toLowerCase().replaceAll("-", " ").trim().replaceAll(" ", "-"),
     ),
@@ -132,6 +131,14 @@ export const FormStepNames = ({
                   </a>
                 </Button>{" "}
                 for your icon to be accepted.
+                {name?.match(/\d[-\d]*$/) && (
+                  <div className="mt-1">
+                    Pay attention to Rule 6:
+                    <br />
+                    Names containing numerals are not allowed, unless the number
+                    itself is represented in the icon.
+                  </div>
+                )}
               </FormDescription>
             </FormItem>
           )}
