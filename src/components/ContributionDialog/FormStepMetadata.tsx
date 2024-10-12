@@ -65,7 +65,11 @@ export const FormStepMetadata = ({
                 <TagInput
                   {...field}
                   placeholder="Add one tag per line."
-                  onChange={(e) => field.onChange(e.target.value.toLowerCase())}
+                  onChange={(e) =>
+                    field.onChange(
+                      e.target.value.toLowerCase().replaceAll(", ", "\n"),
+                    )
+                  }
                   aria-required
                 />
               </FormControl>
