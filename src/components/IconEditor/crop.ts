@@ -3,6 +3,7 @@ import Commander from "svg-path-commander";
 import toPath from "element-to-path";
 import { parseSync, stringify } from "svgson";
 import { BBox, svgPathBbox } from "svg-path-bbox";
+import optimize from "./optimize";
 
 const crop = (svg: string, _bbox?: BBox) => {
   const data = parseSync(svg);
@@ -38,7 +39,7 @@ const crop = (svg: string, _bbox?: BBox) => {
   data.attributes.height = height + "";
   data.attributes.width = width + "";
   data.attributes.viewBox = `0 0 ${width} ${height}`;
-  return stringify(data);
+  return optimize(stringify(data));
 };
 
 export default crop;

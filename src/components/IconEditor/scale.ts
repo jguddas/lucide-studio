@@ -2,6 +2,7 @@ import Commander from "svg-path-commander";
 // @ts-ignore
 import toPath from "element-to-path";
 import { parseSync, stringify } from "svgson";
+import optimize from "./optimize";
 
 const scale = (svg: string, targetWidth: number, targetHeight: number) => {
   const data = parseSync(svg);
@@ -30,7 +31,7 @@ const scale = (svg: string, targetWidth: number, targetHeight: number) => {
   data.attributes.height = targetHeight + "";
   data.attributes.width = targetWidth + "";
   data.attributes.viewBox = `0 0 ${targetWidth} ${targetHeight}`;
-  return stringify(data);
+  return optimize(stringify(data));
 };
 
 export default scale;
