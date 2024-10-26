@@ -86,7 +86,10 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         <SvgEditor
           src={nextValue || value}
           selected={selected}
-          onChange={(value) => onChange(format(value))}
+          onChange={(value) => {
+            setNextValue(undefined);
+            onChange(format(value));
+          }}
           onSelectionChange={setSelected}
         />
         <span className="text-xs text-muted-foreground hidden lg:inline-block">
@@ -114,6 +117,7 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               reader.onload = (e) => {
                 const result = e.target?.result;
                 if (typeof result === "string") {
+                  setNextValue(undefined);
                   onChange(format(result));
                   setSelected([]);
                 }
@@ -135,23 +139,35 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                 setName(clipboardDataName[1]);
                 setBase(clipboardDataName[1]);
               }
+              setNextValue(undefined);
               onChange(format(clipboardData));
               setSelected([]);
             }
           }}
-          onValueChange={onChange}
+          onValueChange={setNextValue}
           className="h-full min-w-full min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground data-[focus=true]:outline-none data-[focus=true]:ring-2 data-[focus=true]:ring-ring data-[focus=true]:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           data-focus={focus}
           padding={12}
-          onFocus={() => setFocus(true)}
-          onBlur={() => setFocus(false)}
+          onFocus={() => {
+            setFocus(true);
+            setNextValue(undefined);
+            onChange(format(nextValue || value));
+          }}
+          onBlur={() => {
+            setFocus(false);
+            setNextValue(undefined);
+            onChange(format(nextValue || value));
+          }}
           highlight={(value) => highlight(value).join("")}
         />
         <div className="absolute flex flex-col z-10 gap-1.5 top-[calc(0.875rem+0.375rem+12px)] right-[12px]">
           <Button
             variant="outline"
             className="gap-1.5"
-            onMouseEnter={() => setNextValue(optimize(value))}
+            onMouseEnter={() => {
+              onChange(format(nextValue || value));
+              setNextValue(optimize(value));
+            }}
             onMouseLeave={() => setNextValue(undefined)}
             onClick={() => onChange(optimize(value))}
           >
