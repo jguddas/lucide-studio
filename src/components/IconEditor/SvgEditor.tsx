@@ -254,7 +254,11 @@ const SvgEditor = ({
           }
 
           // snap to points where the circle is intersecting the grid
-          if (snapPath.circle) {
+          if (
+            snapPath.circle &&
+            (dragTargetRef.current?.type === "svg-editor-start" ||
+              dragTargetRef.current?.type === "svg-editor-end")
+          ) {
             const theta = Math.atan2(
               movedAbsolute.y - snapPath.circle.y,
               movedAbsolute.x - snapPath.circle.x,
