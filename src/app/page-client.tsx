@@ -6,6 +6,7 @@ import optimize from "@/components/IconEditor/optimize";
 import { useCallback, useEffect, useRef } from "react";
 import Menu from "@/components/IconEditor/Menu";
 import ContributionDialog from "@/components/ContributionDialog";
+import { trim } from "@/components/IconEditor/trim";
 
 export async function generateMetadata({ params, searchParams }: any) {
   const queryParams = new URLSearchParams({});
@@ -38,12 +39,7 @@ const useValueState = () => {
     defaultValue: emptyState,
     history: "push",
     parse: (query: string) => format(query),
-    serialize: (value) =>
-      format(value)
-        .replaceAll(/[\r\n]+/g, " ")
-        .replace(/\<\/?svg[^\>]*>/g, "")
-        .replaceAll(/> *</g, "><")
-        .trim(),
+    serialize: (value) => trim(value),
   });
   const pointer = useRef<number>(0);
   const history = useRef<string[]>([value]);

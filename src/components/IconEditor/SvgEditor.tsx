@@ -11,11 +11,11 @@ import round from "lodash/round";
 import debounce from "lodash/debounce";
 import format from "./format";
 
-const nodesToSvg = (nodes: INode[]) => `<svg
+const nodesToSvg = (nodes: INode[], height: number, width: number) => `<svg
   xmlns="http://www.w3.org/2000/svg"
-  width="24"
-  height="24"
-  viewBox="0 0 24 24"
+  width="${width}"
+  height="${height}"
+  viewBox="0 0 ${height} ${width}"
   fill="none"
   stroke="currentColor"
   stroke-width="2"
@@ -62,6 +62,8 @@ const SvgEditor = ({
 }) => {
   const [paths, setPaths] = useState<Path[]>(() => getPaths(src));
   const dragTargetRef = useRef<Selection | undefined>(undefined);
+  const height = parseInt(src.match(/height="(\d+)"/)?.[1] ?? "24");
+  const width = parseInt(src.match(/width="(\d+)"/)?.[1] ?? "24");
 
   useEffect(() => {
     let scopedPaths: Path[];
@@ -199,10 +201,10 @@ const SvgEditor = ({
 
         const movedDelta = {
           x:
-            ((clientX - dragTargetRef.current.startPosition.x) * 24) /
+            ((clientX - dragTargetRef.current.startPosition.x) * width) /
             editorWidth,
           y:
-            ((clientY - dragTargetRef.current.startPosition.y) * 24) /
+            ((clientY - dragTargetRef.current.startPosition.y) * height) /
             editorHeight,
         };
 
@@ -494,8 +496,10 @@ const SvgEditor = ({
             ? movedPaths.filter(({ c }) => c.id === id).map(pathToPathNode)
             : [val],
         );
-        const nextPaths = getPaths(format(nodesToSvg(nextNodes as any)));
-        onChange(nodesToSvg(nextNodes as any));
+        const nextPaths = getPaths(
+          format(nodesToSvg(nextNodes as any, height, width)),
+        );
+        onChange(nodesToSvg(nextNodes as any, height, width));
         onSelectionChange(
           selected
             .map((selected) => {
@@ -534,7 +538,7 @@ const SvgEditor = ({
       document.removeEventListener("touchmove", onMouseMove);
       document.removeEventListener("touchend", onMouseUp);
     };
-  }, [src, selected, onChange, onSelectionChange]);
+  }, [src, selected, onChange, height, width, onSelectionChange]);
 
   return (
     <>
@@ -542,13 +546,22 @@ const SvgEditor = ({
         showGrid
         id="svg-editor"
         src={paths}
+        height={height}
+        width={width}
         className="h-full w-full"
       >
         <filter id="shadow" color-interpolation-filters="sRGB">
           <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.5" />
         </filter>
         <mask id="svg-editor-opacity-mask" maskUnits="userSpaceOnUse">
-          <rect x={0} y={0} width={24} height={24} stroke="none" fill="black" />
+          <rect
+            x={0}
+            y={0}
+            width="100%"
+            height="100%"
+            stroke="none"
+            fill="black"
+          />
           {selected.map(({ c: { id, idx } }, i) => (
             <React.Fragment key={i}>
               <path
@@ -570,8 +583,8 @@ const SvgEditor = ({
         <rect
           x={0}
           y={0}
-          width={24}
-          height={24}
+          width="100%"
+          height="100%"
           className="fill-black dark:fill-white pointer-events-none"
           stroke="none"
           mask="url(#svg-editor-opacity-mask)"

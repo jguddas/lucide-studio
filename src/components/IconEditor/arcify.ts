@@ -211,6 +211,7 @@ export default function arcify(svg: string) {
   if (!newArcs.length) return svg;
   return optimize(
     [
+      svg.match(/<svg[^>]*>/)?.[0] ?? "<svg>",
       ...newArcs,
       ...paths.map((path) => {
         if (
@@ -226,6 +227,7 @@ export default function arcify(svg: string) {
 
         return `<path d="M${path.prev.x} ${path.prev.y} ${path.next.x} ${path.next.y}"/>`;
       }),
+      "</svg>",
     ].join("\n"),
   );
 }

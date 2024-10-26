@@ -1077,7 +1077,12 @@ const removeBackdrop = (svg: string) => {
   for (let i = 0; i < data.children.length; i++) {
     if (data.children[i].name === "rect") {
       const { x = "0", y = "0", width, height } = data.children[i].attributes;
-      if (x === "0" && y === "0" && width === "24" && height === "24") {
+      if (
+        x === "0" &&
+        y === "0" &&
+        width === (data.attributes.width ?? "24") &&
+        height === (data.attributes.height ?? "24")
+      ) {
         data.children.splice(i, 1);
       }
     }
