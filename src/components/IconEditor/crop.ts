@@ -33,8 +33,8 @@ const crop = (svg: string, _bbox?: BBox) => {
       },
     };
   }
-  const height = Math.ceil(Math.round((bbox[3] - bbox[1] + 4) * 100) / 100);
-  const width = Math.ceil(Math.round((bbox[2] - bbox[0] + 4) * 100) / 100);
+  const height = Math.ceil(Math.floor((bbox[3] - bbox[1] + 4) * 10) / 10);
+  const width = Math.ceil(Math.floor((bbox[2] - bbox[0] + 4) * 10) / 10);
   data.attributes.height = height + "";
   data.attributes.width = width + "";
   data.attributes.viewBox = `0 0 ${width} ${height}`;
