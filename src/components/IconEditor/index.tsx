@@ -165,8 +165,9 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
             variant="outline"
             className="gap-1.5"
             onMouseEnter={() => {
+              const nextNextValue = optimize(nextValue || value);
               onChange(format(nextValue || value));
-              setNextValue(optimize(value));
+              setNextValue(nextNextValue);
             }}
             onMouseLeave={() => setNextValue(undefined)}
             onClick={() => onChange(optimize(value))}
