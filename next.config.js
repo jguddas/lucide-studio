@@ -4,7 +4,7 @@ const nextConfig = {
     return [{ source: "/", destination: "/edit", permanent: false }];
   },
   experimental: {
-    missingSuspenseWithCSRBailout: false,
+    reactCompiler: true,
   },
 };
 

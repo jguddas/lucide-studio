@@ -38,4 +38,4 @@ export const GET = auth(async function GET(req) {
   return NextResponse.json(
     JSON.parse(Buffer.from(data.content, "base64").toString("utf-8")),
   );
-});
+}) as any;
