@@ -3,6 +3,7 @@ import PageClient from "../page-client";
 export async function generateMetadata(props: any) {
   const searchParams = await props.searchParams;
   const queryParams = new URLSearchParams(searchParams);
+  queryParams.set("value", btoa(queryParams.get("value") || ""));
   const url = `https://lucide-studio.vercel.app/api/og?${queryParams}`;
 
   return {
