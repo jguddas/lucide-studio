@@ -1,9 +1,4 @@
-import {
-  ChevronRightIcon,
-  ChevronUpIcon,
-  LogInIcon,
-  SettingsIcon,
-} from "lucide-react";
+import { ChevronRightIcon, LogInIcon, SettingsIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import { DialogFooter } from "../ui/dialog";
 import { Input } from "../ui/input";

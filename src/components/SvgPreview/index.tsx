@@ -1,4 +1,4 @@
-import React, { useId } from "react";
+import React from "react";
 import { PathProps, Path } from "./types";
 import getPaths, { assert } from "./utils";
 import { BBox, svgPathBbox } from "svg-path-bbox";
