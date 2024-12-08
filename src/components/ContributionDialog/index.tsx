@@ -149,6 +149,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
 
                 return fetch(urlBase)
                   .then((res) => res.json())
+                  .then((metadata) => ({ base, ...metadata }))
                   .catch(() => ({
                     categories: [],
                     tags: [],
@@ -159,11 +160,15 @@ const ContributionDialog = ({ value }: { value: string }) => {
           ).reduce(
             (acc, metadata) => ({
               ...acc,
+              base: metadata.base
+                ? (acc.base + "\n" + metadata.base).trim()
+                : acc.base,
               categories: [...acc.categories, ...metadata.categories],
               tags: [...acc.tags, ...metadata.tags],
               contributors: [...acc.contributors, ...metadata.contributors],
             }),
             {
+              base: "",
               categories: [],
               tags: [],
               contributors: [],
