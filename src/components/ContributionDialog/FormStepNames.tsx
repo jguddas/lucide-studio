@@ -61,7 +61,7 @@ export const FormStepNames = ({
   const session = useSession();
   const [name, setName] = useQueryState("name", { defaultValue: "" });
   const [branch, setBranch] = useQueryState("branch", { defaultValue: "" });
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(!!branch);
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState<boolean>();
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
     defaultValues: {
@@ -135,7 +135,10 @@ export const FormStepNames = ({
             </FormItem>
           )}
         />
-        {showAdvancedOptions ? (
+        {showAdvancedOptions ||
+        (showAdvancedOptions === undefined &&
+          (nameStepForm.getValues().base ||
+            nameStepForm.getValues().branch)) ? (
           <fieldset className="grid gap-4 rounded-lg border p-4 pt-2 relative">
             <legend className="-ml-1 px-1 text-sm font-medium">
               <button
