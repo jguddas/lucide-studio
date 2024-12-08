@@ -107,7 +107,6 @@ const Menu = ({
   setValue: (value: string) => void;
 }) => {
   const [name, setName] = useQueryState("name");
-  const [, setBase] = useQueryState("base");
   const isFullscreen = useIsFullscreen();
   const { theme, setTheme } = useTheme();
   const session = useSession();
@@ -140,7 +139,6 @@ const Menu = ({
                   if (!file) return;
                   if (!file.name) {
                     setName(file.name.split(".")[0]);
-                    setBase(file.name.split(".")[0]);
                   }
                   const reader = new FileReader();
                   reader.onload = () => {

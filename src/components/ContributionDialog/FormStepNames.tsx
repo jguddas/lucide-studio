@@ -60,21 +60,13 @@ export const FormStepNames = ({
 }: FormStepNamesProps) => {
   const session = useSession();
   const [name, setName] = useQueryState("name", { defaultValue: "" });
-  const [base, setBase] = useQueryState("base", {
-    defaultValue: "",
-    parse: (query: string) => decodeURIComponent(query),
-    serialize: (value) => encodeURIComponent(value),
-  });
   const [branch, setBranch] = useQueryState("branch", { defaultValue: "" });
-  const [showAdvancedOptions, setShowAdvancedOptions] = useState(
-    !!branch || (!!base && name !== base),
-  );
+  const [showAdvancedOptions, setShowAdvancedOptions] = useState(!!branch);
   const nameStepForm = useForm<z.infer<typeof nameStepSchema>>({
     resolver: zodResolver(nameStepSchema),
     defaultValues: {
       name,
       branch,
-      base: base || name,
       ...defaultValues,
     },
   });
@@ -190,7 +182,6 @@ export const FormStepNames = ({
                           .toLowerCase()
                           .replace(/(\w)[\s,]$/, "$1\n");
                         field.onChange(nextBase);
-                        setBase(nextBase);
                       }}
                       aria-required
                     >

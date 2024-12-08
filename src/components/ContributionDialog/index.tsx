@@ -129,11 +129,16 @@ const ContributionDialog = ({ value }: { value: string }) => {
 
           return await (await fetch(url)).json();
         } catch (error) {
-          if (!variables.base) throw error;
-
           const baseMetadata = (
             await Promise.all(
-              tagStringToArray(variables.base).map((base) => {
+              tagStringToArray(
+                variables.base?.trim() ||
+                  variables.name
+                    .split("-")
+                    .slice(0, -1)
+                    .map((_, idx, arr) => arr.slice(0, idx + 1).join("-"))
+                    .join("\n"),
+              ).map((base) => {
                 const urlBase = new URL(
                   `${global?.window?.location?.origin}/api/metadata/${base}`,
                 );
@@ -144,7 +149,11 @@ const ContributionDialog = ({ value }: { value: string }) => {
 
                 return fetch(urlBase)
                   .then((res) => res.json())
-                  .catch(() => ({}));
+                  .catch(() => ({
+                    categories: [],
+                    tags: [],
+                    contributors: [],
+                  }));
               }),
             )
           ).reduce(

@@ -19,7 +19,6 @@ interface IconEditorProps {
 
 const IconEditor = ({ value, onChange }: IconEditorProps) => {
   const [, setName] = useQueryState("name");
-  const [, setBase] = useQueryState("base");
   const [focus, setFocus] = useState(false);
   const [selected, setSelected] = useState<Selection[]>([]);
   const [nextValue, setNextValue] = useState<string | undefined>(undefined);
@@ -111,7 +110,6 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               e.preventDefault();
               if (e.clipboardData.files[0].name) {
                 setName(e.clipboardData.files[0].name?.split(".")[0]);
-                setBase(e.clipboardData.files[0].name?.split(".")[0]);
               }
               const reader = new FileReader();
               reader.onload = (e) => {
@@ -137,7 +135,6 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               );
               if (clipboardDataName && clipboardDataName[1]) {
                 setName(clipboardDataName[1]);
-                setBase(clipboardDataName[1]);
               }
               setNextValue(undefined);
               onChange(format(clipboardData));
