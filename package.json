@@ -22,7 +22,7 @@
     "clsx": "^2.0.0",
     "element-to-path": "^1.2.1",
     "lodash": "^4.17.21",
-    "lucide-react": "^0.396.0",
+    "lucide-react": "^0.474.0",
     "next": "15.0.3",
     "next-themes": "^0.2.1",
     "next-usequerystate": "^1.13.2",
