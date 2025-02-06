@@ -20,7 +20,7 @@ import {
   CropIcon,
   DownloadIcon,
   DraftingCompassIcon,
-  SquareArrowOutUpRightIcon,
+  ExternalLinkIcon,
   FolderUpIcon,
   LogOutIcon,
   LucideBoxSelect,
@@ -269,7 +269,7 @@ const Menu = ({
               }}
               className="gap-1.5"
             >
-              <SquareArrowOutUpRightIcon />
+              <ExternalLinkIcon />
               Open DPI preview
             </MenubarItem>
           </MenubarContent>
