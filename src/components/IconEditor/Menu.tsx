@@ -20,6 +20,7 @@ import {
   CropIcon,
   DownloadIcon,
   DraftingCompassIcon,
+  SquareArrowOutUpRightIcon,
   FolderUpIcon,
   LogOutIcon,
   LucideBoxSelect,
@@ -259,6 +260,18 @@ const Menu = ({
                 </MenubarRadioGroup>
               </MenubarSubContent>
             </MenubarSub>
+            <MenubarItem
+              onClick={() => {
+                window.open(
+                  `https://lucide.dev/api/gh-icon/dpi/24/${Buffer.from(value).toString("base64")}.svg`,
+                  "_blank",
+                );
+              }}
+              className="gap-1.5"
+            >
+              <SquareArrowOutUpRightIcon />
+              Open DPI preview
+            </MenubarItem>
           </MenubarContent>
         </MenubarMenu>
         <MenubarMenu>
