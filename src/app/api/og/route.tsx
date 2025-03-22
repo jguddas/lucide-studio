@@ -26,8 +26,12 @@ export async function GET(request: Request) {
     <path d="M10 12C10 14.2091 11.7909 16 14 16C16.2091 16 18 14.2091 18 12C18 7.58172 14.4183 4 10 4C5.58172 4 2 7.58172 2 12C2 15.5841 3.57127 18.8012 6.06253 21" />`;
 
   const paths = getPaths(value);
-  const width = parseInt(value.match(/width="(\d+)"/)?.[1] ?? "24");
-  const height = parseInt(value.match(/height="(\d+)"/)?.[1] ?? "24");
+  const width = parseInt(
+    (value.includes("svg") ? value.match(/width="(\d+)"/)?.[1] : null) ?? "24",
+  );
+  const height = parseInt(
+    (value.includes("svg") ? value.match(/height="(\d+)"/)?.[1] : null) ?? "24",
+  );
   let idx = 0;
   return new ImageResponse(
     (
