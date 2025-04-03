@@ -1090,6 +1090,18 @@ const removeBackdrop = (svg: string) => {
   return stringify(data);
 };
 
+const fillSmallCircles = (svg: string) => {
+  const data = parseSync(svg);
+  for (let i = 0; i < data.children.length; i++) {
+    if (data.children[i].name === "circle") {
+      if (parseFloat(data.children[i].attributes.r) <= 1) {
+        data.children[i].attributes.fill = "currentColor";
+      }
+    }
+  }
+  return stringify(data);
+};
+
 const catchErrors = (fn: (svg: string) => string) => (svg: string) => {
   try {
     return fn(svg);
@@ -1118,6 +1130,7 @@ const runOptimizations = flow(
   memoize(catchErrors(optimizeEllipse)),
   memoize(catchErrors(optimizeHalfCircle)),
   memoize(catchErrors(smartClose)),
+  memoize(catchErrors(fillSmallCircles)),
   mFixDots,
   memoize(catchErrors(svgo)),
   mFormat,
