@@ -1111,6 +1111,72 @@ const catchErrors = (fn: (svg: string) => string) => (svg: string) => {
   }
 };
 
+function getLineIntersection(
+  line1: { prevPoint: Point; nextPoint: Point },
+  line2: { prevPoint: Point; nextPoint: Point },
+): Point | null {
+  const { prevPoint: A, nextPoint: B } = line1;
+  const { prevPoint: C, nextPoint: D } = line2;
+
+  const denominator = (A.x - B.x) * (C.y - D.y) - (A.y - B.y) * (C.x - D.x);
+
+  if (denominator === 0) {
+    // Lines are parallel or coincident
+    return null;
+  }
+
+  const x =
+    ((A.x * B.y - A.y * B.x) * (C.x - D.x) -
+      (A.x - B.x) * (C.x * D.y - C.y * D.x)) /
+    denominator;
+
+  const y =
+    ((A.x * B.y - A.y * B.x) * (C.y - D.y) -
+      (A.y - B.y) * (C.x * D.y - C.y * D.x)) /
+    denominator;
+
+  return { x, y };
+}
+
+const snapLinesToIntersection = (svg: string) => {
+  const data = parseSync(svg);
+  const { lines } = getLinesAndPoints(data.children);
+  for (let i = 0; i < data.children.length; i++) {
+    if (data.children[i].name === "path") {
+      const command = commander(data.children[i].attributes.d);
+      for (let i2 = 0; i2 < command.segments.length; i2++) {
+        const i3 = lines.findIndex((line) => line.id === i && line.idx === i2);
+        if (i3 !== -1) {
+          for (let i4 = 0; i4 < lines.length; i4++) {
+            if (lines[i4].id !== i || lines[i4].idx !== i2) {
+              const intersection = getLineIntersection(lines[i3], lines[i4]);
+              if (intersection) {
+                if (isDistanceSmaller(intersection, lines[i3].nextPoint, 0.5)) {
+                  lines[i3].nextPoint = intersection;
+                  command.segments[i2] = ["L", intersection.x, intersection.y];
+                  data.children[i].attributes.d = command.toString();
+                }
+                if (isDistanceSmaller(intersection, lines[i3].prevPoint, 0.5)) {
+                  lines[i3].prevPoint = intersection;
+                  command.segments[i2 - 1][
+                    command.segments[i2 - 1].length - 2
+                  ] = intersection.x;
+                  command.segments[i2 - 1][
+                    command.segments[i2 - 1].length - 1
+                  ] = intersection.y;
+                  data.children[i].attributes.d = command.toString();
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return removeOverlappingLineSegments(stringify(data));
+};
+
 const mFormat = memoize(catchErrors(format));
 const mFixDots = memoize(catchErrors(fixDots));
 
@@ -1120,6 +1186,7 @@ const runOptimizations = flow(
   memoize(catchErrors(smartClose)),
   mFixDots,
   memoize(catchErrors(mergeLines)),
+  memoize(catchErrors(snapLinesToIntersection)),
   memoize(catchErrors(removeTinySegments)),
   memoize(catchErrors(mergeArcs)),
   memoize(catchErrors(mMergePaths)),
