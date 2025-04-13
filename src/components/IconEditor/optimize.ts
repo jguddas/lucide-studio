@@ -12,6 +12,7 @@ import { SVGPathData, SVGPathDataTransformer } from "svg-pathdata";
 import { Bezier } from "bezier-js";
 import { Point } from "../SvgPreview/types";
 import getPaths from "../SvgPreview/utils";
+import { getOffsetLine } from "./arcify";
 
 const commander = (d: string) => new Commander(d).toAbsolute();
 
@@ -1149,22 +1150,40 @@ const snapLinesToIntersection = (svg: string) => {
         if (i3 !== -1) {
           for (let i4 = 0; i4 < lines.length; i4++) {
             if (lines[i4].id !== i || lines[i4].idx !== i2) {
-              const intersection = getLineIntersection(lines[i3], lines[i4]);
-              if (intersection) {
-                if (isDistanceSmaller(intersection, lines[i3].nextPoint, 0.5)) {
-                  lines[i3].nextPoint = intersection;
-                  command.segments[i2] = ["L", intersection.x, intersection.y];
-                  data.children[i].attributes.d = command.toString();
-                }
-                if (isDistanceSmaller(intersection, lines[i3].prevPoint, 0.5)) {
-                  lines[i3].prevPoint = intersection;
-                  command.segments[i2 - 1][
-                    command.segments[i2 - 1].length - 2
-                  ] = intersection.x;
-                  command.segments[i2 - 1][
-                    command.segments[i2 - 1].length - 1
-                  ] = intersection.y;
-                  data.children[i].attributes.d = command.toString();
+              for (const offset of [0, 4, -4]) {
+                const _offsetLine = getOffsetLine(
+                  lines[i4].prevPoint,
+                  lines[i4].nextPoint,
+                  offset,
+                );
+                const offsetLine = {
+                  prevPoint: _offsetLine[0],
+                  nextPoint: _offsetLine[1],
+                };
+                const intersection = getLineIntersection(lines[i3], offsetLine);
+                if (intersection && isPointInLine(offsetLine, intersection)) {
+                  if (isDistanceSmaller(intersection, lines[i3].prevPoint, 1)) {
+                    lines[i3].prevPoint = intersection;
+                    command.segments[i2 - 1][
+                      command.segments[i2 - 1].length - 2
+                    ] = intersection.x;
+                    command.segments[i2 - 1][
+                      command.segments[i2 - 1].length - 1
+                    ] = intersection.y;
+                    data.children[i].attributes.d = command.toString();
+                    break;
+                  }
+
+                  if (isDistanceSmaller(intersection, lines[i3].nextPoint, 1)) {
+                    lines[i3].nextPoint = intersection;
+                    command.segments[i2] = [
+                      "L",
+                      intersection.x,
+                      intersection.y,
+                    ];
+                    data.children[i].attributes.d = command.toString();
+                    break;
+                  }
                 }
               }
             }
@@ -1186,7 +1205,7 @@ const runOptimizations = flow(
   memoize(catchErrors(smartClose)),
   mFixDots,
   memoize(catchErrors(mergeLines)),
-  memoize(catchErrors(snapLinesToIntersection)),
+  // memoize(catchErrors(snapLinesToIntersection)),
   memoize(catchErrors(removeTinySegments)),
   memoize(catchErrors(mergeArcs)),
   memoize(catchErrors(mMergePaths)),

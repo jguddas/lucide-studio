@@ -5,7 +5,7 @@ import { SVGPathData } from "svg-pathdata";
 import optimize from "./optimize";
 import path from "path";
 
-function getOffsetLine(
+export function getOffsetLine(
   { x: Ax, y: Ay }: Point,
   { x: Bx, y: By }: Point,
   offset: number,
