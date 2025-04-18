@@ -4,7 +4,7 @@ export async function generateMetadata(props: any) {
   const searchParams = await props.searchParams;
   const queryParams = new URLSearchParams(searchParams);
   queryParams.set("value", btoa(queryParams.get("value") || ""));
-  const url = `https://lucide-studio.vercel.app/api/og?${queryParams}`;
+  const url = `https://studio.lucide.dev/api/og?${queryParams}`;
 
   return {
     title: "Lucide Studio",
