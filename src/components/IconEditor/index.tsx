@@ -170,7 +170,6 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
                       n[n.length - 2] = round(path.next.x + 3, 3) + "";
                       n[n.length - 1] = round(path.next.y + 1, 3) + "";
                       return [
-                        path,
                         {
                           ...path,
                           d: n.join(" "),
