@@ -10,6 +10,7 @@ import throttle from "lodash/throttle";
 import round from "lodash/round";
 import debounce from "lodash/debounce";
 import format from "./format";
+import { useSelection, type Selection } from "../SelectionProvider";
 
 const nodesToSvg = (nodes: INode[], height: number, width: number) => `<svg
   xmlns="http://www.w3.org/2000/svg"
@@ -36,30 +37,14 @@ const pathToPathNode = (path: Path) => ({
 const getDistance = (a: Point, b: Point) =>
   Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
 
-export type Selection = {
-  startPosition: { x: number; y: number };
-  type:
-    | "svg-editor-path"
-    | "svg-editor-start"
-    | "svg-editor-end"
-    | "svg-editor-circle"
-    | "svg-editor-cp1"
-    | "svg-editor-cp2";
-} & Path;
-
 const SvgEditor = ({
   src,
   onChange,
-  selected,
-  onSelectionChange,
 }: {
   src: string;
   onChange: (svg: string) => unknown;
-  selected: Selection[];
-  onSelectionChange: (
-    fn: ((selection: Selection[]) => Selection[]) | Selection[],
-  ) => unknown;
 }) => {
+  const [selected, onSelectionChange] = useSelection();
   const [paths, setPaths] = useState<Path[]>(() => getPaths(src));
   const dragTargetRef = useRef<Selection | undefined>(undefined);
   const height = parseInt(src.match(/height="(\d+)"/)?.[1] ?? "24");

@@ -1,6 +1,6 @@
 "use client";
 import Editor from "react-simple-code-editor";
-import SvgEditor, { Selection } from "./SvgEditor";
+import SvgEditor from "./SvgEditor";
 import highlight from "./highlight";
 import optimize from "./optimize";
 import React, { useState } from "react";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import getPaths from "@/components/SvgPreview/utils";
 import { useQueryState } from "next-usequerystate";
 import debounce from "lodash/debounce";
+import { useSelection, Selection } from "../SelectionProvider";
 
 interface IconEditorProps {
   value: string;
@@ -20,7 +21,7 @@ interface IconEditorProps {
 const IconEditor = ({ value, onChange }: IconEditorProps) => {
   const [, setName] = useQueryState("name");
   const [focus, setFocus] = useState(false);
-  const [selected, setSelected] = useState<Selection[]>([]);
+  const [selected, setSelected] = useSelection();
   const [nextValue, setNextValue] = useState<string | undefined>(undefined);
 
   const onSelect = debounce((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -84,12 +85,10 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         </Label>
         <SvgEditor
           src={nextValue || value}
-          selected={selected}
           onChange={(value) => {
             setNextValue(undefined);
             onChange(format(value));
           }}
-          onSelectionChange={setSelected}
         />
         <span className="text-xs text-muted-foreground hidden lg:inline-block">
           Tip:{" "}

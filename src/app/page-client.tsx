@@ -7,6 +7,7 @@ import { useCallback, useEffect, useRef } from "react";
 import Menu from "@/components/IconEditor/Menu";
 import ContributionDialog from "@/components/ContributionDialog";
 import { trim } from "@/components/IconEditor/trim";
+import { SelectionProvider } from "@/components/SelectionProvider";
 
 const emptyState = format(
   `
@@ -137,20 +138,22 @@ export default function PageClient() {
   }, [setValue, undo, redo]);
 
   return (
-    <div className="flex flex-col">
-      <Menu
-        undo={undo}
-        redo={redo}
-        isMac={isMac}
-        value={value}
-        setValue={setValue}
-      />
-      <div className="flex flex-col m-12 gap-5">
-        <IconEditor onChange={setValue} value={value} />
-        <div className="flex justify-end">
-          <ContributionDialog value={value} />
+    <SelectionProvider>
+      <div className="flex flex-col">
+        <Menu
+          undo={undo}
+          redo={redo}
+          isMac={isMac}
+          value={value}
+          setValue={setValue}
+        />
+        <div className="flex flex-col m-12 gap-5">
+          <IconEditor onChange={setValue} value={value} />
+          <div className="flex justify-end">
+            <ContributionDialog value={value} />
+          </div>
         </div>
       </div>
-    </div>
+    </SelectionProvider>
   );
 }
