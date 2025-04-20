@@ -1,17 +1,24 @@
 "use client";
 import Editor from "react-simple-code-editor";
-import SvgEditor from "./SvgEditor";
+import SvgEditor, { nodesToSvg, pathToPathNode } from "./SvgEditor";
 import highlight from "./highlight";
 import optimize from "./optimize";
 import React, { useState } from "react";
 import format from "./format";
 import { Label } from "@/components/ui/label";
-import { WandSparklesIcon } from "lucide-react";
+import { CopyIcon, Trash2Icon, WandSparklesIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import getPaths from "@/components/SvgPreview/utils";
+import getPaths, { getNodes } from "@/components/SvgPreview/utils";
 import { useQueryState } from "next-usequerystate";
 import debounce from "lodash/debounce";
 import { useSelection, Selection } from "../SelectionProvider";
+import round from "lodash/round";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 
 interface IconEditorProps {
   value: string;
@@ -83,13 +90,94 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
         <Label asChild>
           <span>Preview</span>
         </Label>
-        <SvgEditor
-          src={nextValue || value}
-          onChange={(value) => {
-            setNextValue(undefined);
-            onChange(format(value));
-          }}
-        />
+        <ContextMenu>
+          <ContextMenuTrigger>
+            <SvgEditor
+              src={nextValue || value}
+              onChange={(value) => {
+                setNextValue(undefined);
+                onChange(format(value));
+              }}
+            />
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem
+              className="gap-1.5"
+              disabled={!selected.length}
+              onClick={() => {
+                const height = parseInt(
+                  value.match(/height="(\d+)"/)?.[1] ?? "24",
+                );
+                const width = parseInt(
+                  value.match(/width="(\d+)"/)?.[1] ?? "24",
+                );
+                const paths = getPaths(value);
+                const nextNodes = getNodes(value).flatMap((node, id) => {
+                  if (!selected.some(({ c }) => c.id === id)) {
+                    return node;
+                  }
+                  return paths
+                    .filter(
+                      (path) =>
+                        path.c.id === id &&
+                        !selected.some(
+                          ({ c }) => c.id === path.c.id && c.idx === path.c.idx,
+                        ),
+                    )
+                    .map(pathToPathNode);
+                });
+                onChange(format(nodesToSvg(nextNodes, height, width)));
+                setSelected([]);
+              }}
+            >
+              <Trash2Icon />
+              Delete
+            </ContextMenuItem>
+            <ContextMenuItem
+              className="gap-1.5"
+              disabled={!selected.length}
+              onClick={() => {
+                const height = parseInt(
+                  value.match(/height="(\d+)"/)?.[1] ?? "24",
+                );
+                const width = parseInt(
+                  value.match(/width="(\d+)"/)?.[1] ?? "24",
+                );
+                const nextNodes = [
+                  ...getNodes(value),
+                  ...selected
+                    .flatMap((path) => {
+                      const n = path.d.split(" ");
+                      if (path.cp1) {
+                        n[3] = "C" + round(path.cp1.x + 3, 3);
+                        n[4] = round(path.cp1.y + 1, 3) + "";
+                      }
+                      if (path.cp2) {
+                        n[5] = round(path.cp2.x + 3, 3) + "";
+                        n[6] = round(path.cp2.y + 1, 3) + "";
+                      }
+                      n[1] = round(path.prev.x + 3, 3) + "";
+                      n[2] = round(path.prev.y + 1, 3) + "";
+                      n[n.length - 2] = round(path.next.x + 3, 3) + "";
+                      n[n.length - 1] = round(path.next.y + 1, 3) + "";
+                      return [
+                        path,
+                        {
+                          ...path,
+                          d: n.join(" "),
+                        },
+                      ];
+                    })
+                    .map(pathToPathNode),
+                ];
+                onChange(format(nodesToSvg(nextNodes, height, width)));
+              }}
+            >
+              <CopyIcon />
+              Duplicate
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
         <span className="text-xs text-muted-foreground hidden lg:inline-block">
           Tip:{" "}
           {selected.length

@@ -12,7 +12,11 @@ import debounce from "lodash/debounce";
 import format from "./format";
 import { useSelection, type Selection } from "../SelectionProvider";
 
-const nodesToSvg = (nodes: INode[], height: number, width: number) => `<svg
+export const nodesToSvg = (
+  nodes: INode[],
+  height: number,
+  width: number,
+) => `<svg
   xmlns="http://www.w3.org/2000/svg"
   width="${width}"
   height="${height}"
@@ -26,12 +30,14 @@ const nodesToSvg = (nodes: INode[], height: number, width: number) => `<svg
 ${nodes.map((node) => "  " + stringify(node)).join("\n")}
 </svg>`;
 
-const pathToPathNode = (path: Path) => ({
+export const pathToPathNode = (path: Path) => ({
   name: "path",
   type: "element",
-  value: undefined,
+  value: "",
   children: [],
-  attributes: { d: path.d.replace(/-?\d+(\.\d+)?/g, (n) => round(+n, 5) + "") },
+  attributes: {
+    d: path.d.replace(/-?\d+(\.\d+)?/g, (n) => round(+n, 5) + ""),
+  },
 });
 
 const getDistance = (a: Point, b: Point) =>
@@ -161,7 +167,8 @@ const SvgEditor = ({
         !event.target.closest(
           "button, a, input, textarea, select, details, [role='menuitem'], [role='menu']",
         ) &&
-        !isMenuOpen
+        !isMenuOpen &&
+        !("button" in event && event.button === 2)
       ) {
         onSelectionChange([]);
       }
