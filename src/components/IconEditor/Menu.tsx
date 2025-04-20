@@ -16,6 +16,7 @@ import optimize from "@/components/IconEditor/optimize";
 import {
   BracesIcon,
   BrushIcon,
+  CircleOffIcon,
   CodeXmlIcon,
   CropIcon,
   DownloadIcon,
@@ -29,6 +30,7 @@ import {
   MoonIcon,
   RedoIcon,
   ScalingIcon,
+  SquareTerminalIcon,
   SunIcon,
   TextSelectionIcon,
   UndoIcon,
@@ -64,6 +66,9 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { cutWithInkscape } from "./cut-with-inkscape";
+import { toast } from "sonner";
+import { useSelection } from "../SelectionProvider";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -212,6 +217,26 @@ const Menu = ({
             >
               <DraftingCompassIcon />
               Arcify
+            </MenubarItem>
+            <MenubarItem
+              onClick={() => {
+                window.navigator.clipboard.writeText(
+                  cutWithInkscape(value, "M5.656 0 24 18.344V24L0 0z", {
+                    actions: ["select-all", "path-cut"],
+                    extras: "M 2 2 L 22 22",
+                  }),
+                );
+                toast(
+                  <span className="flex gap-1.5 items-center">
+                    <SquareTerminalIcon />
+                    Bash script copied to clipboard.
+                  </span>,
+                );
+              }}
+              className="gap-1.5"
+            >
+              <CircleOffIcon />
+              Offify with Inkscape
             </MenubarItem>
             <MenubarSeparator />
             <MenubarItem

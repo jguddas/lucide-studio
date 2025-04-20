@@ -6,7 +6,14 @@ import optimize from "./optimize";
 import React, { useState } from "react";
 import format from "./format";
 import { Label } from "@/components/ui/label";
-import { CopyIcon, Trash2Icon, WandSparklesIcon } from "lucide-react";
+import {
+  CopyIcon,
+  ScissorsIcon,
+  SquareTerminalIcon,
+  Trash2Icon,
+  TypeOutlineIcon,
+  WandSparklesIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import getPaths, { getNodes } from "@/components/SvgPreview/utils";
 import { useQueryState } from "next-usequerystate";
@@ -19,6 +26,8 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
+import { toast } from "sonner";
+import { cutWithInkscape } from "./cut-with-inkscape";
 
 interface IconEditorProps {
   value: string;
@@ -175,6 +184,56 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
             >
               <CopyIcon />
               Duplicate
+            </ContextMenuItem>
+            <ContextMenuItem
+              className="gap-1.5"
+              disabled={!selected.length}
+              onClick={() => {
+                const selectionAsPath = getPaths(value)
+                  .filter(({ c }) =>
+                    selected.some((s) => s.c.id === c.id && s.c.idx === c.idx),
+                  )
+                  .map(({ d }) => d)
+                  .join(" ");
+                window.navigator.clipboard.writeText(
+                  cutWithInkscape(value, selectionAsPath),
+                );
+                toast(
+                  <span className="flex gap-1.5 items-center">
+                    <SquareTerminalIcon />
+                    Bash script copied to clipboard.
+                  </span>,
+                );
+              }}
+            >
+              <TypeOutlineIcon />
+              Cutout with Inkscape
+            </ContextMenuItem>
+            <ContextMenuItem
+              className="gap-1.5"
+              disabled={!selected.length}
+              onClick={() => {
+                const selectionAsPath = getPaths(value)
+                  .filter(({ c }) =>
+                    selected.some((s) => s.c.id === c.id && s.c.idx === c.idx),
+                  )
+                  .map(({ d }) => d)
+                  .join(" ");
+                window.navigator.clipboard.writeText(
+                  cutWithInkscape(value, selectionAsPath, {
+                    strokeWidth: 0.01,
+                  }),
+                );
+                toast(
+                  <span className="flex gap-1.5 items-center">
+                    <SquareTerminalIcon />
+                    Bash script copied to clipboard.
+                  </span>,
+                );
+              }}
+            >
+              <ScissorsIcon />
+              Cut with Inkscape
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
