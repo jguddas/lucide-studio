@@ -65,7 +65,6 @@ export default function PageClient() {
   const [value, setValue, { undo, redo }] = useValueState();
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const updateIcon = () => {
       const link = (document.querySelector("link[rel*='icon']") ||
         document.createElement("link")) as HTMLLinkElement;
@@ -79,13 +78,15 @@ export default function PageClient() {
 
       const icon = paths.length
         ? `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  ${paths
-    .map((path) =>
-      mediaQuery.matches
-        ? path.outerHTML.replace(/stroke="[^\"]+"/g, 'stroke="white"')
-        : path.outerHTML,
-    )
-    .join("\n")}
+        ${paths
+          .map((path) =>
+            path.outerHTML.replace(
+              /stroke="[^\"]+"/g,
+              'stroke="white" stroke-width="4.5"',
+            ),
+          )
+          .join("\n")}
+        ${paths.map((path) => path.outerHTML).join("\n")}
 </svg>`
         : value;
 
@@ -94,12 +95,8 @@ export default function PageClient() {
       link.href = "data:image/svg+xml;utf8," + encodeURIComponent(icon);
       document.getElementsByTagName("head")[0].appendChild(link);
     };
-    mediaQuery.addEventListener("change", updateIcon);
     const timeout = setTimeout(updateIcon, 400);
-    return () => {
-      mediaQuery.removeEventListener("change", updateIcon);
-      clearTimeout(timeout);
-    };
+    return () => clearTimeout(timeout);
   }, [value]);
 
   useEffect(() => {
