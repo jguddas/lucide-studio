@@ -187,7 +187,7 @@ export const FormStepNames = ({
                         return (
                           <Badge key={name} className="gap-1" variant="outline">
                             <img
-                              className="h-4"
+                              className="h-4 dark:invert text-black"
                               src={`https://cdn.jsdelivr.net/npm/lucide-static/icons/${name}.svg`}
                               alt="[Unknown]"
                               aria-hidden
