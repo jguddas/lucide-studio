@@ -2,7 +2,11 @@ import getPaths from "../SvgPreview/utils";
 
 const defaultActions = [
   "select-by-id:mask",
+  "copy",
+  "path-break-apart",
+  "paste-style",
   "object-stroke-to-path",
+  "path-combine",
   "select-all",
   "path-cut",
 ];
@@ -38,7 +42,7 @@ echo '
   <path d="${getPaths(svg)
     .map(({ d }) => d)
     .join("")}" />
-  <path d="${mask}" id="mask" stroke-width="${strokeWidth}" />
+  <path d="${mask}" id="mask" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>
 ' > "$TEMP_DIR"/original.svg
 
