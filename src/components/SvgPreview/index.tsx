@@ -4,6 +4,7 @@ import getPaths, { assert } from "./utils";
 import { BBox, svgPathBbox } from "svg-path-bbox";
 import memoize from "lodash/memoize";
 import { getPatternMatches } from "./getPatternMatches";
+import { GapViolationHighlight } from "./GapViolationHighlight";
 
 const Grid = ({
   radius,
@@ -502,6 +503,12 @@ const SvgPreview = React.forwardRef<
           stroke="#777"
           radius={1}
           strokeOpacity={0.15}
+        />
+        <GapViolationHighlight
+          paths={paths}
+          stroke="red"
+          strokeOpacity={0.75}
+          strokeWidth={4}
         />
         <Handles
           paths={paths}
