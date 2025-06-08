@@ -101,6 +101,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
   const [open, _setOpen] = useQueryState("dialog", {
     defaultValue: false,
     parse: (query) => query === "true",
+    serialize: (value) => (value ? "true" : null) as string,
   });
 
   const setOpen = (value: boolean) => {
