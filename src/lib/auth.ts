@@ -32,7 +32,15 @@ const GitHubProvider: OAuthConfig<GitHubProfile> = {
   profile(profile) {
     return {
       name: profile.name,
-      image: JSON.stringify(profile),
+      image: JSON.stringify({
+        ...profile,
+        role:
+          {
+            25524993: "admin", // jguddas
+            17746067: "admin", // karsa-mistmere
+            11825403: "admin", // ericfennis
+          }[profile.id] ?? "user",
+      }),
     };
   },
   style: { logo: "/github.svg", bg: "#24292f", text: "#fff" },
