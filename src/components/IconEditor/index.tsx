@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import {
   CopyIcon,
   ScissorsIcon,
-  SquareTerminalIcon,
   Trash2Icon,
   TypeOutlineIcon,
   WandSparklesIcon,
@@ -27,7 +26,9 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { toast } from "sonner";
-import { cutWithInkscape } from "./cut-with-inkscape";
+import cutOut from "./cut-out";
+import cut from "./cut";
+import { useSession } from "next-auth/react";
 
 interface IconEditorProps {
   value: string;
@@ -35,6 +36,7 @@ interface IconEditorProps {
 }
 
 const IconEditor = ({ value, onChange }: IconEditorProps) => {
+  const session = useSession();
   const [, setName] = useQueryState("name");
   const [focus, setFocus] = useState(false);
   const [selected, setSelected] = useSelection();
@@ -184,56 +186,44 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               <CopyIcon />
               Duplicate
             </ContextMenuItem>
-            <ContextMenuItem
-              className="gap-1.5"
-              disabled={!selected.length}
-              onClick={() => {
-                const selectionAsPath = getPaths(value)
-                  .filter(({ c }) =>
-                    selected.some((s) => s.c.id === c.id && s.c.idx === c.idx),
-                  )
-                  .map(({ d }) => d)
-                  .join(" ");
-                window.navigator.clipboard.writeText(
-                  cutWithInkscape(value, selectionAsPath),
-                );
-                toast(
-                  <span className="flex gap-1.5 items-center">
-                    <SquareTerminalIcon />
-                    Bash script copied to clipboard.
-                  </span>,
-                );
-              }}
-            >
-              <TypeOutlineIcon />
-              Cutout with Inkscape
-            </ContextMenuItem>
-            <ContextMenuItem
-              className="gap-1.5"
-              disabled={!selected.length}
-              onClick={() => {
-                const selectionAsPath = getPaths(value)
-                  .filter(({ c }) =>
-                    selected.some((s) => s.c.id === c.id && s.c.idx === c.idx),
-                  )
-                  .map(({ d }) => d)
-                  .join(" ");
-                window.navigator.clipboard.writeText(
-                  cutWithInkscape(value, selectionAsPath, {
-                    strokeWidth: 0.01,
-                  }),
-                );
-                toast(
-                  <span className="flex gap-1.5 items-center">
-                    <SquareTerminalIcon />
-                    Bash script copied to clipboard.
-                  </span>,
-                );
-              }}
-            >
-              <ScissorsIcon />
-              Cut with Inkscape
-            </ContextMenuItem>
+            {JSON.parse(session.data?.user?.image || "{}").role === "admin" && (
+              <>
+                <ContextMenuItem
+                  className="gap-1.5"
+                  disabled={!selected.length}
+                  onClick={async () => {
+                    const promise = cutOut(value, selected);
+                    toast.promise(promise, {
+                      loading: "Processing SVG...",
+                      success: "SVG processed successfully!",
+                      error: "An error occurred while processing the SVG.",
+                    });
+                    onChange(await promise);
+                    setSelected([]);
+                  }}
+                >
+                  <TypeOutlineIcon />
+                  Cutout
+                </ContextMenuItem>
+                <ContextMenuItem
+                  className="gap-1.5"
+                  disabled={!selected.length}
+                  onClick={async () => {
+                    const promise = cut(value, selected);
+                    toast.promise(promise, {
+                      loading: "Processing SVG...",
+                      success: "SVG processed successfully!",
+                      error: "An error occurred while processing the SVG.",
+                    });
+                    onChange(await promise);
+                    setSelected([]);
+                  }}
+                >
+                  <ScissorsIcon />
+                  Cut
+                </ContextMenuItem>
+              </>
+            )}
           </ContextMenuContent>
         </ContextMenu>
         <span className="text-xs text-muted-foreground hidden lg:inline-block">

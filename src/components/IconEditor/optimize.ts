@@ -16,7 +16,7 @@ import { getOffsetLine } from "./arcify";
 
 const commander = (d: string) => new Commander(d).toAbsolute();
 
-const isDistanceSmaller = (
+export const isDistanceSmaller = (
   { x: x1, y: y1 }: Point,
   { x: x2, y: y2 }: Point,
   threshold: number,
