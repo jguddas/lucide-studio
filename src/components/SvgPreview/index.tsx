@@ -273,9 +273,40 @@ const Radii = ({
   return (
     <g className="svg-preview-radii-group" {...props}>
       {paths.map(
-        ({ circle }, i) =>
+        ({ circle, next, prev, c }, i) =>
           circle && (
             <React.Fragment key={i}>
+              {circle.tangentIntersection && c.name === "path" && (
+                <>
+                  <circle
+                    cx={next.x * 2 - circle.tangentIntersection.x}
+                    cy={next.y * 2 - circle.tangentIntersection.y}
+                    r={0.25}
+                  />
+                  <circle
+                    cx={prev.x * 2 - circle.tangentIntersection.x}
+                    cy={prev.y * 2 - circle.tangentIntersection.y}
+                    r={0.25}
+                  />
+                  <path
+                    d={`M${next.x * 2 - circle.tangentIntersection.x} ${
+                      next.y * 2 - circle.tangentIntersection.y
+                    }L${circle.tangentIntersection.x} ${circle.tangentIntersection.y}L${prev.x * 2 - circle.tangentIntersection.x} ${
+                      prev.y * 2 - circle.tangentIntersection.y
+                    }`}
+                  />
+                  <circle
+                    cx={circle.tangentIntersection.x}
+                    cy={circle.tangentIntersection.y}
+                    r={0.25}
+                  />
+                </>
+              )}
+              {c.name === "path" && (
+                <path
+                  d={`M${next.x} ${next.y}L${circle.x} ${circle.y}L${prev.x} ${prev.y}`}
+                />
+              )}
               <circle
                 cy={circle.y}
                 cx={circle.x}

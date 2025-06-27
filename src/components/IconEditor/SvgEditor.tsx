@@ -243,6 +243,19 @@ const SvgEditor = ({
                 y: scopedPath.circle.y - snapTarget.y,
               };
             }
+            if (
+              scopedPath.circle?.tangentIntersection &&
+              (i !== currentPathIndex || snapTargetKey !== "circle") &&
+              getDistance(
+                movedAbsolute,
+                scopedPath.circle?.tangentIntersection,
+              ) < 0.75
+            ) {
+              return {
+                x: scopedPath.circle.tangentIntersection.x - snapTarget.x,
+                y: scopedPath.circle.tangentIntersection.y - snapTarget.y,
+              };
+            }
           }
 
           // snap to points where the circle is intersecting the grid
@@ -401,6 +414,12 @@ const SvgEditor = ({
               if (movedPath.circle && scopedPath.circle) {
                 movedPath.circle.x = scopedPath.circle.x + snapDelta.x;
                 movedPath.circle.y = scopedPath.circle.y + snapDelta.y;
+                if (movedPath.circle.tangentIntersection) {
+                  movedPath.circle.tangentIntersection.x =
+                    scopedPath.circle!.tangentIntersection!.x + snapDelta.x;
+                  movedPath.circle.tangentIntersection.y =
+                    scopedPath.circle!.tangentIntersection!.y + snapDelta.y;
+                }
               }
               if (movedPath.cp1 && scopedPath.cp1) {
                 movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
@@ -420,6 +439,12 @@ const SvgEditor = ({
               movedPath.next.y = scopedPath.next.y + snapDelta.y;
               movedPath.circle!.x = scopedPath.circle!.x + snapDelta.x;
               movedPath.circle!.y = scopedPath.circle!.y + snapDelta.y;
+              if (movedPath.circle!.tangentIntersection) {
+                movedPath.circle!.tangentIntersection.x =
+                  scopedPath.circle!.tangentIntersection!.x + snapDelta.x;
+                movedPath.circle!.tangentIntersection.y =
+                  scopedPath.circle!.tangentIntersection!.y + snapDelta.y;
+              }
               break;
             }
             case "svg-editor-cp1": {
@@ -442,6 +467,9 @@ const SvgEditor = ({
                 movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
                 movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
               }
+              if (movedPath.circle) {
+                movedPath.circle.tangentIntersection = undefined;
+              }
               break;
             }
             case "svg-editor-end": {
@@ -451,6 +479,9 @@ const SvgEditor = ({
               if (movedPath.cp2 && scopedPath.cp2) {
                 movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
                 movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
+              }
+              if (movedPath.circle) {
+                movedPath.circle.tangentIntersection = undefined;
               }
               break;
             }
