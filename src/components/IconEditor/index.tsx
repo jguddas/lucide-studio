@@ -7,6 +7,7 @@ import React, { useState } from "react";
 import format from "./format";
 import { Label } from "@/components/ui/label";
 import {
+  CircleDotIcon,
   CopyIcon,
   ScissorsIcon,
   Trash2Icon,
@@ -29,6 +30,7 @@ import { toast } from "sonner";
 import cutOut from "./cut-out";
 import cut from "./cut";
 import { useSession } from "next-auth/react";
+import { INode } from "svgson";
 
 interface IconEditorProps {
   value: string;
@@ -186,6 +188,63 @@ const IconEditor = ({ value, onChange }: IconEditorProps) => {
               <CopyIcon />
               Duplicate
             </ContextMenuItem>
+            {selected.length > 0 &&
+              selected.every(
+                ({ c, circle }) => circle && c.name !== "circle",
+              ) && (
+                <ContextMenuItem
+                  className="gap-1.5"
+                  onClick={async () => {
+                    const height = parseInt(
+                      value.match(/height="(\d+)"/)?.[1] ?? "24",
+                    );
+                    const width = parseInt(
+                      value.match(/width="(\d+)"/)?.[1] ?? "24",
+                    );
+                    onChange(
+                      optimize(
+                        nodesToSvg(
+                          [
+                            ...getPaths(value)
+                              .filter(({ circle }) =>
+                                selected.every(
+                                  (s) =>
+                                    !(
+                                      circle &&
+                                      s.circle &&
+                                      Math.abs(circle.x - s.circle.x) < 0.01 &&
+                                      Math.abs(circle.y - s.circle.y) < 0.01 &&
+                                      Math.abs(circle.r - s.circle.r) < 0.01
+                                    ),
+                                ),
+                              )
+                              .map(pathToPathNode),
+                            ...selected.map(
+                              ({ circle }) =>
+                                ({
+                                  name: "circle",
+                                  value: "",
+                                  children: [],
+                                  type: "element",
+                                  attributes: {
+                                    cx: circle!.x + "",
+                                    cy: circle!.y + "",
+                                    r: circle!.r + "",
+                                  },
+                                }) as INode,
+                            ),
+                          ],
+                          height,
+                          width,
+                        ),
+                      ),
+                    );
+                  }}
+                >
+                  <CircleDotIcon />
+                  Circlify
+                </ContextMenuItem>
+              )}
             {JSON.parse(session.data?.user?.image || "{}").role === "admin" && (
               <>
                 <ContextMenuItem
