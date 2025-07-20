@@ -22,6 +22,10 @@ import {
   DownloadIcon,
   DraftingCompassIcon,
   ExternalLinkIcon,
+  FlipHorizontal,
+  FlipHorizontalIcon,
+  FlipVertical,
+  FlipVerticalIcon,
   FolderUpIcon,
   LogOutIcon,
   LucideBoxSelect,
@@ -68,6 +72,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { toast } from "sonner";
 import offify from "./offify";
+import flip from "./flip";
 
 const useIsFullscreen = () => {
   const [isFullscreen, setIsFullscreen] = useState(
@@ -234,6 +239,21 @@ const Menu = ({
                 Offify
               </MenubarItem>
             )}
+            <MenubarSeparator />
+            <MenubarItem
+              onClick={() => setValue(flip(value, "horizontal"))}
+              className="gap-1.5"
+            >
+              <FlipHorizontalIcon />
+              Flip horizontal
+            </MenubarItem>
+            <MenubarItem
+              onClick={() => setValue(flip(value, "vertical"))}
+              className="gap-1.5"
+            >
+              <FlipVerticalIcon />
+              Flip vertical
+            </MenubarItem>
             <MenubarSeparator />
             <MenubarItem
               onClick={() => setIsScaleDialogOpen(true)}
