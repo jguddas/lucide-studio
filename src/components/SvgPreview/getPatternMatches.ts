@@ -60,9 +60,9 @@ export const getVectors = (paths: Path[]) =>
     ({ next, prev, c }) =>
       (c.type === 8 || c.type === 4 || c.type === 1 ? 16 : c.type) +
       "|" +
-      Math.round(Math.abs(next.x - prev.x) * 100) / 100 +
+      Math.round(Math.abs(next.x - prev.x) * 10) / 10 +
       "|" +
-      Math.round(Math.abs(next.y - prev.y) * 100) / 100,
+      Math.round(Math.abs(next.y - prev.y) * 10) / 10,
   );
 
 export const getPoints = (
@@ -71,7 +71,7 @@ export const getPoints = (
 ) =>
   paths.map(
     ({ prev, next }) =>
-      Math.round(((prev.x + next.x) / 2 - offset.x) * 100) / 100 +
+      Math.round(((prev.x + next.x) / 2 - offset.x) * 10) / 10 +
       "|" +
-      Math.round(((prev.y + next.y) / 2 - offset.y) * 100) / 100,
+      Math.round(((prev.y + next.y) / 2 - offset.y) * 10) / 10,
   );

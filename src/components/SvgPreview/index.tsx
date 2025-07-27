@@ -355,7 +355,7 @@ const Handles = ({
   </g>
 );
 
-const mSvgPathBbox = memoize(svgPathBbox);
+export const mSvgPathBbox = memoize(svgPathBbox);
 const mGetPatternMatches = memoize(getPatternMatches);
 const PatternMatches = ({
   paths,
@@ -368,15 +368,9 @@ const PatternMatches = ({
     const [x1, y1, x2, y2] = mSvgPathBbox(
       patternMatch.paths.map((p) => p.d).join(" "),
     );
-    const patternSize = Math.max(x2 - x1, y2 - y1);
     return {
       ...patternMatch,
-      bounds: [
-        (x2 - x1 - patternSize) * 0.5 + x1 - 1,
-        (y2 - y1 - patternSize) * 0.5 + y1 - 1,
-        (x2 - x1 - patternSize) * 0.5 + x1 + patternSize + 1,
-        (y2 - y1 - patternSize) * 0.5 + y1 + patternSize + 1,
-      ] satisfies BBox,
+      bounds: [x1 - 1, y1 - 1, x2 + 1, y2 + 1] satisfies BBox,
     };
   });
   return (
@@ -399,7 +393,8 @@ const PatternMatches = ({
               dominantBaseline="middle"
             >
               <textPath href={`#svg-preview-bounding-box-${idx}`}>
-                {patternName}.{Math.round(x2 - x1 + 2)}.svg
+                {patternName}-{Math.round(x2 - x1 + 2)}x
+                {Math.round(y2 - y1 + 2)}
               </textPath>
             </text>
           ),
@@ -458,7 +453,8 @@ const PatternMatches = ({
                 className="svg-preview-bounding-box-label-path"
                 data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
               >
-                {patternName}.{Math.round(x2 - x1 + 2)}.svg
+                {patternName} {Math.round(x2 - x1 + 2)}x
+                {Math.round(y2 - y1 + 2)}
               </textPath>
             </text>
           ),

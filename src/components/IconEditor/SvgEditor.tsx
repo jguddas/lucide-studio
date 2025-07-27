@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useEffect, useRef, useState } from "react";
-import SvgPreview from "../SvgPreview";
+import SvgPreview, { mSvgPathBbox } from "../SvgPreview";
 import { Path, Point } from "../SvgPreview/types";
 import getPaths, { getNodes } from "../SvgPreview/utils";
 import { stringify, INode } from "svgson";
@@ -52,7 +52,9 @@ const SvgEditor = ({
 }) => {
   const [selected, onSelectionChange] = useSelection();
   const [paths, setPaths] = useState<Path[]>(() => getPaths(src));
-  const dragTargetRef = useRef<Selection | undefined>(undefined);
+  const dragTargetRef = useRef<
+    (Selection & { bounds: { x: number; y: number } }) | undefined
+  >(undefined);
   const height = parseInt(src.match(/height="(\d+)"/)?.[1] ?? "24");
   const width = parseInt(src.match(/width="(\d+)"/)?.[1] ?? "24");
 
@@ -113,10 +115,18 @@ const SvgEditor = ({
         const path = paths.find((p) => p.c.id === id && p.c.idx === idx);
 
         if (path) {
+          const bounds = mSvgPathBbox(paths.map((path) => path.d).join(" "));
           dragTargetRef.current = {
             ...path,
+            bounds: className?.startsWith("svg-preview-bounding-box-label")
+              ? { x: bounds[0], y: bounds[1] }
+              : { x: 0, y: 0 },
             startPosition: { x: clientX, y: clientY },
-            type: dataIds?.length ? "svg-editor-path" : className.split(" ")[0],
+            type: dataIds?.length
+              ? className?.startsWith("svg-preview-bounding-box-label")
+                ? "svg-preview-bounding-box-label"
+                : "svg-editor-path"
+              : className.split(" ")[0],
           };
           if (dataIds?.length) {
             onSelectionChange(
@@ -127,7 +137,9 @@ const SvgEditor = ({
                     (p) => p.c.id === parseInt(id) && p.c.idx === parseInt(idx),
                   ) as Path),
                   startPosition: { x: clientX, y: clientY },
-                  type: "svg-editor-path",
+                  type: className?.startsWith("svg-preview-bounding-box-label")
+                    ? "svg-preview-bounding-box-label"
+                    : "svg-editor-path",
                 })) || [],
             );
           } else {
@@ -202,10 +214,13 @@ const SvgEditor = ({
 
         const getSnapDelta = (
           currentPathIndex: number,
-          snapTargetKey: "prev" | "next" | "circle" | "cp1" | "cp2",
+          snapTargetKey: "prev" | "next" | "circle" | "cp1" | "cp2" | "bounds",
         ) => {
           const snapPath = scopedPaths[currentPathIndex];
-          const snapTarget = snapPath[snapTargetKey];
+          const snapTarget =
+            snapTargetKey === "bounds"
+              ? dragTargetRef.current?.bounds
+              : snapPath[snapTargetKey];
           if (!snapTarget) return { x: 0, y: 0 };
           const movedAbsolute = {
             x: snapTarget.x + movedDelta.x,
@@ -391,6 +406,7 @@ const SvgEditor = ({
               "svg-editor-circle": "circle",
               "svg-editor-cp1": "cp1",
               "svg-editor-cp2": "cp2",
+              "svg-preview-bounding-box-label": "bounds",
             } as const
           )[dragTargetRef.current.type],
         );
@@ -406,6 +422,7 @@ const SvgEditor = ({
           const scopedPath = scopedPaths[i];
 
           switch (dragTargetRef.current.type) {
+            case "svg-preview-bounding-box-label":
             case "svg-editor-path": {
               movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
               movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
