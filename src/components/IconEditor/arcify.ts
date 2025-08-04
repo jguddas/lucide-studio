@@ -158,7 +158,27 @@ export default function arcify(svg: string) {
       );
     })(prevPath.prev, path.prev, path.next);
 
-    const radius = deg > 120 ? 2 : deg > 60 ? 1 : 0.5;
+    const isDiagonal = (p1: Point, p2: Point) =>
+      Math.abs(p1.x - p2.x) - Math.abs(p1.y - p2.y) < 0.01;
+
+    let radius = deg > 120 ? 2 : deg > 60 ? 1 : 0.5;
+    if (
+      isDiagonal(prevPath.prev, path.prev) &&
+      isDiagonal(path.prev, path.next) &&
+      deg > 89.99 &&
+      deg < 90.01
+    ) {
+      radius = (1 + Math.sqrt(2)) / 2;
+    } else if (
+      (Math.abs(prevPath.prev.x - prevPath.next.x) < 0.01 ||
+        Math.abs(prevPath.prev.y - prevPath.next.y) < 0.01 ||
+        Math.abs(path.prev.x - path.next.x) < 0.01 ||
+        Math.abs(path.prev.y - path.next.y) < 0.01) &&
+      deg > 44.99 &&
+      deg < 45.01
+    ) {
+      radius = 0.707;
+    }
 
     const intersection = getOffsetIntersection(
       [prevPath.prev, path.prev],
