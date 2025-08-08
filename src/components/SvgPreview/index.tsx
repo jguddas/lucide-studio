@@ -189,8 +189,13 @@ const ControlPath = ({
       element[0].prev.x === lastElement.x &&
       element[0].prev.y === lastElement.y;
     const showMarker = !["rect", "circle", "ellipse"].includes(path.c.name);
+    const dx = path.next.x - path.prev.x;
+    const dy = path.next.y - path.prev.y;
+    let angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    if (angle < 0) angle += 360;
     return {
       ...path,
+      angle,
       showMarker,
       startMarker: showMarker && path.isStart && !isClosed,
       endMarker: showMarker && paths[i + 1]?.isStart !== false && !isClosed,
@@ -228,9 +233,16 @@ const ControlPath = ({
         })}
       </g>
       <g className="svg-preview-control-path-group" {...props}>
-        {controlPaths.map(({ d, showMarker }, i) => (
+        {controlPaths.map(({ d, prev, next, showMarker, angle, c }, i) => (
           <path
             key={i}
+            strokeDasharray={
+              (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
+              angle % 45 > 0.001 &&
+              angle % 45 < 44.999
+                ? "0.25 0.25"
+                : "0"
+            }
             mask={
               showMarker
                 ? `url(#svg-preview-control-path-marker-mask-${i})`
