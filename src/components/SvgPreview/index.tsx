@@ -5,6 +5,7 @@ import { BBox, svgPathBbox } from "svg-path-bbox";
 import memoize from "lodash/memoize";
 import { getPatternMatches } from "./getPatternMatches";
 import { GapViolationHighlight } from "./GapViolationHighlight";
+import { isDistanceSmaller } from "../IconEditor/optimize";
 
 const Grid = ({
   radius,
@@ -204,38 +205,65 @@ const ControlPath = ({
   return (
     <>
       <g
-        className="svg-preview-control-path-marker-mask-group"
+        className="svg-preview-control-path-mask-group"
         strokeWidth={pointSize}
         stroke="#000"
       >
-        {controlPaths.map(({ prev, next, showMarker }, i) => {
+        {controlPaths.map(({ prev, next, angle, c, showMarker }, idx) => {
           return (
-            showMarker && (
-              <mask
-                id={`svg-preview-control-path-marker-mask-${i}`}
-                key={i}
-                maskUnits="userSpaceOnUse"
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  width="100%"
-                  height="100%"
-                  fill="#fff"
-                  stroke="none"
-                  rx={radius}
-                />
-                <path d={`M${prev.x} ${prev.y}h.01`} />
-                <path d={`M${next.x} ${next.y}h.01`} />
-              </mask>
-            )
+            <mask
+              id={`svg-preview-control-path-mask-${idx}`}
+              key={idx}
+              maskUnits="userSpaceOnUse"
+            >
+              <rect
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                fill="#fff"
+                stroke="none"
+                rx={radius}
+              />
+              {showMarker && (
+                <>
+                  <path d={`M${prev.x} ${prev.y}h.01`} />
+                  <path d={`M${next.x} ${next.y}h.01`} />
+                </>
+              )}
+              {(c.type === 16 ||
+                c.type === 8 ||
+                c.type === 4 ||
+                c.type === 1) &&
+              !isDistanceSmaller(prev, next, 3.5) &&
+              angle % 45 > 0.001 &&
+              angle % 45 < 44.999 ? (
+                <text
+                  fontSize={0.75}
+                  strokeWidth={0.4}
+                  dominantBaseline="middle"
+                  textAnchor="middle"
+                >
+                  <textPath
+                    startOffset="50%"
+                    href={`#svg-preview-control-path-${idx}`}
+                  >
+                    {(Math.round((angle % 45) * 100) / 100) % 1
+                      ? Math.round((angle % 90) * 100) / 100
+                      : Math.round((angle % 90) * 1000) / 1000}
+                    °
+                  </textPath>
+                </text>
+              ) : undefined}
+            </mask>
           );
         })}
       </g>
       <g className="svg-preview-control-path-group" {...props}>
-        {controlPaths.map(({ d, prev, next, showMarker, angle, c }, i) => (
+        {controlPaths.map(({ d, showMarker, prev, next, angle, c }, idx) => (
           <path
-            key={i}
+            key={idx}
+            id={`svg-preview-control-path-${idx}`}
             strokeDasharray={
               (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
               angle % 45 > 0.001 &&
@@ -245,12 +273,45 @@ const ControlPath = ({
             }
             mask={
               showMarker
-                ? `url(#svg-preview-control-path-marker-mask-${i})`
+                ? `url(#svg-preview-control-path-mask-${idx})`
                 : undefined
             }
-            d={d}
+            d={
+              (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
+              prev.x > next.x
+                ? `M${next.x} ${next.y}L${prev.x} ${prev.y}}`
+                : d
+            }
           />
         ))}
+      </g>
+      <g className="svg-preview-control-path-text-group">
+        {controlPaths.map(({ angle, prev, next, c }, idx) =>
+          (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
+          !isDistanceSmaller(prev, next, 3.5) &&
+          angle % 45 > 0.001 &&
+          angle % 45 < 44.999 ? (
+            <text
+              key={idx}
+              stroke={props.stroke}
+              fill={props.stroke}
+              fontSize={0.75}
+              strokeWidth={0.06}
+              dominantBaseline="middle"
+              textAnchor="middle"
+            >
+              <textPath
+                startOffset="50%"
+                href={`#svg-preview-control-path-${idx}`}
+              >
+                {(Math.round((angle % 45) * 100) / 100) % 1
+                  ? Math.round((angle % 90) * 100) / 100
+                  : Math.round((angle % 90) * 1000) / 1000}
+                °
+              </textPath>
+            </text>
+          ) : undefined,
+        )}
       </g>
       <g className="svg-preview-control-path-marker-group" {...props}>
         <path
