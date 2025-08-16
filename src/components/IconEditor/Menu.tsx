@@ -38,7 +38,6 @@ import {
   WandSparklesIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import format from "./format";
 import { useTheme } from "next-themes";
 import { signOut, useSession } from "next-auth/react";
 import { useQueryState } from "next-usequerystate";
@@ -194,14 +193,6 @@ const Menu = ({
               </MenubarShortcut>
             </MenubarItem>
             <MenubarSeparator />
-            <MenubarItem
-              onClick={() => setValue(format(value))}
-              className="gap-1.5"
-            >
-              <BrushIcon />
-              Format{" "}
-              <MenubarShortcut>{isMac ? "⌘S" : "Ctrl+S"}</MenubarShortcut>
-            </MenubarItem>
             <MenubarItem
               onClick={() => setValue(optimize(value))}
               className="gap-1.5"
