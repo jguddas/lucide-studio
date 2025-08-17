@@ -65,4 +65,7 @@ async function cut(svg: string, selected: Path[]) {
   );
 }
 
-export default memoize(cut);
+export default memoize(
+  cut,
+  (svg, selected) => `${svg}:${selected.map((s) => `${s.d}`).join("")}`,
+);
