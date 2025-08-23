@@ -14,17 +14,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
-import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
-import { useMediaQuery } from "@/hooks/use-media-query";
 import { useQueryState } from "next-usequerystate";
 import { useState } from "react";
 import { FormStepNames, FormStepNamesData } from "./FormStepNames";
@@ -91,7 +80,6 @@ type Step =
 
 const ContributionDialog = ({ value }: { value: string }) => {
   const session = useSession();
-  const isDesktop = useMediaQuery("(min-width: 640px)");
   const [name] = useQueryState("name", { defaultValue: "" });
   const [
     iHaveReadTheContributionGuidelines,
@@ -329,25 +317,15 @@ const ContributionDialog = ({ value }: { value: string }) => {
 
   const isPending = isPendingNames || isPendingSubmitMetadata;
 
-  const ResponsiveDialog = isDesktop ? Dialog : Drawer;
-  const ResponsiveDialogTrigger = isDesktop ? DialogTrigger : DrawerTrigger;
-  const ResponsiveDialogContent = isDesktop ? DialogContent : DrawerContent;
-  const ResponsiveDialogHeader = isDesktop ? DialogHeader : DrawerHeader;
-  const ResponsiveDialogTitle = isDesktop ? DialogTitle : DrawerTitle;
-  const ResponsiveDialogDescription = isDesktop
-    ? DialogDescription
-    : DrawerDescription;
-  const ResponsiveDialogFooter = isDesktop ? DialogFooter : DrawerFooter;
-
   return (
-    <ResponsiveDialog open={open} onOpenChange={setOpen}>
-      <ResponsiveDialogTrigger asChild>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
         <Button className="gap-1.5 w-full sm:w-[unset]" variant="github">
           <GitPullRequestCreateArrowIcon />
           Create Pull Request
         </Button>
-      </ResponsiveDialogTrigger>
-      <ResponsiveDialogContent className="sm:max-w-[425px]">
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
         <div className="flex gap-2 -mt-1 mb-2 mr-6">
           <div
             className={cn(
@@ -370,8 +348,8 @@ const ContributionDialog = ({ value }: { value: string }) => {
             )}
           />
         </div>
-        <ResponsiveDialogHeader>
-          <ResponsiveDialogTitle>
+        <DialogHeader>
+          <DialogTitle>
             {step.step === "name" || step.step === "fork"
               ? "Publish your changes to GitHub"
               : step.step === "metadata"
@@ -379,8 +357,8 @@ const ContributionDialog = ({ value }: { value: string }) => {
                 : step.step === "new-checklist"
                   ? "New Icon Pull Request Checklist"
                   : "Changed Icon Pull Request Checklist"}
-          </ResponsiveDialogTitle>
-          <ResponsiveDialogDescription>
+          </DialogTitle>
+          <DialogDescription>
             {step.step === "name"
               ? "Suggest changes or additions to Lucide."
               : step.step === "fork"
@@ -388,8 +366,8 @@ const ContributionDialog = ({ value }: { value: string }) => {
                 : step.step === "metadata"
                   ? "You can take a look at the existing icons for reference."
                   : "Let's fill the pull request description with the needed information."}
-          </ResponsiveDialogDescription>
-        </ResponsiveDialogHeader>
+          </DialogDescription>
+        </DialogHeader>
         {step.step === "name" ? (
           <FormStepNames
             defaultValues={step.data}
@@ -397,7 +375,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
             isPending={isPending}
           />
         ) : step.step === "fork" ? (
-          <ResponsiveDialogFooter>
+          <DialogFooter>
             <Button
               className="gap-1.5"
               disabled={isPending}
@@ -413,7 +391,7 @@ const ContributionDialog = ({ value }: { value: string }) => {
               <GitForkIcon />
               Create Fork
             </Button>
-          </ResponsiveDialogFooter>
+          </DialogFooter>
         ) : step.step === "metadata" ? (
           <FormStepMetadata
             defaultValues={step.data}
@@ -438,8 +416,8 @@ const ContributionDialog = ({ value }: { value: string }) => {
             isPending={isPending}
           />
         )}
-      </ResponsiveDialogContent>
-    </ResponsiveDialog>
+      </DialogContent>
+    </Dialog>
   );
 };
 
