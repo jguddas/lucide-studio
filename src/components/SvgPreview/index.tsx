@@ -590,6 +590,49 @@ const PatternMatches = ({
   );
 };
 
+const BorderViolationHighlight = ({
+  paths,
+  stroke,
+  ...props
+}: {
+  paths: Path[];
+} & PathProps<"stroke", "d">) => {
+  return (
+    <g className="svg-preview-border-violation-group">
+      <defs xmlns="http://www.w3.org/2000/svg">
+        <pattern
+          id="svg-preview-border-violation-pattern"
+          width=".1"
+          height=".1"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45 50 50)"
+        >
+          <line stroke={stroke} strokeWidth={0.1} y2={1} />
+          <line stroke={stroke} strokeWidth={0.1} y2={1} />
+        </pattern>
+      </defs>
+      <mask id="svg-preview-border-violation-mask" maskUnits="userSpaceOnUse">
+        <path d={paths.map(({ d }) => d).join(" ")} stroke="white" />
+        <rect
+          x={1}
+          y={1}
+          rx={1}
+          width={"calc(100% - 2px)"}
+          height={"calc(100% - 2px)"}
+          fill="black"
+          stroke="none"
+        />
+      </mask>
+      <path
+        {...props}
+        d={paths.map(({ d }) => d).join(" ")}
+        stroke="url(#svg-preview-border-violation-pattern)"
+        mask="url(#svg-preview-border-violation-mask)"
+      />
+    </g>
+  );
+};
+
 const SvgPreview = React.forwardRef<
   SVGSVGElement,
   {
@@ -685,6 +728,11 @@ const SvgPreview = React.forwardRef<
             "#8ac926",
             "#52A675",
           ]}
+        />
+        <BorderViolationHighlight
+          paths={paths}
+          stroke="red"
+          strokeOpacity={0.75}
         />
         <Radii
           paths={paths}
