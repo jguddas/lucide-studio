@@ -1142,58 +1142,68 @@ function getLineIntersection(
 const snapLinesToIntersection = (svg: string) => {
   const data = parseSync(svg);
   const { lines } = getLinesAndPoints(data.children);
-  for (let i = 0; i < data.children.length; i++) {
-    if (data.children[i].name === "path") {
-      const command = commander(data.children[i].attributes.d);
-      for (let i2 = 0; i2 < command.segments.length; i2++) {
-        const i3 = lines.findIndex((line) => line.id === i && line.idx === i2);
-        if (i3 !== -1) {
-          for (let i4 = 0; i4 < lines.length; i4++) {
-            if (lines[i4].id !== i || lines[i4].idx !== i2) {
-              for (const offset of [0, 4, -4]) {
-                const _offsetLine = getOffsetLine(
-                  lines[i4].prevPoint,
-                  lines[i4].nextPoint,
-                  offset,
-                );
-                const offsetLine = {
-                  prevPoint: _offsetLine[0],
-                  nextPoint: _offsetLine[1],
-                };
-                const intersection = getLineIntersection(lines[i3], offsetLine);
-                if (intersection && isPointInLine(offsetLine, intersection)) {
-                  if (isDistanceSmaller(intersection, lines[i3].prevPoint, 1)) {
-                    lines[i3].prevPoint = intersection;
-                    command.segments[i2 - 1][
-                      command.segments[i2 - 1].length - 2
-                    ] = intersection.x;
-                    command.segments[i2 - 1][
-                      command.segments[i2 - 1].length - 1
-                    ] = intersection.y;
-                    data.children[i].attributes.d = command.toString();
-                    break;
-                  }
 
-                  if (isDistanceSmaller(intersection, lines[i3].nextPoint, 1)) {
-                    lines[i3].nextPoint = intersection;
-                    command.segments[i2] = [
-                      "L",
-                      intersection.x,
-                      intersection.y,
-                    ];
-                    data.children[i].attributes.d = command.toString();
-                    break;
-                  }
-                }
-              }
-            }
-          }
-        }
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = 0; j < lines.length; j++) {
+      if (i === j) continue;
+      const { prevPoint: p1, nextPoint: p2 } = lines[i];
+      const { prevPoint: p3, nextPoint: p4 } = lines[j];
+      const denom =
+        (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+      if (denom === 0) continue; // Parallel lines
+      const x =
+        ((p1.x * p2.y - p1.y * p2.x) * (p3.x - p4.x) -
+          (p1.x - p2.x) * (p3.x * p4.y - p3.y * p4.x)) /
+        denom;
+      const y =
+        ((p1.x * p2.y - p1.y * p2.x) * (p3.y - p4.y) -
+          (p1.y - p2.y) * (p3.x * p4.y - p3.y * p4.x)) /
+        denom;
+
+      // skip if the intersection point is outside line[i]
+      if (
+        x < Math.min(p1.x, p2.x) - 0.01 ||
+        x > Math.max(p1.x, p2.x) + 0.01 ||
+        y < Math.min(p1.y, p2.y) - 0.01 ||
+        y > Math.max(p1.y, p2.y) + 0.01
+      )
+        continue;
+
+      // skip if already connected
+      if (
+        isDistanceSmaller(p3, { x, y }, 0.001) ||
+        isDistanceSmaller(p4, { x, y }, 0.001)
+      )
+        continue;
+
+      // do not snap to endpoints
+      if (
+        isDistanceSmaller(p2, { x, y }, 0.001) ||
+        isDistanceSmaller(p1, { x, y }, 0.001)
+      )
+        continue;
+
+      if (
+        isDistanceSmaller(p3, { x, y }, 0.5) &&
+        lines[j].id !== lines[j - 1]?.id
+      ) {
+        const command = commander(data.children[lines[j].id].attributes.d);
+        command.segments[0] = ["M", x, y];
+        data.children[lines[j].id].attributes.d = command.toString();
+      }
+
+      if (
+        isDistanceSmaller(p4, { x, y }, 0.5) &&
+        lines[j].id !== lines[j + 1]?.id
+      ) {
+        const command = commander(data.children[lines[j].id].attributes.d);
+        command.segments[command.segments.length - 1].splice(1, 2, x, y);
+        data.children[lines[j].id].attributes.d = command.toString();
       }
     }
   }
 
-  return removeOverlappingLineSegments(stringify(data));
+  return stringify(data);
 };
 
 const mFormat = memoize(catchErrors(format));
@@ -1205,7 +1215,7 @@ const runOptimizations = flow(
   memoize(catchErrors(smartClose)),
   mFixDots,
   memoize(catchErrors(mergeLines)),
-  // memoize(catchErrors(snapLinesToIntersection)),
+  memoize(catchErrors(snapLinesToIntersection)),
   memoize(catchErrors(removeTinySegments)),
   memoize(catchErrors(mergeArcs)),
   memoize(catchErrors(mMergePaths)),
