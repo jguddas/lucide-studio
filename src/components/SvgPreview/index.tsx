@@ -1,5 +1,5 @@
 import React from "react";
-import { PathProps, Path } from "./types";
+import { PathProps, Path, Point } from "./types";
 import getPaths, { assert } from "./utils";
 import { BBox, svgPathBbox } from "svg-path-bbox";
 import memoize from "lodash/memoize";
@@ -590,6 +590,107 @@ const PatternMatches = ({
   );
 };
 
+const SnapViolations = ({
+  paths,
+  pointSize,
+  ...props
+}: {
+  pointSize: number;
+  paths: Path[];
+} & PathProps<"strokeWidth", "d">) => {
+  const lines = paths.filter(
+    ({ c }) => c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1,
+  );
+
+  const intersections: [Point, Point][] = [];
+  for (let i = 0; i < lines.length; i++) {
+    for (let j = 0; j < lines.length; j++) {
+      if (i === j) continue;
+      const { prev: p1, next: p2 } = lines[i];
+      const { prev: p3, next: p4 } = lines[j];
+      const denom =
+        (p1.x - p2.x) * (p3.y - p4.y) - (p1.y - p2.y) * (p3.x - p4.x);
+      if (denom === 0) continue; // Parallel lines
+      const x =
+        ((p1.x * p2.y - p1.y * p2.x) * (p3.x - p4.x) -
+          (p1.x - p2.x) * (p3.x * p4.y - p3.y * p4.x)) /
+        denom;
+      const y =
+        ((p1.x * p2.y - p1.y * p2.x) * (p3.y - p4.y) -
+          (p1.y - p2.y) * (p3.x * p4.y - p3.y * p4.x)) /
+        denom;
+
+      // skip if the intersection point is outside line[i]
+      if (
+        x < Math.min(p1.x, p2.x) - 0.01 ||
+        x > Math.max(p1.x, p2.x) + 0.01 ||
+        y < Math.min(p1.y, p2.y) - 0.01 ||
+        y > Math.max(p1.y, p2.y) + 0.01
+      )
+        continue;
+
+      // skip if already connected
+      if (
+        isDistanceSmaller(p3, { x, y }, 0.001) ||
+        isDistanceSmaller(p4, { x, y }, 0.001)
+      )
+        continue;
+
+      // do not snap to endpoints
+      if (
+        isDistanceSmaller(p1, { x, y }, 0.001) ||
+        isDistanceSmaller(p2, { x, y }, 0.001)
+      )
+        continue;
+
+      // move start if close to line
+      if (
+        isDistanceSmaller(p3, { x, y }, 0.5) &&
+        lines[j].c.id !== lines[j - 1]?.c?.id
+      ) {
+        intersections.push([p3, { x, y }]);
+      }
+
+      // move end if close to line
+      if (
+        isDistanceSmaller(p4, { x, y }, 0.5) &&
+        lines[j].c.id !== lines[j + 1]?.c?.id
+      ) {
+        intersections.push([p4, { x, y }]);
+      }
+    }
+  }
+
+  return (
+    <g className="svg-preview-intersections-group" {...props}>
+      {intersections.map(([a, b], idx) => (
+        <>
+          <circle
+            cx={a.x}
+            cy={a.y}
+            r={pointSize / 2}
+            fill="red"
+            fillOpacity={0.5}
+            stroke="red"
+            key={`circle-${idx}`}
+          />
+          <path d={`M${a.x} ${a.y}h.01`} key={`line-${idx}`} stroke="red" />
+          <circle
+            cx={b.x}
+            cy={b.y}
+            r={pointSize / 2}
+            fill="lime"
+            fillOpacity={0.5}
+            stroke="lime"
+            key={`circle-${idx}`}
+          />
+          <path d={`M${b.x} ${b.y}h.01`} key={`line-${idx}`} stroke="lime" />
+        </>
+      ))}
+    </g>
+  );
+};
+
 const BorderViolationHighlight = ({
   paths,
   stroke,
@@ -748,6 +849,7 @@ const SvgPreview = React.forwardRef<
           stroke="#fff"
           strokeWidth={0.125}
         />
+        <SnapViolations paths={paths} pointSize={1} strokeWidth={0.125} />
         <Handles
           paths={paths}
           strokeWidth={0.12}
