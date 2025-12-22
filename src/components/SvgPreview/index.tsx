@@ -6,6 +6,7 @@ import memoize from "lodash/memoize";
 import { getPatternMatches } from "./getPatternMatches";
 import { GapViolationHighlight } from "./GapViolationHighlight";
 import { isDistanceSmaller } from "../IconEditor/optimize";
+import { isDegOnArc } from "./is-deg-on-arc";
 
 const Grid = ({
   radius,
@@ -558,7 +559,63 @@ const SnapViolations = ({
     ({ c }) => c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1,
   );
 
-  const intersections: [Point, Point][] = [];
+  const intersections: [Point, Point | undefined][] = [];
+
+  const points = paths.flatMap(
+    ({ prev, next, c }, idx, arr) =>
+      [
+        c.id !== arr[idx - 1]?.c.id && [prev, next],
+        c.id !== arr[idx + 1]?.c.id && [next, prev],
+      ].filter(Boolean) as [Point, Point][],
+  );
+  const arcs = paths.filter(({ c }) => c.type === 512);
+
+  for (let i = 0; i < points.length; i++) {
+    for (let j = 0; j < arcs.length; j++) {
+      const circle = arcs[j].circle!;
+      if (
+        (isDistanceSmaller(points[i][0], circle, circle.r + 1) &&
+          !isDistanceSmaller(points[i][0], circle, circle.r + 0.01)) ||
+        (!isDistanceSmaller(points[i][0], circle, circle.r - 1) &&
+          isDistanceSmaller(points[i][0], circle, circle.r - 0.01))
+      ) {
+        let deg =
+          ((Math.atan2(points[i][0].y - circle.y, points[i][0].x - circle.x) *
+            180) /
+            Math.PI) %
+          360;
+        const projectedPoint = {
+          x: circle.x + circle.r * Math.cos((deg * Math.PI) / 180),
+          y: circle.y + circle.r * Math.sin((deg * Math.PI) / 180),
+        };
+        if (
+          !isDistanceSmaller(points[i][1], projectedPoint, 0.5) &&
+          isDegOnArc(deg, arcs[j])
+        ) {
+          intersections.push([points[i][0], undefined]);
+        }
+      }
+    }
+    for (let j = 0; j < lines.length; j++) {
+      const { prev, next } = lines[j];
+      const dx = next.x - prev.x;
+      const dy = next.y - prev.y;
+      const lengthSq = dx * dx + dy * dy;
+      const t =
+        ((points[i][0].x - prev.x) * dx + (points[i][0].y - prev.y) * dy) /
+        lengthSq;
+      if (t < 0 || t > 1) continue; // Outside the line segment
+      const projection = { x: prev.x + t * dx, y: prev.y + t * dy };
+      if (
+        isDistanceSmaller(points[i][0], projection, 1) &&
+        !isDistanceSmaller(points[i][0], projection, 0.01) &&
+        !isDistanceSmaller(points[i][1], projection, 1)
+      ) {
+        intersections.push([points[i][0], undefined]);
+      }
+    }
+  }
+
   for (let i = 0; i < lines.length; i++) {
     for (let j = 0; j < lines.length; j++) {
       if (i === j) continue;
@@ -631,16 +688,24 @@ const SnapViolations = ({
             key={`circle-${idx}`}
           />
           <path d={`M${a.x} ${a.y}h.01`} key={`line-${idx}`} stroke="red" />
-          <circle
-            cx={b.x}
-            cy={b.y}
-            r={pointSize / 2}
-            fill="lime"
-            fillOpacity={0.5}
-            stroke="lime"
-            key={`circle-${idx}`}
-          />
-          <path d={`M${b.x} ${b.y}h.01`} key={`line-${idx}`} stroke="lime" />
+          {b && (
+            <>
+              <circle
+                cx={b.x}
+                cy={b.y}
+                r={pointSize / 2}
+                fill="lime"
+                fillOpacity={0.5}
+                stroke="lime"
+                key={`circle-${idx}`}
+              />
+              <path
+                d={`M${b.x} ${b.y}h.01`}
+                key={`line-${idx}`}
+                stroke="lime"
+              />
+            </>
+          )}
         </>
       ))}
     </g>
