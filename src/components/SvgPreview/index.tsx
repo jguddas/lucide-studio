@@ -195,30 +195,6 @@ const ControlPath = ({
     let angle = Math.atan2(dy, dx) * (180 / Math.PI);
     if (angle < 0) angle += 360;
     angle = angle % 90;
-    if (path.circle) {
-      const v1 = {
-        x: path.prev.x - path.circle.x,
-        y: path.prev.y - path.circle.y,
-      };
-      const v2 = {
-        x: path.next.x - path.circle.x,
-        y: path.next.y - path.circle.y,
-      };
-
-      const dot = v1.x * v2.x + v1.y * v2.y;
-      const mag1 = Math.hypot(v1.x, v1.y);
-      const mag2 = Math.hypot(v2.x, v2.y);
-
-      if (mag1 === 0 || mag2 === 0) {
-        angle = 0;
-      } else {
-        const cosTheta = Math.min(1, Math.max(-1, dot / (mag1 * mag2)));
-        angle = Math.acos(cosTheta) * (180 / Math.PI);
-        if (path.c.lArcFlag) {
-          angle = 360 - angle;
-        }
-      }
-    }
     angle =
       (Math.round((angle % 45) * 100) / 100) % 1
         ? Math.round(angle * 100) / 100
@@ -233,103 +209,83 @@ const ControlPath = ({
   });
   return (
     <>
-      <g
-        className="svg-preview-control-path-mask-group"
-        strokeWidth={pointSize}
-        stroke="#000"
-      >
-        {controlPaths.map(
-          ({ prev, next, angle, c, showMarker, circle }, idx) => {
-            return (
-              <mask
-                id={`svg-preview-control-path-mask-${idx}`}
-                key={idx}
-                maskUnits="userSpaceOnUse"
-              >
-                <rect
-                  x="0"
-                  y="0"
-                  width="100%"
-                  height="100%"
-                  fill="#fff"
-                  stroke="none"
-                  rx={radius}
-                />
-                {showMarker && (
-                  <>
-                    <path d={`M${prev.x} ${prev.y}h.01`} />
-                    <path d={`M${next.x} ${next.y}h.01`} />
-                  </>
-                )}
-                {(circle ||
-                  c.type === 16 ||
-                  c.type === 8 ||
-                  c.type === 4 ||
-                  c.type === 1) &&
-                !isDistanceSmaller(prev, next, 3.5) &&
-                angle % 45 > 0.001 &&
-                angle % 45 < 44.999 ? (
-                  <text
-                    fontSize={0.75}
-                    strokeWidth={0.4}
-                    dominantBaseline="middle"
-                    textAnchor="middle"
+      <g className="svg-preview-control-path-mask-group" stroke="#000">
+        {controlPaths.map(({ prev, next, angle, c, showMarker }, idx) => {
+          return (
+            <mask
+              id={`svg-preview-control-path-mask-${idx}`}
+              key={idx}
+              maskUnits="userSpaceOnUse"
+            >
+              <rect
+                x="0"
+                y="0"
+                width="100%"
+                height="100%"
+                fill="#fff"
+                stroke="none"
+                rx={radius}
+              />
+              {showMarker && (
+                <>
+                  <path d={`M${prev.x} ${prev.y}h.01`} />
+                  <path d={`M${next.x} ${next.y}h.01`} />
+                </>
+              )}
+              {(c.type === 16 ||
+                c.type === 8 ||
+                c.type === 4 ||
+                c.type === 1) &&
+              !isDistanceSmaller(prev, next, 3.5) &&
+              angle % 45 > 0.001 &&
+              angle % 45 < 44.999 ? (
+                <text
+                  fontSize={0.75}
+                  strokeWidth={0.4}
+                  dominantBaseline="middle"
+                  textAnchor="middle"
+                >
+                  <textPath
+                    startOffset="50%"
+                    href={`#svg-preview-control-path-${idx}`}
                   >
-                    <textPath
-                      startOffset="50%"
-                      href={`#svg-preview-control-path-${idx}`}
-                    >
-                      {angle}°
-                    </textPath>
-                  </text>
-                ) : undefined}
-              </mask>
-            );
-          },
-        )}
+                    {angle}°
+                  </textPath>
+                </text>
+              ) : undefined}
+            </mask>
+          );
+        })}
       </g>
       <g className="svg-preview-control-path-group" {...props}>
-        {controlPaths.map(
-          ({ d, showMarker, prev, next, angle, c, circle }, idx) => (
-            <path
-              key={idx}
-              id={`svg-preview-control-path-${idx}`}
-              strokeDasharray={
-                (circle ||
-                  c.type === 16 ||
-                  c.type === 8 ||
-                  c.type === 4 ||
-                  c.type === 1) &&
-                angle % 45 > 0.001 &&
-                angle % 45 < 44.999
-                  ? "0.25 0.25"
-                  : "0"
-              }
-              mask={
-                showMarker
-                  ? `url(#svg-preview-control-path-mask-${idx})`
-                  : undefined
-              }
-              d={
-                (c.type === 16 ||
-                  c.type === 8 ||
-                  c.type === 4 ||
-                  c.type === 1) &&
-                prev.x > next.x
-                  ? `M${next.x} ${next.y}L${prev.x} ${prev.y}}`
-                  : d
-              }
-            />
-          ),
-        )}
+        {controlPaths.map(({ d, showMarker, prev, next, angle, c }, idx) => (
+          <path
+            key={idx}
+            id={`svg-preview-control-path-${idx}`}
+            strokeDasharray={
+              (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
+              angle % 45 > 0.001 &&
+              angle % 45 < 44.999
+                ? "0.25 0.25"
+                : "0"
+            }
+            mask={
+              showMarker
+                ? `url(#svg-preview-control-path-mask-${idx})`
+                : undefined
+            }
+            d={
+              (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
+              prev.x > next.x
+                ? `M${next.x} ${next.y}L${prev.x} ${prev.y}}`
+                : d
+            }
+          />
+        ))}
       </g>
       <g className="svg-preview-control-path-text-group">
-        {controlPaths.map(({ angle, prev, next, c, circle }, idx) =>
-          (circle ||
-            c.type === 16 ||
-            c.type === 8 ||
-            c.type === 4 ||
-            c.type === 1) &&
+        {controlPaths.map(({ angle, prev, next, c }, idx) =>
+          (c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1) &&
           !isDistanceSmaller(prev, next, 3.5) &&
           angle % 45 > 0.001 &&
           angle % 45 < 44.999 ? (
