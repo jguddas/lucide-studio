@@ -249,11 +249,16 @@ const getPaths = (src: string) => {
           c.x,
           c.y,
         );
+        const r =
+          Math.round(
+            Math.sqrt((prev.x - center.x) ** 2 + (prev.y - center.y) ** 2) *
+              100,
+          ) / 100;
         addPath(
           c,
           c,
           `M ${prev.x} ${prev.y} A${c.rX} ${c.rY} ${c.xRot} ${c.lArcFlag} ${c.sweepFlag} ${c.x} ${c.y}`,
-          { circle: c.rX === c.rY ? { ...center, r: c.rX } : undefined },
+          { circle: c.rX === c.rY ? { ...center, r } : undefined },
         );
         break;
       }
