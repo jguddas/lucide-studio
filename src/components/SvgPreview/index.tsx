@@ -572,12 +572,13 @@ const SnapViolations = ({
 
   for (let i = 0; i < points.length; i++) {
     for (let j = 0; j < arcs.length; j++) {
-      const circle = arcs[j].circle!;
+      const { circle } = arcs[j];
       if (
-        (isDistanceSmaller(points[i][0], circle, circle.r + 1) &&
+        circle &&
+        ((isDistanceSmaller(points[i][0], circle, circle.r + 1) &&
           !isDistanceSmaller(points[i][0], circle, circle.r + 0.01)) ||
-        (!isDistanceSmaller(points[i][0], circle, circle.r - 1) &&
-          isDistanceSmaller(points[i][0], circle, circle.r - 0.01))
+          (!isDistanceSmaller(points[i][0], circle, circle.r - 1) &&
+            isDistanceSmaller(points[i][0], circle, circle.r - 0.01)))
       ) {
         let deg =
           ((Math.atan2(points[i][0].y - circle.y, points[i][0].x - circle.x) *
