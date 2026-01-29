@@ -711,8 +711,8 @@ const SvgEditor = ({
         width={width}
         className="h-full w-full"
       >
-        <filter id="shadow" color-interpolation-filters="sRGB">
-          <feDropShadow dx="2" dy="2" stdDeviation="3" flood-opacity="0.5" />
+        <filter id="shadow" colorInterpolationFilters="sRGB">
+          <feDropShadow dx="2" dy="2" stdDeviation="3" floodOpacity="0.5" />
         </filter>
         <mask id="svg-editor-opacity-mask" maskUnits="userSpaceOnUse">
           <rect

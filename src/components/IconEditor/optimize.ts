@@ -752,6 +752,9 @@ const svgo = (svg: string) => {
           },
         },
       },
+      {
+        name: "removeOffCanvasPaths",
+      },
     ],
   }).data;
 };
