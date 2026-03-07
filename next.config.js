@@ -3,9 +3,7 @@ const nextConfig = {
   async redirects() {
     return [{ source: "/", destination: "/edit", permanent: false }];
   },
-  experimental: {
-    reactCompiler: true,
-  },
+  reactCompiler: true,
 };
 
 module.exports = nextConfig;
