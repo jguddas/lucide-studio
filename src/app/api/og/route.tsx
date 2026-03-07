@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import getPaths from "@/components/SvgPreview/utils";
+import { getPaths } from "@/lib/get-paths";
 
 export const runtime = "edge";
 

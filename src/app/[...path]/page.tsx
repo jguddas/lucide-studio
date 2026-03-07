@@ -1,4 +1,4 @@
-import PageClient from "../page-client";
+import PageClient from "@/app/page-client";
 
 export async function generateMetadata(props: any) {
   const searchParams = await props.searchParams;

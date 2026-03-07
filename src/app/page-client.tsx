@@ -1,13 +1,13 @@
 "use client";
 import { useQueryState } from "next-usequerystate";
-import IconEditor from "@/components/IconEditor";
-import format from "@/components/IconEditor/format";
-import optimize from "@/components/IconEditor/optimize";
+import { IconEditor } from "@/components/IconEditor";
+import { format } from "@/lib/format";
+import { optimize } from "@/lib/optimize";
 import { useCallback, useEffect, useRef } from "react";
-import Menu from "@/components/IconEditor/Menu";
-import ContributionDialog from "@/components/ContributionDialog";
-import { trim } from "@/components/IconEditor/trim";
-import { SelectionProvider } from "@/components/SelectionProvider";
+import { Menu } from "@/components/Menu";
+import { ContributionDialog } from "@/components/ContributionDialog";
+import { trim } from "@/lib/trim";
+import { SelectionProvider } from "@/components/providers/SelectionProvider";
 
 const emptyState = format(
   `

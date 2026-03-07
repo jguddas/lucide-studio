@@ -1,6 +1,6 @@
 import SVGPathCommander from "svg-path-commander";
 import fs from "fs";
-import optimize from "./src/components/IconEditor/optimize";
+import { optimize } from "./src/lib/optimize";
 
 const toRelative = (line: string) => {
   const d = line.replace(/  <path d="/, "").replace(/" \/>/, "");
