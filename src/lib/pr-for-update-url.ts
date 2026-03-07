@@ -1,4 +1,4 @@
-import { FormStepUpdateIconChecklistData } from "./FormStepUpdateIconChecklist";
+import { FormStepUpdateIconChecklistData } from "@/components/FormStepUpdateIconChecklist";
 
 const prForUpdateUrl = (
   data: FormStepUpdateIconChecklistData & { prUrl: string },

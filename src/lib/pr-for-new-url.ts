@@ -1,5 +1,5 @@
-import { FormStepNewIconChecklistData } from "../components/FormStepNewIconChecklist";
-import { tagStringToArray } from "./tag-string-to-array";
+import { FormStepNewIconChecklistData } from "@/components/FormStepNewIconChecklist";
+import { tagStringToArray } from "@/lib/tag-string-to-array";
 
 const prForNewUrl = (
   data: FormStepNewIconChecklistData & {
