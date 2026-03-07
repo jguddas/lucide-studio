@@ -1,24 +1,23 @@
 import Commander from "svg-path-commander";
 // @ts-ignore
-import toPath from "element-to-path";
 import { parseSync, stringify } from "svgson";
 import { optimize } from "@/lib/optimize";
+import memoize from "lodash/memoize";
+import { getPaths } from "./get-paths";
 
-export const flip = (svg: string, orientation: "horizontal" | "vertical") => {
+const _flip = (svg: string, orientation: "horizontal" | "vertical") => {
   const data = parseSync(svg);
+  const paths = getPaths(svg);
   const height = data.attributes.height ? parseInt(data.attributes.height) : 24;
   const width = data.attributes.width ? parseInt(data.attributes.width) : 24;
-  for (let i = 0; i < data.children.length; i++) {
-    const d =
-      data.children[i].name === "path"
-        ? data.children[i].attributes.d
-        : toPath(data.children[i]);
-    const commands = new Commander(d);
+  data.children = [];
+  for (let i = 0; i < paths.length; i++) {
+    const commands = new Commander(paths[i].d);
     commands.transform({
       origin: [height / 2, width / 2],
       rotate: orientation === "horizontal" ? [0, 180, 0] : [180, 0, 0],
     });
-    data.children[i] = {
+    data.children.push({
       name: "path",
       type: "element",
       children: [],
@@ -26,7 +25,14 @@ export const flip = (svg: string, orientation: "horizontal" | "vertical") => {
       attributes: {
         d: commands.toString(),
       },
-    };
+    });
   }
   return optimize(stringify(data));
 };
+
+export const flip = memoize(
+  _flip,
+  (svg: string, orientation: "horizontal" | "vertical") =>
+    `${svg}-${orientation}`,
+);
+
