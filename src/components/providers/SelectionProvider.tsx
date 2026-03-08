@@ -5,11 +5,14 @@ import {
   Dispatch,
   SetStateAction,
 } from "react";
-import { Path } from "@/lib/get-paths";
+import { Path, PathArc, PathCurve } from "@/lib/get-paths";
 
-export type Selection = {
+export type Selection = Pick<Path, keyof Path> & {
+  circle?: PathArc["circle"];
+  cp1?: PathCurve["cp1"];
+  cp2?: PathCurve["cp2"];
   startPosition: { x: number; y: number };
-  type:
+  selectionType:
     | "svg-editor-path"
     | "svg-editor-start"
     | "svg-editor-end"
@@ -18,7 +21,7 @@ export type Selection = {
     | "svg-editor-cp2"
     | "svg-editor-radius"
     | "svg-preview-bounding-box-label";
-} & Path;
+};
 
 const SelectionContext = createContext<
   | [selected: Selection[], setSelected: Dispatch<SetStateAction<Selection[]>>]

@@ -1,5 +1,4 @@
 "use client";
-
 import React from "react";
 import { useEffect, useRef, useState } from "react";
 import { SvgPreview } from "./SvgPreview";
@@ -65,9 +64,9 @@ export const SvgEditor = ({
         event.preventDefault();
 
         // @ts-ignore
-        const clientX = event.clientX ?? event.touches[0].clientX;
+        const clientX: number = event.clientX ?? event.touches[0].clientX;
         // @ts-ignore
-        const clientY = event.clientY ?? event.touches[0].clientY;
+        const clientY: number = event.clientY ?? event.touches[0].clientY;
 
         // @ts-ignore
         if (event.touches?.length > 1) return;
@@ -95,7 +94,7 @@ export const SvgEditor = ({
               ? bounds
               : { x: 0, y: 0 },
             startPosition: { x: clientX, y: clientY },
-            type: dataIds?.length
+            selectionType: dataIds?.length
               ? className?.startsWith("svg-preview-bounding-box-label")
                 ? "svg-preview-bounding-box-label"
                 : "svg-editor-path"
@@ -110,7 +109,9 @@ export const SvgEditor = ({
                     (p) => p.c.id === parseInt(id) && p.c.idx === parseInt(idx),
                   ) as Path),
                   startPosition: { x: clientX, y: clientY },
-                  type: className?.startsWith("svg-preview-bounding-box-label")
+                  selectionType: className?.startsWith(
+                    "svg-preview-bounding-box-label",
+                  )
                     ? "svg-preview-bounding-box-label"
                     : "svg-editor-path",
                 })) || [],
@@ -123,7 +124,7 @@ export const SvgEditor = ({
                   .map((p) => ({
                     ...p,
                     startPosition: { x: clientX, y: clientY },
-                    type: className.split(" ")[0],
+                    selectionType: className.split(" ")[0],
                   }));
               }
               const alreadySelected = selection.some(
@@ -193,7 +194,8 @@ export const SvgEditor = ({
           const snapTarget =
             snapTargetKey === "bounds"
               ? dragTargetRef.current?.bounds
-              : snapPath[snapTargetKey];
+              : // @ts-ignore
+                snapPath[snapTargetKey];
           if (!snapTarget) return { x: 0, y: 0 };
           const movedAbsolute = {
             x: snapTarget.x + movedDelta.x,
@@ -231,6 +233,7 @@ export const SvgEditor = ({
               };
             }
             if (
+              scopedPath.type === "arc" &&
               scopedPath.circle &&
               (i !== currentPathIndex || snapTargetKey !== "circle") &&
               getDistance(movedAbsolute, scopedPath.circle) < 0.75
@@ -241,6 +244,7 @@ export const SvgEditor = ({
               };
             }
             if (
+              scopedPath.type === "arc" &&
               scopedPath.circle?.tangentIntersection &&
               (i !== currentPathIndex || snapTargetKey !== "circle") &&
               getDistance(
@@ -257,9 +261,10 @@ export const SvgEditor = ({
 
           // snap to points where the circle is intersecting the grid
           if (
+            snapPath.type === "arc" &&
             snapPath.circle &&
-            (dragTargetRef.current?.type === "svg-editor-start" ||
-              dragTargetRef.current?.type === "svg-editor-end")
+            (dragTargetRef.current?.selectionType === "svg-editor-start" ||
+              dragTargetRef.current?.selectionType === "svg-editor-end")
           ) {
             const theta = Math.atan2(
               movedAbsolute.y - snapPath.circle.y,
@@ -391,7 +396,7 @@ export const SvgEditor = ({
               "svg-editor-radius": "prev",
               "svg-preview-bounding-box-label": "bounds",
             } as const
-          )[dragTargetRef.current.type],
+          )[dragTargetRef.current.selectionType],
         );
 
         for (const {
@@ -404,14 +409,19 @@ export const SvgEditor = ({
           const movedPath = movedPaths[i];
           const scopedPath = scopedPaths[i];
 
-          switch (dragTargetRef.current.type) {
+          switch (dragTargetRef.current.selectionType) {
             case "svg-preview-bounding-box-label":
             case "svg-editor-path": {
               movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
               movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
               movedPath.next.x = scopedPath.next.x + snapDelta.x;
               movedPath.next.y = scopedPath.next.y + snapDelta.y;
-              if (movedPath.circle && scopedPath.circle) {
+              if (
+                movedPath.type === "arc" &&
+                scopedPath.type === "arc" &&
+                movedPath.circle &&
+                scopedPath.circle
+              ) {
                 movedPath.circle.x = scopedPath.circle.x + snapDelta.x;
                 movedPath.circle.y = scopedPath.circle.y + snapDelta.y;
                 if (movedPath.circle.tangentIntersection) {
@@ -421,11 +431,21 @@ export const SvgEditor = ({
                     scopedPath.circle!.tangentIntersection!.y + snapDelta.y;
                 }
               }
-              if (movedPath.cp1 && scopedPath.cp1) {
+              if (
+                movedPath.type === "curve" &&
+                scopedPath.type === "curve" &&
+                movedPath.cp1 &&
+                scopedPath.cp1
+              ) {
                 movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
                 movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
               }
-              if (movedPath.cp2 && scopedPath.cp2) {
+              if (
+                movedPath.type === "curve" &&
+                scopedPath.type === "curve" &&
+                movedPath.cp2 &&
+                scopedPath.cp2
+              ) {
                 movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
                 movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
               }
@@ -433,6 +453,13 @@ export const SvgEditor = ({
             }
             case "svg-editor-circle": {
               if (i !== targetI) break;
+              if (
+                movedPath.type !== "arc" ||
+                scopedPath.type !== "arc" ||
+                !movedPath.circle ||
+                !scopedPath.circle
+              )
+                break;
               movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
               movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
               movedPath.next.x = scopedPath.next.x + snapDelta.x;
@@ -449,12 +476,26 @@ export const SvgEditor = ({
             }
             case "svg-editor-cp1": {
               if (i !== targetI) break;
+              if (
+                movedPath.type !== "curve" ||
+                scopedPath.type !== "curve" ||
+                !movedPath.cp1 ||
+                !scopedPath.cp1
+              )
+                break;
               movedPath.cp1!.x = scopedPath.cp1!.x + snapDelta.x;
               movedPath.cp1!.y = scopedPath.cp1!.y + snapDelta.y;
               break;
             }
             case "svg-editor-cp2": {
               if (i !== targetI) break;
+              if (
+                movedPath.type !== "curve" ||
+                scopedPath.type !== "curve" ||
+                !movedPath.cp2 ||
+                !scopedPath.cp2
+              )
+                break;
               movedPath.cp2!.x = scopedPath.cp2!.x + snapDelta.x;
               movedPath.cp2!.y = scopedPath.cp2!.y + snapDelta.y;
               break;
@@ -463,11 +504,16 @@ export const SvgEditor = ({
               if (i !== targetI) break;
               movedPath.prev.x = scopedPath.prev.x + snapDelta.x;
               movedPath.prev.y = scopedPath.prev.y + snapDelta.y;
-              if (movedPath.cp1 && scopedPath.cp1) {
+              if (
+                movedPath.type === "curve" &&
+                scopedPath.type === "curve" &&
+                movedPath.cp1 &&
+                scopedPath.cp1
+              ) {
                 movedPath.cp1.x = scopedPath.cp1.x + snapDelta.x;
                 movedPath.cp1.y = scopedPath.cp1.y + snapDelta.y;
               }
-              if (movedPath.circle) {
+              if (movedPath.type === "arc" && movedPath.circle) {
                 movedPath.circle.tangentIntersection = undefined;
               }
               break;
@@ -476,11 +522,16 @@ export const SvgEditor = ({
               if (i !== targetI) break;
               movedPath.next.x = scopedPath.next.x + snapDelta.x;
               movedPath.next.y = scopedPath.next.y + snapDelta.y;
-              if (movedPath.cp2 && scopedPath.cp2) {
+              if (
+                movedPath.type === "curve" &&
+                scopedPath.type === "curve" &&
+                movedPath.cp2 &&
+                scopedPath.cp2
+              ) {
                 movedPath.cp2.x = scopedPath.cp2.x + snapDelta.x;
                 movedPath.cp2.y = scopedPath.cp2.y + snapDelta.y;
               }
-              if (movedPath.circle) {
+              if (movedPath.type === "arc" && movedPath.circle) {
                 movedPath.circle.tangentIntersection = undefined;
               }
               break;
@@ -488,6 +539,8 @@ export const SvgEditor = ({
             case "svg-editor-radius": {
               if (i !== targetI) break;
               if (
+                movedPath.type === "arc" &&
+                scopedPath.type === "arc" &&
                 movedPath.circle &&
                 scopedPath.circle &&
                 movedPath.circle.tangentIntersection &&
@@ -591,15 +644,15 @@ export const SvgEditor = ({
           }
 
           const n = scopedPaths[i].d.split(" ");
-          if (movedPath.cp1) {
+          if (movedPath.type === "curve" && movedPath.cp1) {
             n[3] = "C" + round(movedPath.cp1.x, 3);
             n[4] = round(movedPath.cp1.y, 3) + "";
           }
-          if (movedPath.cp2) {
+          if (movedPath.type === "curve" && movedPath.cp2) {
             n[5] = round(movedPath.cp2.x, 3) + "";
             n[6] = round(movedPath.cp2.y, 3) + "";
           }
-          if (movedPath.circle) {
+          if (movedPath.type === "arc" && movedPath.circle) {
             n[3] = "A" + round(movedPath.circle.r, 3);
             n[4] = round(movedPath.circle.r, 3) + "";
           }
@@ -724,40 +777,42 @@ export const SvgEditor = ({
           mask="url(#svg-editor-opacity-mask)"
         />
         <g strokeWidth={1.5} strokeOpacity={0}>
-          {paths.map(({ d, c, next, prev, circle, cp1, cp2 }, i) => (
+          {paths.map((path, i) => (
             <React.Fragment key={i}>
               <path
-                className={`svg-editor-${circle ? "circle" : "path"} svg-editor-segment-${c.id}-${c.idx}`}
-                d={d}
+                className={`svg-editor-${
+                  path.type === "arc" && path.circle ? "circle" : "path"
+                } svg-editor-segment-${path.c.id}-${path.c.idx}`}
+                d={path.d}
               />
               <path
-                className={`svg-editor-start svg-editor-segment-${c.id}-${c.idx}`}
-                d={`M${prev.x} ${prev.y}h.01`}
+                className={`svg-editor-start svg-editor-segment-${path.c.id}-${path.c.idx}`}
+                d={`M${path.prev.x} ${path.prev.y}h.01`}
               />
               <path
-                className={`svg-editor-end svg-editor-segment-${c.id}-${c.idx}`}
+                className={`svg-editor-end svg-editor-segment-${path.c.id}-${path.c.idx}`}
                 strokeWidth={1.5}
-                d={`M${next.x} ${next.y}h.01`}
+                d={`M${path.next.x} ${path.next.y}h.01`}
               />
-              {circle && (
+              {path.type === "arc" && path.circle && (
                 <path
-                  className={`svg-editor-${circle.tangentIntersection ? "radius" : "circle"} svg-editor-segment-${c.id}-${c.idx}`}
+                  className={`svg-editor-${path.circle.tangentIntersection ? "radius" : "circle"} svg-editor-segment-${path.c.id}-${path.c.idx}`}
                   strokeWidth={1.5}
-                  d={`M${circle.x} ${circle.y}h.01`}
+                  d={`M${path.circle.x} ${path.circle.y}h.01`}
                 />
               )}
-              {cp1 && (
+              {path.type === "curve" && path.cp1 && (
                 <path
-                  className={`svg-editor-cp1 svg-editor-segment-${c.id}-${c.idx}`}
+                  className={`svg-editor-cp1 svg-editor-segment-${path.c.id}-${path.c.idx}`}
                   strokeWidth={1.5}
-                  d={`M${cp1.x} ${cp1.y}h.01`}
+                  d={`M${path.cp1.x} ${path.cp1.y}h.01`}
                 />
               )}
-              {cp2 && (
+              {path.type === "curve" && path.cp2 && (
                 <path
-                  className={`svg-editor-cp2 svg-editor-segment-${c.id}-${c.idx}`}
+                  className={`svg-editor-cp2 svg-editor-segment-${path.c.id}-${path.c.idx}`}
                   strokeWidth={1.5}
-                  d={`M${cp2.x} ${cp2.y}h.01`}
+                  d={`M${path.cp2.x} ${path.cp2.y}h.01`}
                 />
               )}
             </React.Fragment>

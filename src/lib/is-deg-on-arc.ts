@@ -1,10 +1,10 @@
-import { Path } from "@/lib/get-paths";
+import { PathArc } from "@/lib/get-paths";
 
 function normalizeDeg(deg: number): number {
   return ((deg % 360) + 360) % 360;
 }
 
-export function isDegOnArc(deg: number, arc: Path): boolean {
+export function isDegOnArc(deg: number, arc: PathArc): boolean {
   // 1. Basic values
   const { prev, c, circle } = arc;
   if (!circle) return false;

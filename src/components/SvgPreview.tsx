@@ -1,6 +1,5 @@
 import React from "react";
-import { assert, getPaths, PathProps, Path, Point } from "@/lib/get-paths";
-import { BBox, svgPathBbox } from "svg-path-bbox";
+import { assert, getPaths, PathProps, Path, Point, PathArc, PathLine, PathCurve } from "@/lib/get-paths";
 import memoize from "lodash/memoize";
 import { getPatternMatches } from "@/lib/get-pattern-matches";
 import { GapViolationHighlight } from "./GapViolationHighlight";
@@ -341,7 +340,8 @@ const Radii = ({
 >) => {
   return (
     <g className="svg-preview-radii-group" {...props}>
-      {paths.map(
+      {(paths.filter(({ type }) => type === "arc") as PathArc[])
+      .map(
         ({ circle, next, prev, c }, i) =>
           circle && (
             <React.Fragment key={i}>
@@ -413,14 +413,16 @@ const Handles = ({
   any
 >) => (
   <g className="svg-preview-handles-group" {...props}>
-    {paths.map(({ c, prev, next, cp1, cp2 }, i) => (
-      <React.Fragment key={i}>
-        {cp1 && <path d={`M${prev.x} ${prev.y} ${cp1.x} ${cp1.y}`} />}
-        {cp1 && <circle cy={cp1.y} cx={cp1.x} r={0.25} />}
-        {cp2 && <path d={`M${next.x} ${next.y} ${cp2.x} ${cp2.y}`} />}
-        {cp2 && <circle cy={cp2.y} cx={cp2.x} r={0.25} />}
-      </React.Fragment>
-    ))}
+    {(paths.filter(({ type }) => type === "curve") as PathCurve[]).map(
+      ({ prev, next, cp1, cp2 }, i) => (
+        <React.Fragment key={i}>
+          {cp1 && <path d={`M${prev.x} ${prev.y} ${cp1.x} ${cp1.y}`} />}
+          {cp1 && <circle cy={cp1.y} cx={cp1.x} r={0.25} />}
+          {cp2 && <path d={`M${next.x} ${next.y} ${cp2.x} ${cp2.y}`} />}
+          {cp2 && <circle cy={cp2.y} cx={cp2.x} r={0.25} />}
+        </React.Fragment>
+      ),
+    )}
   </g>
 );
 
@@ -433,9 +435,7 @@ const PatternMatches = ({
 } & PathProps<any, any>) => {
   const patternMatches = mGetPatternMatches(paths);
   const patternMatchesWithBounds = patternMatches.map((patternMatch) => {
-    const bounds = getPathBounds(
-      patternMatch.paths.map((p) => p.d).join(" "),
-    );
+    const bounds = getPathBounds(patternMatch.paths.map((p) => p.d).join(" "));
     return {
       ...patternMatch,
       bounds: {
@@ -443,7 +443,7 @@ const PatternMatches = ({
         y: bounds.y - 1,
         width: bounds.width + 2,
         height: bounds.height + 2,
-      }
+      },
     };
   });
   return (
@@ -457,21 +457,19 @@ const PatternMatches = ({
           width="100%"
           height="100%"
         />
-        {patternMatchesWithBounds.map(
-          ({ patternName, bounds }, idx) => (
-            <text
-              key={idx}
-              fontSize={0.75}
-              strokeWidth={0.4}
-              dominantBaseline="middle"
-            >
-              <textPath href={`#svg-preview-bounding-box-${idx}`}>
-                {patternName} {Math.round(bounds.width + 2)}x
-                {Math.round(bounds.height + 2)}
-              </textPath>
-            </text>
-          ),
-        )}
+        {patternMatchesWithBounds.map(({ patternName, bounds }, idx) => (
+          <text
+            key={idx}
+            fontSize={0.75}
+            strokeWidth={0.4}
+            dominantBaseline="middle"
+          >
+            <textPath href={`#svg-preview-bounding-box-${idx}`}>
+              {patternName} {Math.round(bounds.width + 2)}x
+              {Math.round(bounds.height + 2)}
+            </textPath>
+          </text>
+        ))}
       </mask>
       <mask id="svg-preview-bounding-box-mask" maskUnits="userSpaceOnUse">
         <rect
@@ -482,23 +480,21 @@ const PatternMatches = ({
           width="100%"
           height="100%"
         />
-        {patternMatchesWithBounds.map(
-          ({ patternName, bounds }, idx) => (
-            <>
-              <text fontSize={0.75} strokeWidth={0.4} dominantBaseline="middle">
-                <textPath href={`#svg-preview-bounding-box-${idx}`}>
-                  {patternName}.{Math.round(bounds.width + 2)}.svg
-                </textPath>
-              </text>
-              <path
-                strokeWidth={props.strokeWidth}
-                mask="url(#svg-preview-bounding-box-mask)"
-                id={`svg-preview-bounding-box-${idx}`}
-                d={`M${bounds.x} ${bounds.y - 1}h${bounds.width + 0.5}a.5 .5 0 0 1 .5 .5v${bounds.height + 1}a.5 .5 0 0 1 -.5 .5h-${bounds.width + 1}a.5 .5 0 0 1 -.5 -.5v-${bounds.height + 1}a.5 .5 0 0 1 .5 -.5z`}
-              />
-            </>
-          ),
-        )}
+        {patternMatchesWithBounds.map(({ patternName, bounds }, idx) => (
+          <>
+            <text fontSize={0.75} strokeWidth={0.4} dominantBaseline="middle">
+              <textPath href={`#svg-preview-bounding-box-${idx}`}>
+                {patternName}.{Math.round(bounds.width + 2)}.svg
+              </textPath>
+            </text>
+            <path
+              strokeWidth={props.strokeWidth}
+              mask="url(#svg-preview-bounding-box-mask)"
+              id={`svg-preview-bounding-box-${idx}`}
+              d={`M${bounds.x} ${bounds.y - 1}h${bounds.width + 0.5}a.5 .5 0 0 1 .5 .5v${bounds.height + 1}a.5 .5 0 0 1 -.5 .5h-${bounds.width + 1}a.5 .5 0 0 1 -.5 -.5v-${bounds.height + 1}a.5 .5 0 0 1 .5 -.5z`}
+            />
+          </>
+        ))}
       </mask>
       <g {...props}>
         <path
@@ -524,28 +520,26 @@ const PatternMatches = ({
             )
             .join(" ")}
         />
-        {patternMatchesWithBounds.map(
-          ({ patternName, paths, bounds }, idx) => (
-            <text
-              key={idx}
-              fill={patternName.length > 16 ? "red" : props.stroke}
-              fontSize={0.75}
-              strokeWidth={0.06}
-              stroke={patternName.length > 16 ? "red" : undefined}
-              dominantBaseline="middle"
-              fillOpacity={props.strokeOpacity}
+        {patternMatchesWithBounds.map(({ patternName, paths, bounds }, idx) => (
+          <text
+            key={idx}
+            fill={patternName.length > 16 ? "red" : props.stroke}
+            fontSize={0.75}
+            strokeWidth={0.06}
+            stroke={patternName.length > 16 ? "red" : undefined}
+            dominantBaseline="middle"
+            fillOpacity={props.strokeOpacity}
+          >
+            <textPath
+              href={`#svg-preview-bounding-box-${idx}`}
+              className="svg-preview-bounding-box-label-path"
+              data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
             >
-              <textPath
-                href={`#svg-preview-bounding-box-${idx}`}
-                className="svg-preview-bounding-box-label-path"
-                data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
-              >
-                {patternName} {Math.round(bounds.width + 2)}x
-                {Math.round(bounds.height + 2)}
-              </textPath>
-            </text>
-          ),
-        )}
+              {patternName} {Math.round(bounds.width + 2)}x
+              {Math.round(bounds.height + 2)}
+            </textPath>
+          </text>
+        ))}
       </g>
     </>
   );
@@ -559,9 +553,7 @@ const SnapViolations = ({
   pointSize: number;
   paths: Path[];
 } & PathProps<"strokeWidth", "d">) => {
-  const lines = paths.filter(
-    ({ c }) => c.type === 16 || c.type === 8 || c.type === 4 || c.type === 1,
-  );
+  const lines = paths.filter(({ type }) => type === "line") as PathLine[];
 
   const intersections: [Point, Point | undefined][] = [];
 
@@ -573,7 +565,7 @@ const SnapViolations = ({
         c.id !== arr[idx + 1]?.c.id && [next, prev],
       ].filter(Boolean) as [Point, Point][],
   );
-  const arcs = paths.filter(({ c }) => c.type === 512);
+  const arcs = paths.filter(({ type }) => type === "arc") as PathArc[];
 
   for (let i = 0; i < endPoints.length; i++) {
     for (let j = 0; j < arcs.length; j++) {

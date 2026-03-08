@@ -1,6 +1,4 @@
 import { Point, getPaths } from "./get-paths";
-// @ts-ignore
-import { SVGPathData } from "svg-pathdata";
 import { optimize } from "@/lib/optimize";
 import { getOffsetLine } from "@/lib/get-offset-line";
 
@@ -79,14 +77,7 @@ export function arcify(svg: string) {
   for (let idx = 0; idx < paths.length; idx++) {
     const path = paths[idx];
 
-    if (
-      ![
-        SVGPathData.LINE_TO,
-        SVGPathData.HORIZ_LINE_TO,
-        SVGPathData.VERT_LINE_TO,
-        SVGPathData.CLOSE_PATH,
-      ].includes(path.c.type)
-    ) {
+    if (path.type !== "line") {
       continue;
     }
 
@@ -98,13 +89,8 @@ export function arcify(svg: string) {
 
     if (
       !prevPath ||
-      !prevPath.c.idx === path.c.idx ||
-      ![
-        SVGPathData.LINE_TO,
-        SVGPathData.HORIZ_LINE_TO,
-        SVGPathData.VERT_LINE_TO,
-        SVGPathData.CLOSE_PATH,
-      ].includes(prevPath.c.type)
+      (prevPath.c.idx === path.c.idx && prevPath.c.id === path.c.id) ||
+      prevPath.type !== "line"
     ) {
       continue;
     }
@@ -175,15 +161,7 @@ export function arcify(svg: string) {
     paths[prevPathIdx].next = closestPointOnLineA;
 
     for (let i = 0; i < paths.length; i++) {
-      if (
-        ![
-          SVGPathData.LINE_TO,
-          SVGPathData.HORIZ_LINE_TO,
-          SVGPathData.VERT_LINE_TO,
-          SVGPathData.CLOSE_PATH,
-        ].includes(path.c.type)
-      )
-        continue;
+      if (path.type !== "line") continue;
       if (isDistanceSmaller(paths[i].prev, prevCorner, 0.01)) {
         paths[i].prev = getClosestPointOnCircle(
           { ...intersection, r: radius },
@@ -204,14 +182,7 @@ export function arcify(svg: string) {
       svg.match(/<svg[^>]*>/)?.[0] ?? "<svg>",
       ...newArcs,
       ...paths.map((path) => {
-        if (
-          ![
-            SVGPathData.LINE_TO,
-            SVGPathData.HORIZ_LINE_TO,
-            SVGPathData.VERT_LINE_TO,
-            SVGPathData.CLOSE_PATH,
-          ].includes(path.c.type)
-        ) {
+        if (path.type !== "line") {
           return `<path d="${path.d}"/>`;
         }
 

@@ -2,22 +2,56 @@ import { INode, parseSync } from "svgson";
 // @ts-ignore
 import toPath from "element-to-path";
 // @ts-ignore
-import { SVGPathData, encodeSVGPath } from "svg-pathdata";
+import {
+  CommandA,
+  CommandC,
+  CommandH,
+  CommandL,
+  CommandQ,
+  CommandS,
+  CommandT,
+  CommandV,
+  CommandZ,
+  SVGPathData,
+} from "svg-pathdata";
 import memoize from "lodash/memoize";
 import { SVGProps } from "react";
 
 export type Point = { x: number; y: number };
 
-export type Path = {
+type BasePath = {
   d: string;
   prev: Point;
   next: Point;
   isStart: boolean;
-  circle?: { x: number; y: number; r: number; tangentIntersection?: Point };
-  cp1?: Point;
-  cp2?: Point;
-  c: ReturnType<typeof getCommands>[number];
 };
+
+export type PathArc = BasePath & {
+  type: "arc";
+  c: CommandA & { id: number; idx: number; name: string };
+  circle?: { x: number; y: number; r: number; tangentIntersection?: Point };
+  ellipse: { x: number; y: number; rx: number; ry: number };
+};
+export type PathLine = BasePath & {
+  c: (CommandL | CommandH | CommandV | CommandZ) & {
+    id: number;
+    idx: number;
+    name: string;
+  };
+  type: "line";
+};
+export type PathCurve = BasePath & {
+  c: (CommandQ | CommandT | CommandC | CommandS) & {
+    id: number;
+    idx: number;
+    name: string;
+  };
+  type: "curve";
+  cp1: Point;
+  cp2: Point;
+};
+
+export type Path = PathArc | PathLine | PathCurve;
 
 export type PathProps<
   RequiredProps extends keyof SVGProps<
@@ -36,7 +70,6 @@ export type PathProps<
     React.SVGProps<SVGPathElement & SVGRectElement & SVGCircleElement>,
     RequiredProps & NeverProps
   >;
-
 
 function assertNever(x: never): never {
   throw new Error("Unknown type: " + x["type"]);
@@ -101,7 +134,6 @@ export const getCommands = (src: string) =>
     .flatMap(({ d, name }, idx) =>
       new SVGPathData(d)
         .toAbs()
-        // @ts-ignore
         .commands.map((c, cIdx) => ({ ...c, id: idx, idx: cIdx, name })),
     );
 
@@ -112,19 +144,66 @@ const _getPaths = (src: string) => {
   const paths: Path[] = [];
   let prev: Point | undefined = undefined;
   let start: Point | undefined = undefined;
-  const addPath = (
-    c: (typeof commands)[number],
+  const addArc = (c: PathArc["c"]) => {
+    assert(prev);
+    const center = arcEllipseCenter(
+      prev.x,
+      prev.y,
+      c.rX,
+      c.rY,
+      c.xRot,
+      c.lArcFlag,
+      c.sweepFlag,
+      c.x,
+      c.y,
+    );
+    const r =
+      Math.round(
+        Math.sqrt((prev.x - center.x) ** 2 + (prev.y - center.y) ** 2) * 100,
+      ) / 100;
+    paths.push({
+      type: "arc",
+      c,
+      d: `M ${prev.x} ${prev.y} A${c.rX} ${c.rY} ${c.xRot} ${c.lArcFlag} ${c.sweepFlag} ${c.x} ${c.y}`,
+      circle: c.rX === c.rY ? { ...center, r } : undefined,
+      prev,
+      next: { x: c.x, y: c.y },
+      isStart: start === prev,
+    });
+    prev = { x: c.x, y: c.y };
+  };
+  const addLine = (c: PathLine["c"], next: Point) => {
+    assert(prev);
+    paths.push({
+      type: "line",
+      c,
+      d: `M ${prev.x} ${prev.y} L ${next.x} ${next.y}`,
+      prev,
+      next,
+      isStart: start === prev,
+    });
+    prev = next;
+  };
+  const addCurve = (
+    c: PathCurve["c"],
     next: Point,
-    d?: string,
-    extras?: { circle?: Path["circle"]; cp1?: Path["cp1"]; cp2?: Path["cp2"] },
+    {
+      cp1,
+      cp2,
+    }: {
+      cp1: Point;
+      cp2: Point;
+    },
   ) => {
     assert(prev);
     paths.push({
+      type: "curve",
       c,
-      d: d || `M ${prev.x} ${prev.y} L ${next.x} ${next.y}`,
+      d: `M ${prev.x} ${prev.y} C ${cp1.x} ${cp1.y} ${cp2.x} ${cp2.y} ${next.x} ${next.y}`,
+      cp1,
+      cp2,
       prev,
       next,
-      ...extras,
       isStart: start === prev,
     });
     prev = next;
@@ -141,29 +220,29 @@ const _getPaths = (src: string) => {
       }
       case SVGPathData.LINE_TO: {
         assert(prev);
-        addPath(c, c);
+        addLine(c, c);
         break;
       }
       case SVGPathData.HORIZ_LINE_TO: {
         assert(prev);
-        addPath(c, { x: c.x, y: prev.y });
+        addLine(c, { x: c.x, y: prev.y });
         break;
       }
       case SVGPathData.VERT_LINE_TO: {
         assert(prev);
-        addPath(c, { x: prev.x, y: c.y });
+        addLine(c, { x: prev.x, y: c.y });
         break;
       }
       case SVGPathData.CLOSE_PATH: {
         assert(prev);
         assert(start);
-        addPath(c, start);
+        addLine(c, start);
         start = undefined;
         break;
       }
       case SVGPathData.CURVE_TO: {
         assert(prev);
-        addPath(c, c, `M ${prev.x} ${prev.y} ${encodeSVGPath(c)}`, {
+        addCurve(c, c, {
           cp1: { x: c.x1, y: c.y1 },
           cp2: { x: c.x2, y: c.y2 },
         });
@@ -190,29 +269,15 @@ const _getPaths = (src: string) => {
                 : previousCommand.y2 - prev.y
               : 0,
         };
-        addPath(
-          c,
-          c,
-          `M ${prev.x} ${prev.y} ${encodeSVGPath({
-            type: SVGPathData.CURVE_TO,
-            relative: false,
-            x: c.x,
-            y: c.y,
-            x1: prev.x - reflectedCp1.x,
-            y1: prev.y - reflectedCp1.y,
-            x2: c.x2,
-            y2: c.y2,
-          })}`,
-          {
-            cp1: { x: prev.x - reflectedCp1.x, y: prev.y - reflectedCp1.y },
-            cp2: { x: c.x2, y: c.y2 },
-          },
-        );
+        addCurve(c, c, {
+          cp1: { x: prev.x - reflectedCp1.x, y: prev.y - reflectedCp1.y },
+          cp2: { x: c.x2, y: c.y2 },
+        });
         break;
       }
       case SVGPathData.QUAD_TO: {
         assert(prev);
-        addPath(c, c, `M ${prev.x} ${prev.y} ${encodeSVGPath(c)}`, {
+        addCurve(c, c, {
           cp1: { x: c.x1, y: c.y1 },
           cp2: { x: c.x1, y: c.y1 },
         });
@@ -250,48 +315,15 @@ const _getPaths = (src: string) => {
           return currentPoint;
         };
         prevCP = backTrackCP(i, prev);
-        addPath(
-          c,
-          c,
-          `M ${prev.x} ${prev.y} ${encodeSVGPath({
-            type: SVGPathData.QUAD_TO,
-            relative: false,
-            x: c.x,
-            y: c.y,
-            x1: prevCP.x,
-            y1: prevCP.y,
-          })}`,
-          {
-            cp1: { x: prevCP.x, y: prevCP.y },
-            cp2: { x: prevCP.x, y: prevCP.y },
-          },
-        );
+        addCurve(c, c, {
+          cp1: { x: prevCP.x, y: prevCP.y },
+          cp2: { x: prevCP.x, y: prevCP.y },
+        });
         break;
       }
       case SVGPathData.ARC: {
         assert(prev);
-        const center = arcEllipseCenter(
-          prev.x,
-          prev.y,
-          c.rX,
-          c.rY,
-          c.xRot,
-          c.lArcFlag,
-          c.sweepFlag,
-          c.x,
-          c.y,
-        );
-        const r =
-          Math.round(
-            Math.sqrt((prev.x - center.x) ** 2 + (prev.y - center.y) ** 2) *
-              100,
-          ) / 100;
-        addPath(
-          c,
-          c,
-          `M ${prev.x} ${prev.y} A${c.rX} ${c.rY} ${c.xRot} ${c.lArcFlag} ${c.sweepFlag} ${c.x} ${c.y}`,
-          { circle: c.rX === c.rY ? { ...center, r } : undefined },
-        );
+        addArc(c);
         break;
       }
       default: {

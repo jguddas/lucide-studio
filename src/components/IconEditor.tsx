@@ -74,7 +74,7 @@ export const IconEditor = ({ value, onChange }: IconEditorProps) => {
           newSelection.push({
             ...path,
             startPosition: { x: 0, y: 0 },
-            type: "svg-editor-path",
+            selectionType: "svg-editor-path",
           });
           continue;
         }
@@ -90,7 +90,7 @@ export const IconEditor = ({ value, onChange }: IconEditorProps) => {
             newSelection.push({
               ...path,
               startPosition: { x: 0, y: 0 },
-              type: "svg-editor-path",
+              selectionType: "svg-editor-path",
             });
           }
         }
@@ -182,6 +182,7 @@ export const IconEditor = ({ value, onChange }: IconEditorProps) => {
                         },
                       ];
                     })
+                    // @ts-ignore
                     .map(pathToPathNode),
                 ];
                 onChange(format(nodesToSvg(nextNodes, height, width)));
@@ -208,15 +209,19 @@ export const IconEditor = ({ value, onChange }: IconEditorProps) => {
                         nodesToSvg(
                           [
                             ...getPaths(value)
-                              .filter(({ circle }) =>
+                              .filter((path) =>
                                 selected.every(
                                   (s) =>
                                     !(
-                                      circle &&
+                                      path.type === "arc" &&
+                                      path.circle &&
                                       s.circle &&
-                                      Math.abs(circle.x - s.circle.x) < 0.01 &&
-                                      Math.abs(circle.y - s.circle.y) < 0.01 &&
-                                      Math.abs(circle.r - s.circle.r) < 0.01
+                                      Math.abs(path.circle.x - s.circle.x) <
+                                        0.01 &&
+                                      Math.abs(path.circle.y - s.circle.y) <
+                                        0.01 &&
+                                      Math.abs(path.circle.r - s.circle.r) <
+                                        0.01
                                     ),
                                 ),
                               )
@@ -253,6 +258,7 @@ export const IconEditor = ({ value, onChange }: IconEditorProps) => {
                   className="gap-1.5"
                   disabled={!selected.length}
                   onClick={async () => {
+                    // @ts-ignore
                     const promise = cutOut(value, selected);
                     toast.promise(promise, {
                       loading: "Processing SVG...",
@@ -270,6 +276,7 @@ export const IconEditor = ({ value, onChange }: IconEditorProps) => {
                   className="gap-1.5"
                   disabled={!selected.length}
                   onClick={async () => {
+                    // @ts-ignore
                     const promise = cut(value, selected);
                     toast.promise(promise, {
                       loading: "Processing SVG...",

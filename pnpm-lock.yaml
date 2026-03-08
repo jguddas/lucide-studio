@@ -88,8 +88,8 @@ importers:
         specifier: ^2.0.9
         version: 2.0.9
       svg-pathdata:
-        specifier: ^6.0.3
-        version: 6.0.3
+        specifier: ^8.0.0
+        version: 8.0.0
       svgo:
         specifier: ^3.1.0
         version: 3.3.2
@@ -2994,9 +2994,9 @@ packages:
     resolution: {integrity: sha512-VfRLznHewlpQvuahtBK0MT/PlWAapbTx8RSytqgaVwD3US2keKcc3WYYlBBk4vIOR+jB3nQu/NAVlWHKlo0Fjw==}
     engines: {node: '>=16', pnpm: '>=8.6.0'}
 
-  svg-pathdata@6.0.3:
-    resolution: {integrity: sha512-qsjeeq5YjBZ5eMdFuUa4ZosMLxgr5RZ+F+Y1OrDhuOCEInRMA3x74XdBtggJcj9kOeInz0WE+LgCPDkZFlBYJw==}
-    engines: {node: '>=12.0.0'}
+  svg-pathdata@8.0.0:
+    resolution: {integrity: sha512-2Zqf5zsrX44Ws9y52EdHYrzGGnzyQG0jgREw+S3nP7zdx7QeH3QJonnGPvjtxPmYzU5mJMJ2YM+q2hUWGENWFg==}
+    engines: {node: '>=22.16.0'}
 
   svgo@3.3.2:
     resolution: {integrity: sha512-OoohrmuUlBs8B8o6MB2Aevn+pRIH9zDALSR+6hhqVfa6fRwG/Qw9VUMSMW9VNg2CFc/MTIfabtdOVl9ODIJjpw==}
@@ -6381,7 +6381,7 @@ snapshots:
     dependencies:
       '@thednp/dommatrix': 2.0.6
 
-  svg-pathdata@6.0.3: {}
+  svg-pathdata@8.0.0: {}
 
   svgo@3.3.2:
     dependencies:
