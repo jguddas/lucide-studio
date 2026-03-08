@@ -6,7 +6,7 @@ import { getPatternMatches } from "@/lib/get-pattern-matches";
 import { GapViolationHighlight } from "./GapViolationHighlight";
 import { isDegOnArc } from "@/lib/is-deg-on-arc";
 import { isDistanceSmaller } from "@/lib/is-distance-smaller";
-import { mSVGPathBBox } from "@/lib/m-svg-path-bbox";
+import { getPathBounds } from "@/lib/get-path-bounds";
 
 const Grid = ({
   radius,
@@ -433,12 +433,17 @@ const PatternMatches = ({
 } & PathProps<any, any>) => {
   const patternMatches = mGetPatternMatches(paths);
   const patternMatchesWithBounds = patternMatches.map((patternMatch) => {
-    const [x1, y1, x2, y2] = mSVGPathBBox(
+    const bounds = getPathBounds(
       patternMatch.paths.map((p) => p.d).join(" "),
     );
     return {
       ...patternMatch,
-      bounds: [x1 - 1, y1 - 1, x2 + 1, y2 + 1] satisfies BBox,
+      bounds: {
+        x: bounds.x - 1,
+        y: bounds.y - 1,
+        width: bounds.width + 2,
+        height: bounds.height + 2,
+      }
     };
   });
   return (
@@ -453,7 +458,7 @@ const PatternMatches = ({
           height="100%"
         />
         {patternMatchesWithBounds.map(
-          ({ patternName, bounds: [x1, y1, x2, y2] }, idx) => (
+          ({ patternName, bounds }, idx) => (
             <text
               key={idx}
               fontSize={0.75}
@@ -461,8 +466,8 @@ const PatternMatches = ({
               dominantBaseline="middle"
             >
               <textPath href={`#svg-preview-bounding-box-${idx}`}>
-                {patternName} {Math.round(x2 - x1 + 2)}x
-                {Math.round(y2 - y1 + 2)}
+                {patternName} {Math.round(bounds.width + 2)}x
+                {Math.round(bounds.height + 2)}
               </textPath>
             </text>
           ),
@@ -478,18 +483,18 @@ const PatternMatches = ({
           height="100%"
         />
         {patternMatchesWithBounds.map(
-          ({ patternName, bounds: [x1, y1, x2, y2] }, idx) => (
+          ({ patternName, bounds }, idx) => (
             <>
               <text fontSize={0.75} strokeWidth={0.4} dominantBaseline="middle">
                 <textPath href={`#svg-preview-bounding-box-${idx}`}>
-                  {patternName}.{Math.round(x2 - x1 + 2)}.svg
+                  {patternName}.{Math.round(bounds.width + 2)}.svg
                 </textPath>
               </text>
               <path
                 strokeWidth={props.strokeWidth}
                 mask="url(#svg-preview-bounding-box-mask)"
                 id={`svg-preview-bounding-box-${idx}`}
-                d={`M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5z`}
+                d={`M${bounds.x} ${bounds.y - 1}h${bounds.width + 0.5}a.5 .5 0 0 1 .5 .5v${bounds.height + 1}a.5 .5 0 0 1 -.5 .5h-${bounds.width + 1}a.5 .5 0 0 1 -.5 -.5v-${bounds.height + 1}a.5 .5 0 0 1 .5 -.5z`}
               />
             </>
           ),
@@ -502,8 +507,8 @@ const PatternMatches = ({
           d={patternMatchesWithBounds
             .filter(({ patternName }) => patternName.length <= 16)
             .map(
-              ({ bounds: [x1, y1, x2, y2] }) =>
-                `M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5L${x1} ${y1 - 1}`,
+              ({ bounds }) =>
+                `M${bounds.x} ${bounds.y - 1}h${bounds.width + 0.5}a.5 .5 0 0 1 .5 .5v${bounds.height + 1}a.5 .5 0 0 1 -.5 .5h-${bounds.width + 1}a.5 .5 0 0 1 -.5 -.5v-${bounds.height + 1}a.5 .5 0 0 1 .5 -.5L${bounds.x} ${bounds.y - 1}`,
             )
             .join(" ")}
         />
@@ -514,13 +519,13 @@ const PatternMatches = ({
           d={patternMatchesWithBounds
             .filter(({ patternName }) => patternName.length > 16)
             .map(
-              ({ bounds: [x1, y1, x2, y2] }) =>
-                `M${x1} ${y1 - 1}h${x2 - x1 + 0.5}a.5 .5 0 0 1 .5 .5v${y2 - y1 + 1}a.5 .5 0 0 1 -.5 .5h-${x2 - x1 + 1}a.5 .5 0 0 1 -.5 -.5v-${y2 - y1 + 1}a.5 .5 0 0 1 .5 -.5L${x1} ${y1 - 1}`,
+              ({ bounds }) =>
+                `M${bounds.x} ${bounds.y - 1}h${bounds.width + 0.5}a.5 .5 0 0 1 .5 .5v${bounds.height + 1}a.5 .5 0 0 1 -.5 .5h-${bounds.width + 1}a.5 .5 0 0 1 -.5 -.5v-${bounds.height + 1}a.5 .5 0 0 1 .5 -.5L${bounds.x} ${bounds.y - 1}`,
             )
             .join(" ")}
         />
         {patternMatchesWithBounds.map(
-          ({ patternName, paths, bounds: [x1, y1, x2, y2] }, idx) => (
+          ({ patternName, paths, bounds }, idx) => (
             <text
               key={idx}
               fill={patternName.length > 16 ? "red" : props.stroke}
@@ -535,8 +540,8 @@ const PatternMatches = ({
                 className="svg-preview-bounding-box-label-path"
                 data-ids={paths.map((p) => `${p.c.id}-${p.c.idx}`).join(" ")}
               >
-                {patternName} {Math.round(x2 - x1 + 2)}x
-                {Math.round(y2 - y1 + 2)}
+                {patternName} {Math.round(bounds.width + 2)}x
+                {Math.round(bounds.height + 2)}
               </textPath>
             </text>
           ),

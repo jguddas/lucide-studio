@@ -11,7 +11,7 @@ import { format } from "@/lib/format";
 import { useSelection, type Selection } from "./providers/SelectionProvider";
 import { nodesToSvg } from "@/lib/nodes-to-svg";
 import { pathToPathNode } from "@/lib/path-to-path-node";
-import { mSVGPathBBox } from "@/lib/m-svg-path-bbox";
+import { getPathBounds } from "@/lib/get-path-bounds";
 
 const getDistance = (a: Point, b: Point) =>
   Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
@@ -88,11 +88,11 @@ export const SvgEditor = ({
         const path = paths.find((p) => p.c.id === id && p.c.idx === idx);
 
         if (path) {
-          const bounds = mSVGPathBBox(paths.map((path) => path.d).join(" "));
+          const bounds = getPathBounds(paths.map((path) => path.d).join(" "));
           dragTargetRef.current = {
             ...path,
             bounds: className?.startsWith("svg-preview-bounding-box-label")
-              ? { x: bounds[0], y: bounds[1] }
+              ? bounds
               : { x: 0, y: 0 },
             startPosition: { x: clientX, y: clientY },
             type: dataIds?.length
