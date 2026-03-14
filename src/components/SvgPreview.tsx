@@ -340,10 +340,9 @@ const Radii = ({
 >) => {
   return (
     <g className="svg-preview-radii-group" {...props}>
-      {(paths.filter(({ type }) => type === "arc") as PathArc[])
-      .map(
-        ({ circle, next, prev, c }, i) =>
-          circle && (
+      {(paths.filter(({ type }) => type === "arc") as PathArc[]).map(
+        ({ ellipse, circle, next, prev, c }, i) =>
+          circle ? (
             <React.Fragment key={i}>
               {circle.tangentIntersection && c.name === "path" && (
                 <>
@@ -397,6 +396,16 @@ const Radii = ({
                     ? "red"
                     : undefined
                 }
+              />
+            </React.Fragment>
+          ) : (
+            <React.Fragment key={i}>
+              <ellipse
+                cx={ellipse.x}
+                cy={ellipse.y}
+                rx={ellipse.rx}
+                ry={ellipse.ry}
+                transform={`rotate(${ellipse.rotation}, ${ellipse.x}, ${ellipse.y})`}
               />
             </React.Fragment>
           ),

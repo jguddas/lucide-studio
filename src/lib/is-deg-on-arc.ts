@@ -6,11 +6,11 @@ function normalizeDeg(deg: number): number {
 
 export function isDegOnArc(deg: number, arc: PathArc): boolean {
   // 1. Basic values
-  const { prev, c, circle } = arc;
-  if (!circle) return false;
+  const { prev, c, ellipse } = arc;
+  if (!ellipse) return false;
   const { x: x0, y: y0 } = prev; // start point
   const { x: x1, y: y1 } = c; // end point
-  const { x: cx, y: cy, r } = circle;
+  const { x: cx, y: cy } = ellipse;
   const { lArcFlag, sweepFlag, xRot } = c;
   const isEllipse = c.rX !== c.rY || xRot !== 0;
 

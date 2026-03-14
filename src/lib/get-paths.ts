@@ -30,7 +30,7 @@ export type PathArc = BasePath & {
   type: "arc";
   c: CommandA & { id: number; idx: number; name: string };
   circle?: { x: number; y: number; r: number; tangentIntersection?: Point };
-  ellipse: { x: number; y: number; rx: number; ry: number };
+  ellipse: { x: number; y: number; rx: number; ry: number, rotation: number };
 };
 export type PathLine = BasePath & {
   c: (CommandL | CommandH | CommandV | CommandZ) & {
@@ -166,6 +166,13 @@ const _getPaths = (src: string) => {
       c,
       d: `M ${prev.x} ${prev.y} A${c.rX} ${c.rY} ${c.xRot} ${c.lArcFlag} ${c.sweepFlag} ${c.x} ${c.y}`,
       circle: c.rX === c.rY ? { ...center, r } : undefined,
+      ellipse: {
+        x: center.x,
+        y: center.y,
+        rotation: c.xRot,
+        rx: c.rX === c.rY ? r : c.rX,
+        ry: c.rX === c.rY ? r : c.rY
+      },
       prev,
       next: { x: c.x, y: c.y },
       isStart: start === prev,
