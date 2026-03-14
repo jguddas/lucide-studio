@@ -2,7 +2,7 @@ import memoize from "lodash/memoize";
 import SVGPathCommander from "svg-path-commander";
 import { Path } from "@/lib/get-paths";
 
-function pathToPoints({ d, prev, next }: Path, interval = 1) {
+function _pathToPoints({ d, prev, next }: Path, interval = 1) {
   const commander = new SVGPathCommander(d);
   const points = [];
   try {
@@ -16,4 +16,7 @@ function pathToPoints({ d, prev, next }: Path, interval = 1) {
   return points;
 }
 
-export default memoize(pathToPoints);
+export const pathToPoints = memoize(
+  _pathToPoints,
+  (path, interval) => `${path.d}-${interval}`,
+);

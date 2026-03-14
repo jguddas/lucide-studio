@@ -1,5 +1,5 @@
 import React from "react";
-import pathToPoints from "@/lib/path-to-points";
+import { pathToPoints } from "@/lib/path-to-points";
 import { Path, PathProps } from "@/lib/get-paths";
 
 export const GapViolationHighlight = ({

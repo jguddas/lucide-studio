@@ -5,7 +5,7 @@ import { isDistanceSmaller } from "@/lib/is-distance-smaller";
 import { nodesToSvg } from "@/lib/nodes-to-svg";
 import { optimize } from "@/lib/optimize";
 import { pathToPathNode } from "@/lib/path-to-path-node";
-import pathToPoints from "@/lib/path-to-points";
+import { pathToPoints } from "@/lib/path-to-points";
 
 const emptyState = format("");
 
