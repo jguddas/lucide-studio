@@ -285,8 +285,8 @@ const _getPaths = (src: string) => {
       case SVGPathData.QUAD_TO: {
         assert(prev);
         addCurve(c, c, {
-          cp1: { x: c.x1, y: c.y1 },
-          cp2: { x: c.x1, y: c.y1 },
+          cp1: { x: prev.x + (2 / 3) * (c.x1 - prev.x), y: prev.y + (2 / 3) * (c.y1 - prev.y) },
+          cp2: { x: c.x + (2 / 3) * (c.x1 - c.x), y: c.y + (2 / 3) * (c.y1 - c.y) },
         });
         break;
       }
