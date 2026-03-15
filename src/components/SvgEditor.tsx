@@ -51,8 +51,10 @@ export const SvgEditor = ({
     });
 
     const onMouseDown = (event: MouseEvent | TouchEvent) => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       const className = event.target?.getAttribute("class");
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       //@ts-ignore
       if (event.target?.getAttribute("role") === "menuitem") {
         return;
@@ -63,14 +65,18 @@ export const SvgEditor = ({
       ) {
         event.preventDefault();
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const clientX: number = event.clientX ?? event.touches[0].clientX;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const clientY: number = event.clientY ?? event.touches[0].clientY;
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         if (event.touches?.length > 1) return;
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const dataIds = event.target?.getAttribute("data-ids")?.split(" ") as
           | string[]
@@ -149,6 +155,7 @@ export const SvgEditor = ({
         return;
       }
       if (
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         !event.target.closest(
           "button, a, input, textarea, select, details, [role='menuitem'], [role='menu']",
@@ -167,11 +174,14 @@ export const SvgEditor = ({
 
     const onMouseMove = throttle((event: MouseEvent | TouchEvent) => {
       if (dragTargetRef.current) {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const clientX = event.clientX ?? event.touches[0].clientX;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         const clientY = event.clientY ?? event.touches[0].clientY;
 
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
         // @ts-ignore
         if (event.touches?.length > 1) return;
 
@@ -194,7 +204,8 @@ export const SvgEditor = ({
           const snapTarget =
             snapTargetKey === "bounds"
               ? dragTargetRef.current?.bounds
-              : // @ts-ignore
+              : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 snapPath[snapTargetKey];
           if (!snapTarget) return { x: 0, y: 0 };
           const movedAbsolute = {
@@ -424,6 +435,8 @@ export const SvgEditor = ({
               ) {
                 movedPath.circle.x = scopedPath.circle.x + snapDelta.x;
                 movedPath.circle.y = scopedPath.circle.y + snapDelta.y;
+                movedPath.ellipse.x = scopedPath.circle.x + snapDelta.x;
+                movedPath.ellipse.y = scopedPath.circle.y + snapDelta.y;
                 if (movedPath.circle.tangentIntersection) {
                   movedPath.circle.tangentIntersection.x =
                     scopedPath.circle!.tangentIntersection!.x + snapDelta.x;
@@ -466,6 +479,8 @@ export const SvgEditor = ({
               movedPath.next.y = scopedPath.next.y + snapDelta.y;
               movedPath.circle!.x = scopedPath.circle!.x + snapDelta.x;
               movedPath.circle!.y = scopedPath.circle!.y + snapDelta.y;
+              movedPath.ellipse.x = scopedPath.circle!.x + snapDelta.x;
+              movedPath.ellipse.y = scopedPath.circle!.y + snapDelta.y;
               if (movedPath.circle!.tangentIntersection) {
                 movedPath.circle!.tangentIntersection.x =
                   scopedPath.circle!.tangentIntersection!.x + snapDelta.x;
@@ -599,6 +614,10 @@ export const SvgEditor = ({
                 movedPath.circle.x = snappedCenter.x;
                 movedPath.circle.y = snappedCenter.y;
                 movedPath.circle.r = round(snappedRadius, 3);
+                movedPath.ellipse.x = snappedCenter.x;
+                movedPath.ellipse.y = snappedCenter.y;
+                movedPath.ellipse.rx = round(snappedRadius, 3);
+                movedPath.ellipse.ry = round(snappedRadius, 3);
                 function getTangentsOnCircle(
                   center: Point,
                   tangent: Point,
@@ -643,25 +662,29 @@ export const SvgEditor = ({
             }
           }
 
-          const n = scopedPaths[i].d.split(" ");
-          if (movedPath.type === "curve" && movedPath.cp1) {
-            n[3] = "C" + round(movedPath.cp1.x, 3);
-            n[4] = round(movedPath.cp1.y, 3) + "";
+          let n = scopedPaths[i].d;
+          if (movedPath.type === "curve") {
+            n = [
+              `M${round(movedPath.prev.x, 3)} ${round(movedPath.prev.y, 3)}`,
+              `C${round(movedPath.cp1.x, 3)} ${round(movedPath.cp1.y, 3)}`,
+              `${round(movedPath.cp2.x, 3)} ${round(movedPath.cp2.y, 3)}`,
+              `${round(movedPath.next.x, 3)} ${round(movedPath.next.y, 3)}`,
+            ].join(" ");
+          } else if (movedPath.type === "line") {
+            n = [
+              `M${round(movedPath.prev.x, 3)} ${round(movedPath.prev.y, 3)}`,
+              `L${round(movedPath.next.x, 3)} ${round(movedPath.next.y, 3)}`,
+            ].join(" ");
+          } else if (movedPath.type === "arc") {
+            n = [
+              `M${round(movedPath.prev.x, 3)} ${round(movedPath.prev.y, 3)}`,
+              `A${round(movedPath.ellipse.rx, 3)} ${round(movedPath.ellipse.ry, 3)}`,
+              `${movedPath.ellipse.rotation} ${movedPath.c.lArcFlag} ${movedPath.c.sweepFlag}`,
+              `${round(movedPath.next.x, 3)} ${round(movedPath.next.y, 3)}`,
+            ].join(" ");
           }
-          if (movedPath.type === "curve" && movedPath.cp2) {
-            n[5] = round(movedPath.cp2.x, 3) + "";
-            n[6] = round(movedPath.cp2.y, 3) + "";
-          }
-          if (movedPath.type === "arc" && movedPath.circle) {
-            n[3] = "A" + round(movedPath.circle.r, 3);
-            n[4] = round(movedPath.circle.r, 3) + "";
-          }
-          n[1] = round(movedPath.prev.x, 3) + "";
-          n[2] = round(movedPath.prev.y, 3) + "";
-          n[n.length - 2] = round(movedPath.next.x, 3) + "";
-          n[n.length - 1] = round(movedPath.next.y, 3) + "";
-          if (movedPath.d !== n.join(" ")) {
-            movedPath.d = n.join(" ");
+          if (movedPath.d !== n) {
+            movedPath.d = n;
             movedPaths[i] = movedPath;
             setPaths(movedPaths.slice(0));
           }
@@ -677,6 +700,7 @@ export const SvgEditor = ({
         movedPaths = JSON.parse(movedPathsString);
         const nodes = getNodes(src);
         const nextNodes = nodes.flatMap((val, id) =>
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
           id === dragTargetRef.current?.c.id ||
           selected.some(({ c }) => c.id === id)
@@ -684,8 +708,10 @@ export const SvgEditor = ({
             : [val],
         );
         const nextPaths = getPaths(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           format(nodesToSvg(nextNodes as any, height, width)),
         );
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onChange(nodesToSvg(nextNodes as any, height, width));
         onSelectionChange(
           selected
